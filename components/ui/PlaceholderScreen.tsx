@@ -1,0 +1,50 @@
+import { StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { colors, spacing } from "@/lib/theme";
+
+type PlaceholderScreenProps = {
+  title: string;
+  subtitle?: string;
+};
+
+export function PlaceholderScreen({ title, subtitle }: PlaceholderScreenProps) {
+  return (
+    <SafeAreaView style={styles.safe}>
+      <View style={styles.container}>
+        <Text style={styles.title}>{title}</Text>
+        {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+        <Text style={styles.hint}>This screen is ready for you to build.</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: colors.muted,
+    textAlign: "center",
+  },
+  hint: {
+    fontSize: 13,
+    color: colors.muted,
+    marginTop: spacing.md,
+  },
+});
