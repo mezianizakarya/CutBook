@@ -5,7 +5,7 @@ import { colors, radius, spacing } from "@/lib/theme";
 type ButtonProps = {
   title: string;
   onPress: () => void;
-  variant?: "primary" | "outline" | "ghost";
+  variant?: "primary" | "outline" | "ghost" | "danger";
   loading?: boolean;
   disabled?: boolean;
 };
@@ -21,8 +21,8 @@ export function Button({
   const background =
     variant === "primary"
       ? colors.primary
-      : variant === "outline"
-        ? "transparent"
+      : variant === "danger"
+        ? colors.danger
         : "transparent";
 
   return (
@@ -39,7 +39,9 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "primary" ? colors.white : colors.primary} />
+        <ActivityIndicator
+          color={variant === "primary" || variant === "danger" ? colors.white : colors.primary}
+        />
       ) : (
         <Text
           style={[
