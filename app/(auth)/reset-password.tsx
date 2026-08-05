@@ -1,22 +1,32 @@
-import { useSignIn } from "@clerk/expo";
-import { useRouter } from "expo-router";
+import { useAuth, useSignIn } from "@clerk/expo";
+import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
+import { FullScreenLoader } from "@/lib/auth";
 import { errorMessage } from "@/lib/errors";
 import { colors, spacing } from "@/lib/theme";
 
 export default function ResetPasswordScreen() {
   const { signIn, errors, fetchStatus } = useSignIn();
+  const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  if (!isLoaded) {
+    return <FullScreenLoader />;
+  }
+
+  if (isSignedIn) {
+    return <Redirect href="/loading" />;
+  }
 
   async function handleReset() {
     setLocalError(null);
@@ -39,9 +49,22 @@ export default function ResetPasswordScreen() {
         return;
       }
       if (signIn.status === "complete") {
-        await signIn.reset();
-        router.replace({ pathname: "/sign-in", params: { message: "Password reset. Sign in with your new password." } });
+        // The password reset already created an authenticated session. Activate
+        // it with finalize() and let loading.tsx route the user to the app.
+        try {
+          const { error: finalizeError } = await signIn.finalize();
+          if (!finalizeError) {
+            router.replace("/loading");
+            return;
+          }
+        } catch {
+          // No session was created after all; fall back to signing in below.
+        }
       }
+      router.replace({
+        pathname: "/sign-in",
+        params: { message: "Password reset. Sign in with your new password." },
+      });
     } finally {
       setSubmitting(false);
     }

@@ -1,20 +1,30 @@
-import { useSignUp } from "@clerk/expo";
-import { useRouter } from "expo-router";
+import { useAuth, useSignUp } from "@clerk/expo";
+import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
+import { FullScreenLoader } from "@/lib/auth";
 import { colors, spacing } from "@/lib/theme";
 
 export default function SignUpScreen() {
   const { signUp, errors, fetchStatus } = useSignUp();
+  const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
 
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  if (!isLoaded) {
+    return <FullScreenLoader />;
+  }
+
+  if (isSignedIn) {
+    return <Redirect href="/loading" />;
+  }
 
   async function handleSignUp() {
     if (!signUp) return;

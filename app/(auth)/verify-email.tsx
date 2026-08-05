@@ -1,5 +1,5 @@
-import { useSignIn, useSignUp, useUser } from "@clerk/expo";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useAuth, useSignIn, useSignUp, useUser } from "@clerk/expo";
+import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -19,6 +19,7 @@ export default function VerifyEmailScreen() {
   const router = useRouter();
   const { signUp, errors: signUpErrors } = useSignUp();
   const { signIn, errors: signInErrors } = useSignIn();
+  const { isLoaded: authLoaded, isSignedIn } = useAuth();
   const { isLoaded: userLoaded, user } = useUser();
 
   const [code, setCode] = useState("");
@@ -65,6 +66,14 @@ export default function VerifyEmailScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, userLoaded, user]);
+
+  if (mode === "verify") {
+    if (userLoaded && (!isSignedIn || !user)) {
+      return <Redirect href="/loading" />;
+    }
+  } else if (authLoaded && isSignedIn) {
+    return <Redirect href="/loading" />;
+  }
 
   async function handleVerify() {
     setVerifyError(null);

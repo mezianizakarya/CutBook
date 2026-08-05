@@ -1,20 +1,30 @@
-import { useSignIn } from "@clerk/expo";
-import { useRouter } from "expo-router";
+import { useAuth, useSignIn } from "@clerk/expo";
+import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
+import { FullScreenLoader } from "@/lib/auth";
 import { errorMessage } from "@/lib/errors";
 import { colors, spacing } from "@/lib/theme";
 
 export default function ForgotPasswordScreen() {
   const { signIn, errors, fetchStatus } = useSignIn();
+  const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
 
   const [emailAddress, setEmailAddress] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  if (!isLoaded) {
+    return <FullScreenLoader />;
+  }
+
+  if (isSignedIn) {
+    return <Redirect href="/loading" />;
+  }
 
   async function handleSendCode() {
     if (!signIn) return;
