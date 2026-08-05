@@ -13,5 +13,5 @@ export const TAB_BAR = {
   /** Diameter of the profile avatar inside the bar. */
   avatarSize: 28,
   /** Duration of the active/inactive transition, feels native on iOS. */
-  animationDuration: 50,
+  animationDuration: 100,
 } as const;
