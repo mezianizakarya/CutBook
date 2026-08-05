@@ -9,6 +9,13 @@ export const ROLE_LABELS: Record<Role, string> = {
   admin: "Admin",
 };
 
+export const ACCOUNT_TYPE_LABELS: Record<Role, string> = {
+  customer: "Customer",
+  barber: "Barber",
+  owner: "Shop Owner",
+  admin: "Administrator",
+};
+
 export const ROLE_DESCRIPTIONS: Record<Role, string> = {
   customer: "Book appointments and discover barbershops",
   barber: "Manage your schedule and clients",

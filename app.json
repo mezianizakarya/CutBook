@@ -41,6 +41,12 @@
       ],
       "expo-secure-store",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow CutBook to access your photos."
+        }
+      ],
+      [
         "@clerk/expo",
         {
           "appleSignIn": false

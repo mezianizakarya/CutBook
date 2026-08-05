@@ -1,0 +1,147 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useUser } from "@clerk/expo";
+import * as ImagePicker from "expo-image-picker";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type AlertButton,
+} from "react-native";
+
+import { Avatar } from "@/components/ui/Avatar";
+import { errorMessageFromUnknown } from "@/lib/errors";
+import { colors, radius, spacing } from "@/lib/theme";
+
+const AVATAR_SIZE = 96;
+
+export function ProfilePicture() {
+  const { user } = useUser();
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function uploadImage(file: string) {
+    setError(null);
+    setUploading(true);
+    try {
+      await user?.setProfileImage({ file });
+      await user?.reload();
+    } catch (e) {
+      setError(errorMessageFromUnknown(e));
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleChoosePhoto() {
+    setError(null);
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      setError("Photo library access is required to choose a photo.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+      base64: true,
+    });
+    if (result.canceled) {
+      return;
+    }
+    const asset = result.assets[0];
+    if (!asset.base64) {
+      setError("Could not read the selected photo. Please try again.");
+      return;
+    }
+    await uploadImage(`data:${asset.mimeType ?? "image/jpeg"};base64,${asset.base64}`);
+  }
+
+  async function handleRemovePhoto() {
+    setError(null);
+    setUploading(true);
+    try {
+      await user?.setProfileImage({ file: null });
+      await user?.reload();
+    } catch (e) {
+      setError(errorMessageFromUnknown(e));
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function handlePress() {
+    const buttons: AlertButton[] = [{ text: "Choose Photo", onPress: handleChoosePhoto }];
+    if (user?.hasImage) {
+      buttons.push({ text: "Remove Photo", onPress: handleRemovePhoto, style: "destructive" });
+    }
+    buttons.push({ text: "Cancel", style: "cancel" });
+    Alert.alert("Profile Picture", undefined, buttons);
+  }
+
+  return (
+    <View style={styles.container}>
+      <Pressable
+        onPress={handlePress}
+        disabled={uploading}
+        accessibilityRole="imagebutton"
+        accessibilityLabel="Profile picture"
+      >
+        <Avatar
+          fullName={user?.fullName}
+          imageUrl={user?.hasImage ? user?.imageUrl : null}
+          size={AVATAR_SIZE}
+        />
+        <View style={styles.badge}>
+          <Ionicons name="camera" size={16} color={colors.white} />
+        </View>
+        {uploading && (
+          <View style={styles.overlay}>
+            <ActivityIndicator color={colors.white} />
+          </View>
+        )}
+      </Pressable>
+      {!!error && <Text style={styles.errorText}>{error}</Text>}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  badge: {
+    position: "absolute",
+    right: 0,
+    bottom: 0,
+    width: 32,
+    height: 32,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: colors.white,
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: radius.full,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  errorText: {
+    color: colors.danger,
+    fontSize: 13,
+    textAlign: "center",
+  },
+});

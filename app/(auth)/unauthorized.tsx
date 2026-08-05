@@ -83,7 +83,6 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 15,
     color: colors.muted,
-    textAlign: "center",
   },
   actions: {
     marginTop: spacing.lg,

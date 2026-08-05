@@ -1,7 +1,5 @@
-import { PlaceholderScreen } from "@/components/ui/PlaceholderScreen";
-import { SignOutButton } from "@/components/ui/SignOutButton";
+import { AccountScreen } from "@/components/ui/AccountScreen";
 
 export default function SettingsScreen() {
-  return <PlaceholderScreen title="Settings" footer={<SignOutButton />} />;
+  return <AccountScreen role="admin" />;
 }
-
