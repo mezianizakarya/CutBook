@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { BottomTabBarHeightContext } from "@react-navigation/bottom-tabs";
+import { useContext, type ReactNode } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -20,15 +21,21 @@ type ScreenProps = {
 };
 
 export function Screen({ children, scroll = false, centered = false, style }: ScreenProps) {
+  const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
+  const hasTabBar = tabBarHeight > 0;
+
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
+    <SafeAreaView style={styles.safe} edges={hasTabBar ? ["top"] : ["top", "bottom"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.flex}
       >
         {scroll ? (
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: spacing.lg + tabBarHeight },
+            ]}
             keyboardShouldPersistTaps="handled"
           >
             <View style={[styles.column, centered && styles.centered, style]}>
@@ -36,7 +43,14 @@ export function Screen({ children, scroll = false, centered = false, style }: Sc
             </View>
           </ScrollView>
         ) : (
-          <View style={[styles.content, centered && styles.centered, style]}>
+          <View
+            style={[
+              styles.content,
+              centered && styles.centered,
+              { paddingBottom: spacing.lg + tabBarHeight },
+              style,
+            ]}
+          >
             {children}
           </View>
         )}

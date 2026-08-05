@@ -70,8 +70,8 @@ function TabRouteItem({
 
 /**
  * Reusable floating iOS-style tab bar shared by every role navigator.
- * The bar reserves its own layout band (so content is never covered) and the
- * capsule floats inside it, clearing the bottom safe area.
+ * The bar overlays the bottom of the screen (content stays visible behind and
+ * below the capsule) and floats above the bottom safe area.
  */
 export function FloatingTabBar({
   state,
@@ -108,7 +108,11 @@ export function FloatingTabBar({
   );
 
   return (
-    <View style={{ height: bandHeight }} onLayout={handleLayout}>
+    <View
+      style={[styles.band, { height: bandHeight }]}
+      onLayout={handleLayout}
+      pointerEvents="box-none"
+    >
       <View style={styles.capsule}>
         <FloatingTabContainer>
           <View style={styles.items}>
@@ -133,6 +137,12 @@ export function FloatingTabBar({
 }
 
 const styles = StyleSheet.create({
+  band: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   capsule: {
     position: "absolute",
     top: TAB_BAR.topMargin,
