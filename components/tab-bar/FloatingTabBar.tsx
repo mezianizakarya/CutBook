@@ -23,11 +23,22 @@ type TabRouteItemProps = {
   navigation: BottomTabBarProps["navigation"];
   label: string;
   icon: string;
+  iconImage?: number;
+  iconImageActive?: number;
   isProfile: boolean;
   isFocused: boolean;
 };
 
-function TabRouteItem({ route, navigation, label, icon, isProfile, isFocused }: TabRouteItemProps) {
+function TabRouteItem({
+  route,
+  navigation,
+  label,
+  icon,
+  iconImage,
+  iconImageActive,
+  isProfile,
+  isFocused,
+}: TabRouteItemProps) {
   const handlePress = useCallback(() => {
     const event = navigation.emit({
       type: "tabPress",
@@ -47,6 +58,8 @@ function TabRouteItem({ route, navigation, label, icon, isProfile, isFocused }: 
     <FloatingTabBarItem
       label={label}
       icon={icon}
+      iconImage={iconImage}
+      iconImageActive={iconImageActive}
       active={isFocused}
       showAvatar={isProfile}
       onPress={handlePress}
@@ -79,6 +92,8 @@ export function FloatingTabBar({
           route,
           label: config?.title ?? route.name,
           icon: config?.icon ?? "ellipse-outline",
+          iconImage: config?.iconImage,
+          iconImageActive: config?.iconImageActive,
           isProfile: showProfileAvatar && config?.name === "profile",
         };
       }),
@@ -104,6 +119,8 @@ export function FloatingTabBar({
                 navigation={navigation}
                 label={item.label}
                 icon={item.icon}
+                iconImage={item.iconImage}
+                iconImageActive={item.iconImageActive}
                 isProfile={item.isProfile}
                 isFocused={state.index === index}
               />

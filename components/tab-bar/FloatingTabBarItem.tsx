@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import type { ComponentProps } from "react";
 import { memo, useEffect } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import Animated, {
   Easing,
   interpolate,
-  interpolateColor,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -14,15 +14,19 @@ import Animated, {
 
 import { ProfileTabAvatar } from "./ProfileTabAvatar";
 import { TAB_BAR } from "./constants";
-import { colors, radius } from "@/lib/theme";
+import { colors } from "@/lib/theme";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
 type FloatingTabBarItemProps = {
   /** Accessible label, e.g. "Profile". */
   label: string;
-  /** Ionicons name rendered for regular tabs. */
+  /** Ionicons name rendered for regular tabs without custom images. */
   icon: string;
+  /** Custom image rendered for the inactive state. */
+  iconImage?: number;
+  /** Custom image rendered for the active state. */
+  iconImageActive?: number;
   /** Whether this tab is currently selected. */
   active: boolean;
   /** Renders the real profile avatar instead of the icon. */
@@ -40,6 +44,8 @@ const AnimatedIonicons = Animated.createAnimatedComponent(Ionicons);
 function FloatingTabBarItemBase({
   label,
   icon,
+  iconImage,
+  iconImageActive,
   active,
   showAvatar,
   onPress,
@@ -60,19 +66,50 @@ function FloatingTabBarItemBase({
     });
   }, [active, progress, reduceMotion]);
 
-  const pillStyle = useAnimatedStyle(() => ({
-    opacity: progress.value,
-    transform: [{ scale: interpolate(progress.value, [0, 1], [0.9, 1]) }],
-  }));
-
   const pressStyle = useAnimatedStyle(() => ({
     transform: [{ scale: interpolate(pressed.value, [0, 1], [1, 0.94]) }],
   }));
 
   const iconStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(progress.value, [0, 1], [colors.muted, colors.primary]),
+    color: colors.white,
     transform: [{ scale: interpolate(progress.value, [0, 1], [1, 1.08]) }],
   }));
+
+  const inactiveImageStyle = useAnimatedStyle(() => ({
+    opacity: 1 - progress.value,
+    transform: [{ scale: interpolate(progress.value, [0, 1], [1, 1.12]) }],
+  }));
+
+  const activeImageStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ scale: interpolate(progress.value, [0, 1], [0.88, 1]) }],
+  }));
+
+  const renderIcon = () => {
+    if (iconImage) {
+      return (
+        <>
+          <Animated.View style={[styles.iconLayer, inactiveImageStyle]}>
+            <Image
+              source={iconImage}
+              style={styles.imageIcon}
+              contentFit="contain"
+              tintColor={colors.white}
+            />
+          </Animated.View>
+          <Animated.View style={[styles.iconLayer, activeImageStyle]}>
+            <Image
+              source={iconImageActive ?? iconImage}
+              style={styles.imageIcon}
+              contentFit="contain"
+              tintColor={colors.white}
+            />
+          </Animated.View>
+        </>
+      );
+    }
+    return <AnimatedIonicons name={icon as IconName} size={TAB_BAR.iconSize} style={iconStyle} />;
+  };
 
   return (
     <Pressable
@@ -90,12 +127,7 @@ function FloatingTabBarItemBase({
       accessibilityLabel={label}
     >
       <Animated.View style={[styles.visualBox, pressStyle]}>
-        {!showAvatar && <Animated.View style={[styles.pill, pillStyle]} />}
-        {showAvatar ? (
-          <ProfileTabAvatar active={active} />
-        ) : (
-          <AnimatedIonicons name={icon as IconName} size={TAB_BAR.iconSize} style={iconStyle} />
-        )}
+        {showAvatar ? <ProfileTabAvatar active={active} /> : renderIcon()}
       </Animated.View>
     </Pressable>
   );
@@ -116,9 +148,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  pill: {
+  iconLayer: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: radius.full,
-    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imageIcon: {
+    width: TAB_BAR.iconSize,
+    height: TAB_BAR.iconSize,
   },
 });

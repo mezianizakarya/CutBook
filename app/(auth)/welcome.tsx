@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   logoBadge: {
     width: 72,
     height: 72,
-    borderRadius: radius.lg,
+    borderRadius: radius.full,
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",

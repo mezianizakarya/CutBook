@@ -60,7 +60,7 @@ export function Button({
 const styles = StyleSheet.create({
   base: {
     height: 50,
-    borderRadius: radius.md,
+    borderRadius: radius.full,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.lg,

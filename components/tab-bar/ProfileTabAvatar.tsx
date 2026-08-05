@@ -44,7 +44,7 @@ export function ProfileTabAvatar({ active }: ProfileTabAvatarProps) {
   }, [active, progress, reduceMotion]);
 
   const ringStyle = useAnimatedStyle(() => ({
-    borderColor: interpolateColor(progress.value, [0, 1], ["rgba(0, 0, 0, 0)", colors.primary]),
+    borderColor: interpolateColor(progress.value, [0, 1], ["rgba(0, 0, 0, 0)", colors.white]),
     transform: [{ scale: interpolate(progress.value, [0, 1], [1, 1.08]) }],
   }));
 

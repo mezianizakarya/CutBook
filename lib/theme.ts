@@ -1,5 +1,5 @@
 export const colors = {
-  primary: "#0266D6",
+  primary: "#000",
   primaryDark: "#0052AB",
   primarySoft: "#EAF2FE",
   background: "#ffffff",
@@ -10,6 +10,7 @@ export const colors = {
   danger: "#dc2626",
   success: "#16a34a",
   white: "#ffffff",
+  black: "#000000",
 } as const;
 
 export const spacing = {
@@ -25,5 +26,5 @@ export const radius = {
   sm: 8,
   md: 12,
   lg: 16,
-  full: 999,
+  full: 9999,
 } as const;
