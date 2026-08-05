@@ -84,6 +84,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   ghostLabel: {
-    color: colors.accent,
+    color: colors.primary,
   },
 });

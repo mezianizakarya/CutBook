@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   resendText: {
-    color: colors.accent,
+    color: colors.primary,
     fontSize: 15,
     fontWeight: "600",
     textAlign: "center",

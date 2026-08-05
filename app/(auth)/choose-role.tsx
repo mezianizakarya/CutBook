@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   cardSelected: {
-    borderColor: colors.accent,
+    borderColor: colors.primary,
     backgroundColor: "#fff7ed",
   },
   cardHeader: {
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   },
   savingText: {
     fontSize: 13,
-    color: colors.accent,
+    color: colors.primary,
     fontWeight: "600",
   },
   cardDescription: {

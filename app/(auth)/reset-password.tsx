@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   link: {
-    color: colors.accent,
+    color: colors.primary,
     fontSize: 15,
     fontWeight: "600",
     alignSelf: "center",
