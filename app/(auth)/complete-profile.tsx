@@ -58,7 +58,7 @@ export default function CompleteProfileScreen() {
   }
 
   return (
-    <Screen scroll>
+    <Screen scroll centered>
       <View style={styles.header}>
         <Text style={styles.title}>Complete your profile</Text>
         <Text style={styles.subtitle}>
@@ -107,7 +107,6 @@ export default function CompleteProfileScreen() {
 const styles = StyleSheet.create({
   header: {
     gap: spacing.xs,
-    marginTop: spacing.xl,
     marginBottom: spacing.xl,
   },
   title: {

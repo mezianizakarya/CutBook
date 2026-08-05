@@ -47,7 +47,7 @@ export default function SignUpScreen() {
   const globalErrors = errors?.global ?? null;
 
   return (
-    <Screen scroll>
+    <Screen scroll centered>
       <View style={styles.header}>
         <Text style={styles.title}>Create your account</Text>
         <Text style={styles.subtitle}>
@@ -103,7 +103,6 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   header: {
     gap: spacing.xs,
-    marginTop: spacing.xl,
     marginBottom: spacing.xl,
   },
   title: {

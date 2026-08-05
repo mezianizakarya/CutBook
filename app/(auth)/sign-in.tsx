@@ -137,7 +137,7 @@ export default function SignInScreen() {
 
   if (verifying) {
     return (
-      <Screen scroll>
+      <Screen scroll centered>
         <View style={styles.header}>
           <Text style={styles.title}>Verify your account</Text>
           <Text style={styles.subtitle}>
@@ -185,7 +185,7 @@ export default function SignInScreen() {
   }
 
   return (
-    <Screen scroll>
+    <Screen scroll centered>
       <View style={styles.header}>
         <Text style={styles.title}>Welcome back</Text>
         <Text style={styles.subtitle}>Sign in to your CutBook account</Text>
@@ -246,7 +246,6 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   header: {
     gap: spacing.xs,
-    marginTop: spacing.xl,
     marginBottom: spacing.xl,
   },
   title: {

@@ -15,10 +15,11 @@ import { colors, spacing } from "@/lib/theme";
 type ScreenProps = {
   children: ReactNode;
   scroll?: boolean;
+  centered?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
-export function Screen({ children, scroll = false, style }: ScreenProps) {
+export function Screen({ children, scroll = false, centered = false, style }: ScreenProps) {
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <KeyboardAvoidingView
@@ -27,13 +28,17 @@ export function Screen({ children, scroll = false, style }: ScreenProps) {
       >
         {scroll ? (
           <ScrollView
-            contentContainerStyle={[styles.content, style]}
+            contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
           >
-            {children}
+            <View style={[styles.column, centered && styles.centered, style]}>
+              {children}
+            </View>
           </ScrollView>
         ) : (
-          <View style={[styles.content, style]}>{children}</View>
+          <View style={[styles.content, centered && styles.centered, style]}>
+            {children}
+          </View>
         )}
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -48,8 +53,24 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  content: {
+  scrollContent: {
     flexGrow: 1,
     padding: spacing.lg,
+  },
+  column: {
+    flexGrow: 1,
+    width: "100%",
+    maxWidth: 480,
+    alignSelf: "center",
+  },
+  content: {
+    flexGrow: 1,
+    width: "100%",
+    maxWidth: 480,
+    alignSelf: "center",
+    padding: spacing.lg,
+  },
+  centered: {
+    justifyContent: "center",
   },
 });

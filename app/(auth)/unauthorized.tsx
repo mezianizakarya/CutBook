@@ -37,7 +37,7 @@ export default function UnauthorizedScreen() {
   }
 
   return (
-    <Screen>
+    <Screen centered>
       <View style={styles.container}>
         <Text style={styles.code}>403</Text>
         <Text style={styles.title}>Access denied</Text>

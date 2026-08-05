@@ -73,7 +73,7 @@ export default function ResetPasswordScreen() {
   const globalErrors = errors?.global ?? null;
 
   return (
-    <Screen scroll>
+    <Screen scroll centered>
       <View style={styles.header}>
         <Text style={styles.title}>Set a new password</Text>
         <Text style={styles.subtitle}>Choose a strong password you haven&apos;t used before.</Text>
@@ -123,7 +123,6 @@ export default function ResetPasswordScreen() {
 const styles = StyleSheet.create({
   header: {
     gap: spacing.xs,
-    marginTop: spacing.xl,
     marginBottom: spacing.xl,
   },
   title: {

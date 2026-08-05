@@ -117,7 +117,7 @@ export default function VerifyEmailScreen() {
   }
 
   return (
-    <Screen scroll>
+    <Screen scroll centered>
       <View style={styles.header}>
         <Text style={styles.title}>Verify your email</Text>
         <Text style={styles.subtitle}>
@@ -156,7 +156,6 @@ export default function VerifyEmailScreen() {
 const styles = StyleSheet.create({
   header: {
     gap: spacing.xs,
-    marginTop: spacing.xl,
     marginBottom: spacing.xl,
   },
   title: {

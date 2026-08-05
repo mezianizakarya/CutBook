@@ -20,7 +20,7 @@ export default function WelcomeScreen() {
   }
 
   return (
-    <Screen>
+    <Screen centered>
       <View style={styles.container}>
         <View style={styles.hero}>
           <View style={styles.logoBadge}>

@@ -39,7 +39,7 @@ export default function ChooseRoleScreen() {
   }
 
   return (
-    <Screen scroll>
+    <Screen scroll centered>
       <View style={styles.header}>
         <Text style={styles.title}>How will you use CutBook?</Text>
         <Text style={styles.subtitle}>
@@ -77,7 +77,6 @@ export default function ChooseRoleScreen() {
 const styles = StyleSheet.create({
   header: {
     gap: spacing.xs,
-    marginTop: spacing.xl,
     marginBottom: spacing.xl,
   },
   title: {
