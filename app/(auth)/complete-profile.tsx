@@ -8,6 +8,7 @@ import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
 import { FullScreenLoader } from "@/lib/auth";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { supabase } from "@/lib/supabase";
 import { colors, spacing } from "@/lib/theme";
 
 export default function CompleteProfileScreen() {
@@ -40,6 +41,10 @@ export default function CompleteProfileScreen() {
       setError("Please enter your full name.");
       return;
     }
+    if (!phone.trim()) {
+      setError("Please enter your phone number.");
+      return;
+    }
     setSubmitting(true);
     try {
       await currentUser.update({
@@ -49,6 +54,13 @@ export default function CompleteProfileScreen() {
       await currentUser.updateMetadata({
         unsafeMetadata: { phone: phone.trim() || undefined, profileCompleted: true },
       });
+      const { error: dbError } = await supabase
+        .from("profiles")
+        .update({ phone: phone.trim() })
+        .eq("id", currentUser.id);
+      if (dbError) {
+        console.warn("Failed to sync phone to Supabase:", dbError.message);
+      }
       router.replace("/loading");
     } catch (e) {
       setError(errorMessageFromUnknown(e));
@@ -89,7 +101,7 @@ export default function CompleteProfileScreen() {
         </View>
 
         <TextField
-          label="Phone (optional)"
+          label="Phone"
           value={phone}
           onChangeText={setPhone}
           placeholder="+1 555 000 1234"

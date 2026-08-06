@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
+import { DeleteAccountButton } from "@/components/ui/DeleteAccountButton";
 import { ProfilePicture } from "@/components/ui/ProfilePicture";
 import { ProfileSummary } from "@/components/ui/ProfileSummary";
 import { Screen } from "@/components/ui/Screen";
@@ -20,6 +21,7 @@ export function AccountScreen({ role }: AccountScreenProps) {
       </View>
       <View style={styles.footer}>
         <SignOutButton />
+        <DeleteAccountButton />
       </View>
     </Screen>
   );
@@ -34,5 +36,6 @@ const styles = StyleSheet.create({
   footer: {
     marginTop: "auto",
     paddingBottom: spacing.xl,
+    gap: spacing.md,
   },
 });

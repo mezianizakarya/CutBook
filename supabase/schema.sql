@@ -1,0 +1,17 @@
+-- CutBook: Supabase schema for Clerk (third-party auth) + RLS.
+--
+-- The canonical, production schema lives in:
+--   supabase/migrations/20260806000000_initial_schema.sql
+--
+-- Apply it via:
+--   Supabase Dashboard -> SQL Editor -> paste the migration file contents, or
+--   `supabase db push` once the Supabase CLI is set up.
+--
+-- Identity notes (from the migration header):
+--   * Clerk user IDs are strings like "user_2abc..." (NOT UUIDs), so the
+--     ownership columns are TEXT and policies compare against
+--     auth.jwt() ->> 'sub' instead of auth.uid().
+--   * profiles.id = Clerk "sub". Profiles are upserted by a Clerk webhook ->
+--     Edge Function (service_role); the client never inserts/deletes them.
+--   * profiles.role is the authoritative role for RLS. Clerk unsafeMetadata.role
+--     remains only for client-side routing and is never trusted by the DB.

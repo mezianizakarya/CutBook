@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Screen } from "@/components/ui/Screen";
 import { FullScreenLoader } from "@/lib/auth";
-import { ROLES, ROLE_DESCRIPTIONS, ROLE_LABELS, type Role } from "@/lib/roles";
+import { SELF_SELECTABLE_ROLES, ROLE_DESCRIPTIONS, ROLE_LABELS, type Role } from "@/lib/roles";
 import { colors, radius, spacing } from "@/lib/theme";
 
 export default function ChooseRoleScreen() {
@@ -31,7 +31,9 @@ export default function ChooseRoleScreen() {
   async function handleSelect(role: Role) {
     setSubmitting(role);
     try {
-      await currentUser.updateMetadata({ unsafeMetadata: { role } });
+      await currentUser.updateMetadata({
+        unsafeMetadata: { role, roleUpdatedAt: Date.now() },
+      });
       router.replace("/complete-profile");
     } finally {
       setSubmitting(null);
@@ -48,7 +50,7 @@ export default function ChooseRoleScreen() {
       </View>
 
       <View style={styles.list}>
-        {ROLES.map((role) => {
+        {SELF_SELECTABLE_ROLES.map((role) => {
           const isSelected = submitting === role;
           return (
             <Pressable

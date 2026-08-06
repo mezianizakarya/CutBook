@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { FullScreenLoader, emailIsVerified } from "@/lib/auth";
 import { ROLE_ROUTES } from "@/lib/roles";
+import { useReconciledRole } from "@/lib/role-sync";
 
 /**
  * Central authentication router. Every entry point (app launch, sign-in,
@@ -14,9 +15,10 @@ export default function LoadingScreen() {
   const { isLoaded, isSignedIn } = useAuth();
   const { isLoaded: userLoaded, user } = useUser();
   const router = useRouter();
+  const { role, loading: roleLoading } = useReconciledRole();
 
   useEffect(() => {
-    if (!isLoaded || !userLoaded) {
+    if (!isLoaded || !userLoaded || roleLoading) {
       return;
     }
     if (!isSignedIn || !user) {
@@ -31,7 +33,6 @@ export default function LoadingScreen() {
       router.replace("/verify-email");
       return;
     }
-    const role = user.unsafeMetadata?.role;
     if (!role) {
       router.replace("/choose-role");
       return;
@@ -41,7 +42,7 @@ export default function LoadingScreen() {
       return;
     }
     router.replace(ROLE_ROUTES[role]);
-  }, [isLoaded, isSignedIn, userLoaded, user, router]);
+  }, [isLoaded, isSignedIn, userLoaded, user, router, role, roleLoading]);
 
   return <FullScreenLoader />;
 }

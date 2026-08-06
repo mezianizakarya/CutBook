@@ -3,6 +3,7 @@ import type { Role } from "./roles";
 declare global {
   interface UserUnsafeMetadata {
     role?: Role;
+    roleUpdatedAt?: number;
     profileCompleted?: boolean;
     disabled?: boolean;
     phone?: string;
@@ -12,6 +13,7 @@ declare global {
 
 export interface OnboardingMetadata {
   role?: Role;
+  roleUpdatedAt?: number;
   profileCompleted?: boolean;
   disabled?: boolean;
   phone?: string;

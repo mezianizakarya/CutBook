@@ -3,8 +3,9 @@ import { useRouter } from "expo-router";
 import { useEffect, type ReactNode } from "react";
 import { ActivityIndicator, View } from "react-native";
 
+import { useReconciledRole } from "./role-sync";
 import { colors } from "./theme";
-import type { Role } from "./roles";
+import { ROLE_ROUTES, type Role } from "./roles";
 
 export function emailIsVerified(user: {
   primaryEmailAddress?: { verification?: { status?: string | null } | null } | null;
@@ -35,9 +36,11 @@ export function RoleGuard({ role, children }: { role: Role; children: ReactNode 
   const { isLoaded, isSignedIn } = useAuth();
   const { isLoaded: userLoaded, user } = useUser();
   const router = useRouter();
+  const { role: effectiveRole, loading: roleLoading } = useReconciledRole();
 
-  const ready = isLoaded && userLoaded;
+  const ready = isLoaded && userLoaded && !roleLoading;
   const valid = isSignedIn && user !== null;
+  const profileCompleted = user?.unsafeMetadata?.profileCompleted === true;
 
   useEffect(() => {
     if (!ready) return;
@@ -53,27 +56,24 @@ export function RoleGuard({ role, children }: { role: Role; children: ReactNode 
       router.replace("/unauthorized");
       return;
     }
-    if (!user.unsafeMetadata?.role) {
+    if (!effectiveRole) {
       router.replace("/choose-role");
       return;
     }
-    if (user.unsafeMetadata?.role !== role) {
-      router.replace("/unauthorized");
+    if (effectiveRole !== role) {
+      router.replace(ROLE_ROUTES[effectiveRole]);
       return;
     }
-    if (!user.unsafeMetadata?.profileCompleted) {
+    if (!profileCompleted) {
       router.replace("/complete-profile");
       return;
     }
-  }, [ready, valid, user, role, router]);
+  }, [ready, valid, user, role, router, effectiveRole, profileCompleted]);
 
   if (!ready || !valid) {
     return <FullScreenLoader />;
   }
-  if (
-    user.unsafeMetadata?.role !== role ||
-    !user.unsafeMetadata?.profileCompleted
-  ) {
+  if (effectiveRole !== role || !profileCompleted) {
     return null;
   }
   return <>{children}</>;

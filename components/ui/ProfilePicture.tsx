@@ -14,9 +14,20 @@ import {
 
 import { Avatar } from "@/components/ui/Avatar";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
 
 const AVATAR_SIZE = 96;
+
+async function syncAvatarUrl(user: { id: string; hasImage: boolean; imageUrl: string }) {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: user.hasImage ? user.imageUrl : null })
+    .eq("id", user.id);
+  if (error) {
+    console.warn("Failed to sync avatar_url to Supabase:", error.message);
+  }
+}
 
 export function ProfilePicture() {
   const { user } = useUser();
@@ -29,6 +40,9 @@ export function ProfilePicture() {
     try {
       await user?.setProfileImage({ file });
       await user?.reload();
+      if (user) {
+        await syncAvatarUrl(user);
+      }
     } catch (e) {
       setError(errorMessageFromUnknown(e));
     } finally {
@@ -67,6 +81,9 @@ export function ProfilePicture() {
     try {
       await user?.setProfileImage({ file: null });
       await user?.reload();
+      if (user) {
+        await syncAvatarUrl(user);
+      }
     } catch (e) {
       setError(errorMessageFromUnknown(e));
     } finally {

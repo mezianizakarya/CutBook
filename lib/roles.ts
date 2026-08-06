@@ -2,6 +2,9 @@ export type Role = "customer" | "barber" | "owner" | "admin";
 
 export const ROLES: Role[] = ["customer", "barber", "owner", "admin"];
 
+/** Roles a user may pick for themselves. `admin` is granted only via Supabase. */
+export const SELF_SELECTABLE_ROLES: Role[] = ["customer", "barber", "owner"];
+
 export const ROLE_LABELS: Record<Role, string> = {
   customer: "Customer",
   barber: "Barber",
