@@ -11,6 +11,8 @@ type TextFieldProps = {
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
   keyboardType?: "default" | "email-address" | "numeric" | "phone-pad";
   error?: string | null;
+  /** Text rendered inside the left edge of the input, e.g. "@" for a username. */
+  prefix?: string;
 };
 
 export function TextField({
@@ -22,21 +24,25 @@ export function TextField({
   autoCapitalize = "none",
   keyboardType = "default",
   error,
+  prefix,
 }: TextFieldProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={[styles.input, !!error && styles.inputError]}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={colors.muted}
-        secureTextEntry={secureTextEntry}
-        autoCapitalize={autoCapitalize}
-        autoCorrect={false}
-        keyboardType={keyboardType}
-      />
+      <View style={[styles.inputRow, !!error && styles.inputRowError]}>
+        {!!prefix && <Text style={styles.prefix}>{prefix}</Text>}
+        <TextInput
+          style={styles.input}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={colors.muted}
+          secureTextEntry={secureTextEntry}
+          autoCapitalize={autoCapitalize}
+          autoCorrect={false}
+          keyboardType={keyboardType}
+        />
+      </View>
       {!!error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
@@ -51,18 +57,29 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: colors.text,
   },
-  input: {
+  inputRow: {
     height: 50,
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
-    fontSize: 16,
-    color: colors.text,
     backgroundColor: colors.surface,
   },
-  inputError: {
+  inputRowError: {
     borderColor: colors.danger,
+  },
+  prefix: {
+    fontSize: 16,
+    color: colors.muted,
+    marginRight: spacing.xs,
+  },
+  input: {
+    flex: 1,
+    height: "100%",
+    fontSize: 16,
+    color: colors.text,
   },
   error: {
     fontSize: 13,

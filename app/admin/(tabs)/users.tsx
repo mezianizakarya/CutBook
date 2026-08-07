@@ -1,4 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useUser } from "@clerk/expo";
+import * as Clipboard from "expo-clipboard";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -24,16 +26,21 @@ import { errorMessageFromUnknown } from "@/lib/errors";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/roles";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
+import { stripAtPrefix } from "@/lib/username";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type ProfileRow = {
   id: string;
   email: string | null;
+  username: string | null;
   first_name: string | null;
   last_name: string | null;
   avatar_url: string | null;
+  phone: string | null;
   role: Role | null;
   account_status: "active" | "deleted";
   created_at: string | null;
+  last_active_at: string | null;
 };
 
 type StatusFilter = "all" | "active" | "deleted";
@@ -42,12 +49,32 @@ const STATUS_FILTERS: StatusFilter[] = ["all", "active", "deleted"];
 
 type RoleFilter = "all" | Role;
 
+const PAGE_SIZE = 50;
+
+const PROFILE_SELECT =
+  "id, email, username, first_name, last_name, avatar_url, phone, role, account_status, created_at, last_active_at";
+
 function fullName(row: ProfileRow): string {
   const name = [row.first_name ?? "", row.last_name ?? ""]
     .filter((part) => part.length > 0)
     .join(" ")
     .trim();
   return name || "—";
+}
+
+function formatDate(value: string | null): string {
+  if (!value) {
+    return "—";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+  return date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function useSheetDrag(onClose: () => void) {
@@ -100,6 +127,8 @@ export default function UsersScreen() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selected, setSelected] = useState<ProfileRow | null>(null);
   const [removing, setRemoving] = useState(false);
   const [notice, setNotice] = useState<{
@@ -128,17 +157,45 @@ export default function UsersScreen() {
     setError(null);
     const { data, error } = await supabase
       .from("profiles")
-      .select(
-        "id, email, first_name, last_name, avatar_url, role, account_status, created_at"
-      )
-      .order("created_at", { ascending: false });
+      .select(PROFILE_SELECT)
+      .order("created_at", { ascending: false })
+      .range(0, PAGE_SIZE - 1);
     if (error) {
       setError(errorMessageFromUnknown(error));
       setProfiles((previous) => previous ?? []);
       return;
     }
-    setProfiles((data ?? []) as unknown as ProfileRow[]);
+    const rows = (data ?? []) as unknown as ProfileRow[];
+    setProfiles(rows);
+    setHasMore(rows.length === PAGE_SIZE);
   }, []);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) {
+      return;
+    }
+    setLoadingMore(true);
+    const start = profiles?.length ?? 0;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(PROFILE_SELECT)
+      .order("created_at", { ascending: false })
+      .range(start, start + PAGE_SIZE - 1);
+    if (error) {
+      setError(errorMessageFromUnknown(error));
+    } else {
+      const rows = (data ?? []) as unknown as ProfileRow[];
+      setProfiles((previous) => {
+        const existing = new Set((previous ?? []).map((row) => row.id));
+        return [
+          ...(previous ?? []),
+          ...rows.filter((row) => !existing.has(row.id)),
+        ];
+      });
+      setHasMore(rows.length === PAGE_SIZE);
+    }
+    setLoadingMore(false);
+  }, [loadingMore, hasMore, profiles?.length]);
 
   useFocusEffect(
     useCallback(() => {
@@ -172,10 +229,22 @@ export default function UsersScreen() {
     [profiles]
   );
 
+  const roleCounts = useMemo(() => {
+    const counts: Record<Role, number> = Object.fromEntries(
+      ROLES.map((role) => [role, 0])
+    ) as Record<Role, number>;
+    for (const row of profiles ?? []) {
+      if (row.role) {
+        counts[row.role] += 1;
+      }
+    }
+    return counts;
+  }, [profiles]);
+
   const filtered = useMemo(() => {
     const rows = profiles ?? [];
-    const q = query.trim().toLowerCase();
-    return rows.filter((row) => {
+    const q = stripAtPrefix(query).toLowerCase();
+    const matched = rows.filter((row) => {
       if (statusFilter !== "all" && row.account_status !== statusFilter) {
         return false;
       }
@@ -187,10 +256,20 @@ export default function UsersScreen() {
       }
       return (
         row.email?.toLowerCase().includes(q) ||
+        row.username?.toLowerCase().includes(q) ||
         `${row.first_name ?? ""} ${row.last_name ?? ""}`.toLowerCase().includes(q)
       );
     });
+    return matched;
   }, [profiles, query, statusFilter, roleFilter]);
+
+  const hasActiveFilters =
+    query.trim() !== "" || statusFilter !== "all" || roleFilter !== "all";
+
+  function resetFilters() {
+    setStatusFilter("all");
+    setRoleFilter("all");
+  }
 
   function isLastActiveAdmin(row: ProfileRow): boolean {
     return (
@@ -333,22 +412,34 @@ export default function UsersScreen() {
           </Text>
         </View>
       ) : (
-        <TextInput
-          style={styles.search}
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search name or email"
-          placeholderTextColor={colors.muted}
-          autoCapitalize="none"
-          autoCorrect={false}
-          clearButtonMode="while-editing"
-        />
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.search}
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search name, username, or email"
+            placeholderTextColor={colors.muted}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {query.length > 0 && (
+            <Pressable
+              onPress={() => setQuery("")}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+              style={styles.clearButton}
+            >
+              <Ionicons name="close" size={18} color={colors.muted} />
+            </Pressable>
+          )}
+        </View>
       )}
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={[styles.chipsScroll, styles.chipsScrollFirst]}
+        style={styles.chipsScroll}
         contentContainerStyle={styles.chipsRow}
       >
         {STATUS_FILTERS.map((filter) => {
@@ -371,7 +462,7 @@ export default function UsersScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={styles.chipsScroll}
+        style={[styles.chipsScroll, styles.chipsScrollLast]}
         contentContainerStyle={styles.chipsRow}
       >
         {(["all", ...ROLES] as RoleFilter[]).map((role) => {
@@ -383,7 +474,9 @@ export default function UsersScreen() {
               style={[styles.chip, isActive && styles.chipActive]}
             >
               <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
-                {role === "all" ? "All roles" : ROLE_LABELS[role]}
+                {role === "all"
+                  ? "All roles"
+                  : `${ROLE_LABELS[role]} (${roleCounts[role]})`}
               </Text>
             </Pressable>
           );
@@ -412,8 +505,34 @@ export default function UsersScreen() {
             <Text style={styles.emptySubtitle}>
               Try a different search or filter.
             </Text>
+            {hasActiveFilters && (
+              <Button
+                title="Reset filters"
+                variant="outline"
+                onPress={resetFilters}
+                style={styles.resetButton}
+              />
+            )}
           </View>
         }
+        ListFooterComponent={
+          hasMore ? (
+            <View style={styles.listFooter}>
+              {loadingMore ? (
+                <ActivityIndicator color={colors.primary} />
+              ) : (
+                <Button
+                  title="Load more"
+                  variant="outline"
+                  onPress={loadMore}
+                  style={styles.loadMoreButton}
+                />
+              )}
+            </View>
+          ) : null
+        }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.3}
         renderItem={({ item }) => (
           <Pressable
             onPress={() => setSelected(item)}
@@ -424,8 +543,8 @@ export default function UsersScreen() {
               <Text style={styles.rowName} numberOfLines={1}>
                 {fullName(item)}
               </Text>
-              <Text style={styles.rowEmail} numberOfLines={1}>
-                {item.email ?? "No email"}
+              <Text style={styles.rowUsername} numberOfLines={1}>
+                {item.username ?? "No username"}
               </Text>
             </View>
             <View style={styles.rowBadges}>
@@ -462,6 +581,8 @@ export default function UsersScreen() {
         visible={selected !== null}
         transparent
         animationType="slide"
+        statusBarTranslucent
+        navigationBarTranslucent
         onRequestClose={() => setSelected(null)}
       >
         {!!selected && (
@@ -503,12 +624,63 @@ function ActionModal({
   onRestore,
 }: ActionModalProps) {
   const deleted = row.account_status === "deleted";
+  const insets = useSafeAreaInsets();
   const [showingRoles, setShowingRoles] = useState(false);
   const [confirmingRole, setConfirmingRole] = useState<Role | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingRestore, setConfirmingRestore] = useState(false);
+  const [copiedField, setCopiedField] = useState<"email" | "phone" | "username" | null>(null);
+  const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countRef = useRef(5);
+  const [confirmCount, setConfirmCount] = useState(5);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeout.current) {
+        clearTimeout(copyTimeout.current);
+      }
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+    };
+  }, []);
 
   const { translateY, panResponder } = useSheetDrag(onClose);
+
+  async function copyToClipboard(value: string, field: "email" | "phone" | "username") {
+    if (!value) {
+      return;
+    }
+    await Clipboard.setStringAsync(value);
+    setCopiedField(field);
+    if (copyTimeout.current) {
+      clearTimeout(copyTimeout.current);
+    }
+    copyTimeout.current = setTimeout(() => setCopiedField(null), 1500);
+  }
+
+  function cancelCountdown() {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+  }
+
+  function startCountdown() {
+    countRef.current = 5;
+    setConfirmCount(5);
+    cancelCountdown();
+    countdownRef.current = setInterval(() => {
+      countRef.current -= 1;
+      setConfirmCount(countRef.current);
+      if (countRef.current <= 0) {
+        cancelCountdown();
+        setConfirmingDelete(false);
+        setConfirmingRestore(false);
+      }
+    }, 1000);
+  }
 
   function handleRoleBadgePress() {
     if (showingRoles) {
@@ -525,23 +697,28 @@ function ActionModal({
     setShowingRoles(true);
     setConfirmingDelete(false);
     setConfirmingRestore(false);
+    cancelCountdown();
   }
 
   function handleDeletePress() {
     if (confirmingDelete) {
       setConfirmingDelete(false);
+      cancelCountdown();
       onDelete(row);
     } else {
       setConfirmingDelete(true);
+      startCountdown();
     }
   }
 
   function handleRestorePress() {
     if (confirmingRestore) {
       setConfirmingRestore(false);
+      cancelCountdown();
       onRestore(row);
     } else {
       setConfirmingRestore(true);
+      startCountdown();
     }
   }
 
@@ -549,7 +726,13 @@ function ActionModal({
     <Pressable style={styles.modalBackdrop} onPress={onClose}>
       <Pressable onPress={() => undefined}>
         <Animated.View
-          style={[styles.modalCard, { transform: [{ translateY }] }]}
+          style={[
+            styles.modalCard,
+            {
+              transform: [{ translateY }],
+              paddingBottom: spacing.xl + insets.bottom,
+            },
+          ]}
         >
           <View style={styles.dragHandleArea} {...panResponder.panHandlers}>
             <View style={styles.dragHandle} />
@@ -589,8 +772,8 @@ function ActionModal({
                   </Text>
                 </View>
               </View>
-              <Text style={styles.modalEmail} numberOfLines={1}>
-                {row.email ?? "No email"}
+              <Text style={styles.modalUsername} numberOfLines={1}>
+                {row.username ?? "No username"}
               </Text>
             </View>
           </View>
@@ -651,7 +834,7 @@ function ActionModal({
                 />
               ) : deleted ? (
                 <Button
-                  title={confirmingRestore ? "Confirm restore" : "Restore account"}
+                  title={confirmingRestore ? `Confirm restore (${confirmCount})` : "Restore account"}
                   onPress={handleRestorePress}
                   variant={confirmingRestore ? "primary" : "successOutline"}
                   loading={removing}
@@ -663,7 +846,7 @@ function ActionModal({
                 />
               ) : (
                 <Button
-                  title={confirmingDelete ? "Confirm delete" : "Delete account"}
+                  title={confirmingDelete ? `Confirm delete (${confirmCount})` : "Delete account"}
                   onPress={handleDeletePress}
                   variant={confirmingDelete ? "danger" : "dangerOutline"}
                   loading={removing}
@@ -676,10 +859,12 @@ function ActionModal({
                 onPress={() => {
                   if (confirmingRestore) {
                     setConfirmingRestore(false);
+                    cancelCountdown();
                     return;
                   }
                   if (confirmingDelete) {
                     setConfirmingDelete(false);
+                    cancelCountdown();
                     return;
                   }
                   if (confirmingRole) {
@@ -700,9 +885,70 @@ function ActionModal({
             </Text>
           )}
 
+          <View style={styles.detailsCard}>
+            {row.username ? (
+              <Pressable
+                onPress={() => copyToClipboard(row.username ?? "", "username")}
+                style={styles.detailRow}
+              >
+                <Text style={styles.detailLabel}>Username</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>
+                  {row.username}
+                </Text>
+                {copiedField === "username" ? (
+                  <Text style={styles.copiedText}>Copied</Text>
+                ) : (
+                  <Text style={styles.copyHint}>Copy</Text>
+                )}
+              </Pressable>
+            ) : null}
+            <Pressable
+              onPress={() => copyToClipboard(row.email ?? "", "email")}
+              style={styles.detailRow}
+            >
+              <Text style={styles.detailLabel}>Email</Text>
+              <Text style={styles.detailValue} numberOfLines={1}>
+                {row.email ?? "No email"}
+              </Text>
+              {copiedField === "email" ? (
+                <Text style={styles.copiedText}>Copied</Text>
+              ) : (
+                <Text style={styles.copyHint}>Copy</Text>
+              )}
+            </Pressable>
+            {row.phone ? (
+              <Pressable
+                onPress={() => copyToClipboard(row.phone ?? "", "phone")}
+                style={styles.detailRow}
+              >
+                <Text style={styles.detailLabel}>Phone</Text>
+                <Text style={styles.detailValue} numberOfLines={1}>
+                  {row.phone}
+                </Text>
+                {copiedField === "phone" ? (
+                  <Text style={styles.copiedText}>Copied</Text>
+                ) : (
+                  <Text style={styles.copyHint}>Copy</Text>
+                )}
+              </Pressable>
+            ) : null}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Member since</Text>
+              <Text style={styles.detailValue}>
+                {formatDate(row.created_at)}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Last active</Text>
+              <Text style={styles.detailValue}>
+                {formatDate(row.last_active_at)}
+              </Text>
+            </View>
+          </View>
+
           {deleted ? (
             <Button
-              title={confirmingRestore ? "Confirm restore" : "Restore account"}
+              title={confirmingRestore ? `Confirm restore (${confirmCount})` : "Restore account"}
               onPress={handleRestorePress}
               variant={confirmingRestore ? "primary" : "successOutline"}
               loading={removing}
@@ -714,7 +960,7 @@ function ActionModal({
             />
           ) : (
             <Button
-              title={confirmingDelete ? "Confirm delete" : "Delete account"}
+              title={confirmingDelete ? `Confirm delete (${confirmCount})` : "Delete account"}
               onPress={handleDeletePress}
               variant={confirmingDelete ? "danger" : "dangerOutline"}
               loading={removing}
@@ -728,10 +974,12 @@ function ActionModal({
             onPress={() => {
               if (confirmingRestore) {
                 setConfirmingRestore(false);
+                cancelCountdown();
                 return;
               }
               if (confirmingDelete) {
                 setConfirmingDelete(false);
+                cancelCountdown();
                 return;
               }
               onClose();
@@ -749,6 +997,7 @@ function ActionModal({
 
 const styles = StyleSheet.create({
   screenPadding: {
+    paddingTop: spacing.sm,
     paddingLeft: 14,
     paddingRight: 14,
     paddingBottom: 0,
@@ -800,25 +1049,37 @@ const styles = StyleSheet.create({
   noticeTextRole: {
     color: colors.primaryDark,
   },
+  searchContainer: {
+    marginBottom: spacing.md,
+  },
   search: {
     height: 48,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
+    paddingRight: 44,
     fontSize: 15,
     color: colors.text,
     backgroundColor: colors.surface,
-    marginBottom: spacing.md,
+  },
+  clearButton: {
+    position: "absolute",
+    right: spacing.xs,
+    top: 0,
+    bottom: 0,
+    width: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
   chipsScroll: {
     flexGrow: 0,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
     marginLeft: 0,
     marginRight: -14,
   },
-  chipsScrollFirst: {
-    marginBottom: spacing.sm,
+  chipsScrollLast: {
+    marginBottom: spacing.md,
   },
   chipsRow: {
     flexDirection: "row",
@@ -857,7 +1118,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     gap: spacing.sm,
-    paddingBottom: 90,
+    paddingBottom: 98,
   },
   row: {
     flexDirection: "row",
@@ -881,7 +1142,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.text,
   },
-  rowEmail: {
+  rowUsername: {
     fontSize: 13,
     color: colors.muted,
   },
@@ -917,6 +1178,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.muted,
     textAlign: "center",
+  },
+  resetButton: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.surface,
+  },
+  listFooter: {
+    alignItems: "center",
+    paddingVertical: spacing.md,
+  },
+  loadMoreButton: {
+    backgroundColor: colors.surface,
   },
   modalBackdrop: {
     flex: 1,
@@ -967,9 +1239,52 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: colors.text,
   },
-  modalEmail: {
+  modalUsername: {
     fontSize: 13,
     color: colors.muted,
+  },
+  copiedText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.primaryDark,
+    backgroundColor: colors.primarySoft,
+    paddingVertical: 2,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.full,
+    overflow: "hidden",
+  },
+  copyHint: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.primaryDark,
+    backgroundColor: colors.primarySoft,
+    paddingVertical: 2,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.full,
+    overflow: "hidden",
+  },
+  detailsCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  detailLabel: {
+    width: 110,
+    fontSize: 13,
+    color: colors.muted,
+  },
+  detailValue: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.text,
   },
   statusBadge: {
     paddingVertical: 2,

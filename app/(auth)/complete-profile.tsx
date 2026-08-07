@@ -1,15 +1,22 @@
 import { useUser } from "@clerk/expo";
 import { Redirect, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
+import { PhoneInput } from "@/components/ui/PhoneInput";
 import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
+import { UsernameField } from "@/components/ui/UsernameField";
 import { FullScreenLoader } from "@/lib/auth";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { supabase } from "@/lib/supabase";
 import { colors, spacing } from "@/lib/theme";
+import {
+  isUsernameTaken,
+  suggestUsername,
+  validateUsername,
+} from "@/lib/username";
 
 export default function CompleteProfileScreen() {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -18,8 +25,18 @@ export default function CompleteProfileScreen() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameEdited, setUsernameEdited] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const randomSuffix = useMemo(() => Math.floor(100 + Math.random() * 900), []);
+
+  useEffect(() => {
+    if (!usernameEdited) {
+      setUsername(`${suggestUsername(firstName, lastName)}${randomSuffix}`);
+    }
+  }, [firstName, lastName, usernameEdited, randomSuffix]);
 
   if (!isLoaded) {
     return <FullScreenLoader />;
@@ -37,16 +54,31 @@ export default function CompleteProfileScreen() {
 
   async function handleComplete() {
     setError(null);
+    setUsernameError(null);
     if (!firstName.trim() || !lastName.trim()) {
       setError("Please enter your full name.");
       return;
     }
-    if (!phone.trim()) {
-      setError("Please enter your phone number.");
+    if (phone.replace(/\D/g, "").length < 5) {
+      setError("Please enter a valid phone number.");
+      return;
+    }
+    const chosenUsername = username.trim();
+    if (!chosenUsername) {
+      setError("Please choose a username.");
+      return;
+    }
+    const validationErrors = validateUsername(chosenUsername);
+    if (validationErrors.length > 0) {
+      setError(validationErrors[0]);
       return;
     }
     setSubmitting(true);
     try {
+      if (await isUsernameTaken(chosenUsername)) {
+        setUsernameError("This username is already taken.");
+        return;
+      }
       await currentUser.update({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -56,10 +88,15 @@ export default function CompleteProfileScreen() {
       });
       const { error: dbError } = await supabase
         .from("profiles")
-        .update({ phone: phone.trim() })
+        .update({ phone: phone.trim(), username: chosenUsername })
         .eq("id", currentUser.id);
       if (dbError) {
-        console.warn("Failed to sync phone to Supabase:", dbError.message);
+        const message = dbError.message.toLowerCase();
+        if (message.includes("duplicate") || message.includes("unique")) {
+          setError("This username is already taken.");
+          return;
+        }
+        console.warn("Failed to sync profile to Supabase:", dbError.message);
       }
       router.replace("/loading");
     } catch (e) {
@@ -100,12 +137,21 @@ export default function CompleteProfileScreen() {
           </View>
         </View>
 
-        <TextField
+        <UsernameField
+          label="Username"
+          value={username}
+          onChangeText={(text) => {
+            setUsernameEdited(true);
+            setUsername(text);
+          }}
+          placeholder="janedoe123"
+          error={usernameError}
+        />
+
+        <PhoneInput
           label="Phone"
           value={phone}
-          onChangeText={setPhone}
-          placeholder="+1 555 000 1234"
-          keyboardType="phone-pad"
+          onChangeValue={setPhone}
         />
 
         {error && <Text style={styles.errorText}>{error}</Text>}

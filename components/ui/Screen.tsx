@@ -23,7 +23,7 @@ type ScreenProps = {
 export function Screen({ children, scroll = false, centered = false, style }: ScreenProps) {
   const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
   const hasTabBar = tabBarHeight > 0;
-  const bottomPadding = spacing.lg;
+  const bottomPadding = hasTabBar ? 0 : spacing.lg;
 
   return (
     <SafeAreaView style={styles.safe} edges={hasTabBar ? ["top"] : ["top", "bottom"]}>
