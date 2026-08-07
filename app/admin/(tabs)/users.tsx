@@ -1,11 +1,13 @@
 import { useUser } from "@clerk/expo";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   FlatList,
   Modal,
+  PanResponder,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -48,6 +50,45 @@ function fullName(row: ProfileRow): string {
   return name || "—";
 }
 
+function useSheetDrag(onClose: () => void) {
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_event, gesture) =>
+        gesture.dy > 6 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+      onPanResponderMove: (_event, gesture) => {
+        if (gesture.dy > 0) {
+          translateY.setValue(gesture.dy);
+        }
+      },
+      onPanResponderRelease: (_event, gesture) => {
+        if (gesture.dy > 80) {
+          Animated.timing(translateY, {
+            toValue: 600,
+            duration: 180,
+            useNativeDriver: true,
+          }).start(onClose);
+        } else {
+          Animated.spring(translateY, {
+            toValue: 0,
+            useNativeDriver: true,
+            bounciness: 6,
+          }).start();
+        }
+      },
+      onPanResponderTerminate: () => {
+        Animated.spring(translateY, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      },
+    })
+  ).current;
+
+  return { translateY, panResponder };
+}
+
 export default function UsersScreen() {
   const { user } = useUser();
   const currentUserId = user?.id;
@@ -60,8 +101,28 @@ export default function UsersScreen() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [selected, setSelected] = useState<ProfileRow | null>(null);
-  const [busyRole, setBusyRole] = useState<Role | null>(null);
   const [removing, setRemoving] = useState(false);
+  const [notice, setNotice] = useState<{
+    message: string;
+    tone: "danger" | "success" | "role";
+  } | null>(null);
+  const noticeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function showNotice(message: string, tone: "danger" | "success" | "role") {
+    setNotice({ message, tone });
+    if (noticeTimeout.current) {
+      clearTimeout(noticeTimeout.current);
+    }
+    noticeTimeout.current = setTimeout(() => setNotice(null), 3000);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (noticeTimeout.current) {
+        clearTimeout(noticeTimeout.current);
+      }
+    };
+  }, []);
 
   const load = useCallback(async () => {
     setError(null);
@@ -146,18 +207,18 @@ export default function UsersScreen() {
   }
 
   async function performChangeRole(row: ProfileRow, role: Role) {
-    setBusyRole(role);
     try {
       const { error } = await supabase.from("profiles").update({ role }).eq("id", row.id);
       if (error) {
         throw error;
       }
-      setSelected(null);
+      setSelected((previous) =>
+        previous && previous.id === row.id ? { ...previous, role } : previous
+      );
       await load();
+      showNotice(`${fullName(row)} is now ${ROLE_LABELS[role]}`, "role");
     } catch (e) {
       Alert.alert("Couldn't change role", errorMessageFromUnknown(e));
-    } finally {
-      setBusyRole(null);
     }
   }
 
@@ -179,14 +240,7 @@ export default function UsersScreen() {
       );
       return;
     }
-    Alert.alert(
-      "Change role",
-      `Set ${fullName(row)}'s role to ${ROLE_LABELS[role]}?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Change", style: "destructive", onPress: () => performChangeRole(row, role) },
-      ]
-    );
+    performChangeRole(row, role);
   }
 
   async function performSetDeleted(row: ProfileRow, deleted: boolean) {
@@ -201,6 +255,10 @@ export default function UsersScreen() {
       }
       setSelected(null);
       await load();
+      showNotice(
+        deleted ? `${fullName(row)} deleted` : `${fullName(row)} restored`,
+        deleted ? "danger" : "success"
+      );
     } catch (e) {
       Alert.alert(
         deleted ? "Couldn't delete account" : "Couldn't restore account",
@@ -226,25 +284,11 @@ export default function UsersScreen() {
       );
       return;
     }
-    Alert.alert(
-      "Delete account",
-      `${fullName(row)} will be marked as deleted. Their booking and review history is kept. This can be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: () => performSetDeleted(row, true) },
-      ]
-    );
+    performSetDeleted(row, true);
   }
 
   function handleRestore(row: ProfileRow) {
-    Alert.alert(
-      "Restore account",
-      `Reactivate ${fullName(row)}'s account?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Restore", onPress: () => performSetDeleted(row, false) },
-      ]
-    );
+    performSetDeleted(row, false);
   }
 
   if (loading && !profiles) {
@@ -264,16 +308,42 @@ export default function UsersScreen() {
         </Text>
       </View>
 
-      <TextInput
-        style={styles.search}
-        value={query}
-        onChangeText={setQuery}
-        placeholder="Search name or email"
-        placeholderTextColor={colors.muted}
-        autoCapitalize="none"
-        autoCorrect={false}
-        clearButtonMode="while-editing"
-      />
+      {notice ? (
+        <View
+          style={[
+            styles.notice,
+            notice.tone === "danger"
+              ? styles.noticeDanger
+              : notice.tone === "role"
+                ? styles.noticeRole
+                : styles.noticeSuccess,
+          ]}
+        >
+          <Text
+            style={[
+              styles.noticeText,
+              notice.tone === "danger"
+                ? styles.noticeTextDanger
+                : notice.tone === "role"
+                  ? styles.noticeTextRole
+                  : styles.noticeTextSuccess,
+            ]}
+          >
+            {notice.message}
+          </Text>
+        </View>
+      ) : (
+        <TextInput
+          style={styles.search}
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search name or email"
+          placeholderTextColor={colors.muted}
+          autoCapitalize="none"
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+        />
+      )}
 
       <ScrollView
         horizontal
@@ -326,6 +396,7 @@ export default function UsersScreen() {
         style={styles.list}
         data={filtered}
         keyExtractor={(row) => row.id}
+        showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.listContent}
         refreshControl={
@@ -363,11 +434,25 @@ export default function UsersScreen() {
                   {item.role ? ROLE_LABELS[item.role] : "—"}
                 </Text>
               </View>
-              {item.account_status === "deleted" && (
-                <View style={styles.deletedBadge}>
-                  <Text style={styles.deletedBadgeText}>Deleted</Text>
-                </View>
-              )}
+              <View
+                style={[
+                  styles.statusBadge,
+                  item.account_status === "deleted"
+                    ? styles.statusBadgeDeleted
+                    : styles.statusBadgeActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.statusBadgeText,
+                    item.account_status === "deleted"
+                      ? styles.statusBadgeTextDeleted
+                      : styles.statusBadgeTextActive,
+                  ]}
+                >
+                  {item.account_status === "deleted" ? "Deleted" : "Active"}
+                </Text>
+              </View>
             </View>
           </Pressable>
         )}
@@ -384,7 +469,6 @@ export default function UsersScreen() {
             row={selected}
             isSelf={selected.id === currentUserId}
             isLastActiveAdmin={isLastActiveAdmin(selected)}
-            busyRole={busyRole}
             removing={removing}
             onClose={() => setSelected(null)}
             onChangeRole={handleChangeRole}
@@ -401,7 +485,6 @@ type ActionModalProps = {
   row: ProfileRow;
   isSelf: boolean;
   isLastActiveAdmin: boolean;
-  busyRole: Role | null;
   removing: boolean;
   onClose: () => void;
   onChangeRole: (row: ProfileRow, role: Role) => void;
@@ -413,7 +496,6 @@ function ActionModal({
   row,
   isSelf,
   isLastActiveAdmin,
-  busyRole,
   removing,
   onClose,
   onChangeRole,
@@ -421,79 +503,245 @@ function ActionModal({
   onRestore,
 }: ActionModalProps) {
   const deleted = row.account_status === "deleted";
+  const [showingRoles, setShowingRoles] = useState(false);
+  const [confirmingRole, setConfirmingRole] = useState<Role | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmingRestore, setConfirmingRestore] = useState(false);
+
+  const { translateY, panResponder } = useSheetDrag(onClose);
+
+  function handleRoleBadgePress() {
+    if (showingRoles) {
+      setShowingRoles(false);
+      return;
+    }
+    if (isSelf) {
+      Alert.alert(
+        "Can't change your own role",
+        "Ask another admin to change your role so you don't lock yourself out."
+      );
+      return;
+    }
+    setShowingRoles(true);
+    setConfirmingDelete(false);
+    setConfirmingRestore(false);
+  }
+
+  function handleDeletePress() {
+    if (confirmingDelete) {
+      setConfirmingDelete(false);
+      onDelete(row);
+    } else {
+      setConfirmingDelete(true);
+    }
+  }
+
+  function handleRestorePress() {
+    if (confirmingRestore) {
+      setConfirmingRestore(false);
+      onRestore(row);
+    } else {
+      setConfirmingRestore(true);
+    }
+  }
 
   return (
     <Pressable style={styles.modalBackdrop} onPress={onClose}>
-      <Pressable style={styles.modalCard} onPress={() => undefined}>
-        <View style={styles.modalHeader}>
-          <Avatar fullName={fullName(row)} imageUrl={row.avatar_url} size={48} />
-          <View style={styles.modalHeaderInfo}>
-            <Text style={styles.modalName} numberOfLines={1}>
-              {fullName(row)}
-            </Text>
-            <Text style={styles.modalEmail} numberOfLines={1}>
-              {row.email ?? "No email"}
-            </Text>
+      <Pressable onPress={() => undefined}>
+        <Animated.View
+          style={[styles.modalCard, { transform: [{ translateY }] }]}
+        >
+          <View style={styles.dragHandleArea} {...panResponder.panHandlers}>
+            <View style={styles.dragHandle} />
           </View>
-        </View>
-
-        <Text style={styles.modalSectionTitle}>Role</Text>
-        {isSelf && (
-          <Text style={styles.modalHint}>
-            You can't change your own role here to avoid locking yourself out.
-          </Text>
-        )}
-        <View style={styles.roleList}>
-          {ROLES.map((role) => {
-            const isCurrent = row.role === role;
-            const disabled = isSelf || busyRole !== null;
-            return (
-              <Pressable
-                key={role}
-                disabled={disabled}
-                onPress={() => onChangeRole(row, role)}
-                style={[styles.roleOption, isCurrent && styles.roleOptionActive]}
-              >
-                <Text
-                  style={[styles.roleOptionLabel, isCurrent && styles.roleOptionLabelActive]}
-                >
-                  {ROLE_LABELS[role]}
+          <View style={styles.modalHeader}>
+            <Avatar fullName={fullName(row)} imageUrl={row.avatar_url} size={48} />
+            <View style={styles.modalHeaderInfo}>
+              <View style={styles.modalNameRow}>
+                <Text style={styles.modalName} numberOfLines={1}>
+                  {fullName(row)}
                 </Text>
-                {busyRole === role ? (
-                  <ActivityIndicator size="small" color={colors.primary} />
-                ) : isCurrent ? (
-                  <Text style={styles.roleOptionCurrent}>Current</Text>
-                ) : null}
-              </Pressable>
-            );
-          })}
-        </View>
+                <Pressable
+                  onPress={handleRoleBadgePress}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.roleBadge,
+                    pressed && styles.roleBadgePressed,
+                  ]}
+                >
+                  <Text style={styles.roleBadgeText}>
+                    {row.role ? ROLE_LABELS[row.role] : "—"}
+                  </Text>
+                </Pressable>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    deleted ? styles.statusBadgeDeleted : styles.statusBadgeActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.statusBadgeText,
+                      deleted ? styles.statusBadgeTextDeleted : styles.statusBadgeTextActive,
+                    ]}
+                  >
+                    {deleted ? "Deleted" : "Active"}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.modalEmail} numberOfLines={1}>
+                {row.email ?? "No email"}
+              </Text>
+            </View>
+          </View>
 
-        {isLastActiveAdmin && !deleted && (
-          <Text style={styles.modalHint}>
-            This is the only active admin account on the platform.
-          </Text>
-        )}
+          {showingRoles ? (
+            <>
+              <Text style={styles.rolePickerTitle}>Change role</Text>
+              <View style={styles.roleChipsBleed}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.roleChipsScroll}
+                contentContainerStyle={styles.chipsRow}
+              >
+                {[
+                  ...(row.role ? [row.role] : []),
+                  ...ROLES.filter((role) => role !== row.role),
+                ].map((role) => {
+                  const isCurrent = row.role === role;
+                  const isSelected = confirmingRole === role;
+                  return (
+                    <Pressable
+                      key={role}
+                      onPress={() => {
+                        if (!isCurrent) {
+                          setConfirmingRole(role);
+                        }
+                      }}
+                      accessibilityRole="button"
+                      style={[
+                        styles.chip,
+                        isCurrent && styles.chipRoleCurrent,
+                        isSelected && styles.chipSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.chipLabel,
+                          isCurrent && styles.chipRoleCurrentLabel,
+                          isSelected && styles.chipSelectedLabel,
+                        ]}
+                      >
+                        {ROLE_LABELS[role]}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+              </View>
+              {confirmingRole ? (
+                <Button
+                  title={`Change role to ${ROLE_LABELS[confirmingRole]}`}
+                  onPress={() => {
+                    onChangeRole(row, confirmingRole);
+                    setConfirmingRole(null);
+                  }}
+                  style={[styles.modalActionSpacer, styles.changeRoleButton]}
+                />
+              ) : deleted ? (
+                <Button
+                  title={confirmingRestore ? "Confirm restore" : "Restore account"}
+                  onPress={handleRestorePress}
+                  variant={confirmingRestore ? "primary" : "successOutline"}
+                  loading={removing}
+                  disabled={removing}
+                  style={[
+                    styles.modalActionSpacer,
+                    confirmingRestore && styles.confirmRestoreButton,
+                  ]}
+                />
+              ) : (
+                <Button
+                  title={confirmingDelete ? "Confirm delete" : "Delete account"}
+                  onPress={handleDeletePress}
+                  variant={confirmingDelete ? "danger" : "dangerOutline"}
+                  loading={removing}
+                  disabled={removing || isSelf}
+                  style={styles.modalActionSpacer}
+                />
+              )}
+              <Button
+                title="Cancel"
+                onPress={() => {
+                  if (confirmingRestore) {
+                    setConfirmingRestore(false);
+                    return;
+                  }
+                  if (confirmingDelete) {
+                    setConfirmingDelete(false);
+                    return;
+                  }
+                  if (confirmingRole) {
+                    setConfirmingRole(null);
+                    return;
+                  }
+                  onClose();
+                }}
+                variant="outline"
+                style={styles.cancelButton}
+              />
+            </>
+          ) : (
+            <>
+          {isLastActiveAdmin && !deleted && (
+            <Text style={styles.modalHint}>
+              This is the only active admin account on the platform.
+            </Text>
+          )}
 
-        {deleted ? (
+          {deleted ? (
+            <Button
+              title={confirmingRestore ? "Confirm restore" : "Restore account"}
+              onPress={handleRestorePress}
+              variant={confirmingRestore ? "primary" : "successOutline"}
+              loading={removing}
+              disabled={removing}
+              style={[
+                styles.modalActionSpacer,
+                confirmingRestore && styles.confirmRestoreButton,
+              ]}
+            />
+          ) : (
+            <Button
+              title={confirmingDelete ? "Confirm delete" : "Delete account"}
+              onPress={handleDeletePress}
+              variant={confirmingDelete ? "danger" : "dangerOutline"}
+              loading={removing}
+              disabled={removing || isSelf}
+              style={styles.modalActionSpacer}
+            />
+          )}
+
           <Button
-            title="Restore account"
-            onPress={() => onRestore(row)}
+            title="Cancel"
+            onPress={() => {
+              if (confirmingRestore) {
+                setConfirmingRestore(false);
+                return;
+              }
+              if (confirmingDelete) {
+                setConfirmingDelete(false);
+                return;
+              }
+              onClose();
+            }}
             variant="outline"
-            loading={removing}
-            disabled={removing}
+            style={styles.cancelButton}
           />
-        ) : (
-          <Button
-            title="Delete account"
-            onPress={() => onDelete(row)}
-            variant="danger"
-            loading={removing}
-            disabled={removing || isSelf}
-          />
-        )}
-
-        <Button title="Cancel" onPress={onClose} variant="ghost" />
+            </>
+          )}
+        </Animated.View>
       </Pressable>
     </Pressable>
   );
@@ -503,6 +751,7 @@ const styles = StyleSheet.create({
   screenPadding: {
     paddingLeft: 14,
     paddingRight: 14,
+    paddingBottom: 0,
   },
   header: {
     gap: spacing.xs,
@@ -516,6 +765,40 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 13,
     color: colors.muted,
+  },
+  notice: {
+    height: 48,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.md,
+  },
+  noticeSuccess: {
+    backgroundColor: "#dcfce7",
+    borderColor: colors.success,
+  },
+  noticeDanger: {
+    backgroundColor: "#fee2e2",
+    borderColor: colors.danger,
+  },
+  noticeRole: {
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.primaryDark,
+  },
+  noticeText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  noticeTextSuccess: {
+    color: colors.success,
+  },
+  noticeTextDanger: {
+    color: colors.danger,
+  },
+  noticeTextRole: {
+    color: colors.primaryDark,
   },
   search: {
     height: 48,
@@ -574,7 +857,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     gap: spacing.sm,
-    paddingBottom: spacing.lg,
+    paddingBottom: 90,
   },
   row: {
     flexDirection: "row",
@@ -607,26 +890,18 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   roleBadge: {
-    backgroundColor: colors.primarySoft,
-    paddingVertical: spacing.sm,
+    backgroundColor: "#fef3c7",
+    paddingVertical: 2,
     paddingHorizontal: spacing.sm,
     borderRadius: radius.full,
   },
   roleBadgeText: {
     fontSize: 12,
     fontWeight: "600",
-    color: colors.primary,
+    color: "#b45309",
   },
-  deletedBadge: {
-    backgroundColor: "#fee2e2",
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.full,
-  },
-  deletedBadgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.danger,
+  roleBadgePressed: {
+    opacity: 0.7,
   },
   empty: {
     alignItems: "center",
@@ -645,16 +920,32 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: "transparent",
     justifyContent: "flex-end",
   },
   modalCard: {
     backgroundColor: colors.background,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
-    padding: spacing.lg,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingLeft: 14,
+    paddingRight: 14,
+    paddingTop: spacing.lg,
     paddingBottom: spacing.xl,
     gap: spacing.md,
+  },
+  dragHandleArea: {
+    alignSelf: "center",
+    marginTop: -spacing.md,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.sm,
+  },
+  dragHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: radius.full,
+    backgroundColor: colors.border,
   },
   modalHeader: {
     flexDirection: "row",
@@ -665,7 +956,13 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
   },
+  modalNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
   modalName: {
+    flexShrink: 1,
     fontSize: 17,
     fontWeight: "700",
     color: colors.text,
@@ -674,46 +971,66 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.muted,
   },
-  modalSectionTitle: {
-    fontSize: 13,
+  statusBadge: {
+    paddingVertical: 2,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.full,
+  },
+  statusBadgeText: {
+    fontSize: 12,
     fontWeight: "600",
-    color: colors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginTop: spacing.sm,
+  },
+  statusBadgeActive: {
+    backgroundColor: "#dcfce7",
+  },
+  statusBadgeTextActive: {
+    color: colors.success,
+  },
+  statusBadgeDeleted: {
+    backgroundColor: "#fee2e2",
+  },
+  statusBadgeTextDeleted: {
+    color: colors.danger,
   },
   modalHint: {
     fontSize: 12,
     color: colors.muted,
   },
-  roleList: {
-    gap: spacing.sm,
-  },
-  roleOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+  cancelButton: {
     backgroundColor: colors.surface,
   },
-  roleOptionActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySoft,
+  changeRoleButton: {
+    backgroundColor: colors.primaryDark,
   },
-  roleOptionLabel: {
-    fontSize: 15,
-    fontWeight: "600",
+  confirmRestoreButton: {
+    backgroundColor: colors.success,
+  },
+  modalActionSpacer: {
+    marginBottom: -spacing.sm,
+  },
+  rolePickerTitle: {
+    fontSize: 17,
+    fontWeight: "700",
     color: colors.text,
   },
-  roleOptionLabelActive: {
-    color: colors.primary,
+  roleChipsBleed: {
+    marginRight: -14,
   },
-  roleOptionCurrent: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.primary,
+  roleChipsScroll: {
+    flexGrow: 0,
+  },
+  chipRoleCurrent: {
+    backgroundColor: "#fef3c7",
+    borderColor: "#b45309",
+  },
+  chipRoleCurrentLabel: {
+    color: "#b45309",
+  },
+  chipSelected: {
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.primaryDark,
+  },
+  chipSelectedLabel: {
+    color: colors.primaryDark,
   },
 });

@@ -23,6 +23,7 @@ type ScreenProps = {
 export function Screen({ children, scroll = false, centered = false, style }: ScreenProps) {
   const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
   const hasTabBar = tabBarHeight > 0;
+  const bottomPadding = spacing.lg;
 
   return (
     <SafeAreaView style={styles.safe} edges={hasTabBar ? ["top"] : ["top", "bottom"]}>
@@ -34,7 +35,7 @@ export function Screen({ children, scroll = false, centered = false, style }: Sc
           <ScrollView
             contentContainerStyle={[
               styles.scrollContent,
-              { paddingBottom: spacing.lg + tabBarHeight },
+              { paddingBottom: bottomPadding },
             ]}
             keyboardShouldPersistTaps="handled"
           >
@@ -47,7 +48,7 @@ export function Screen({ children, scroll = false, centered = false, style }: Sc
             style={[
               styles.content,
               centered && styles.centered,
-              { paddingBottom: spacing.lg + tabBarHeight },
+              { paddingBottom: bottomPadding },
               style,
             ]}
           >

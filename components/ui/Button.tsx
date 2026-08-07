@@ -1,13 +1,14 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from "react-native";
 
 import { colors, radius, spacing } from "@/lib/theme";
 
 type ButtonProps = {
   title: string;
   onPress: () => void;
-  variant?: "primary" | "outline" | "ghost" | "danger";
+  variant?: "primary" | "outline" | "ghost" | "danger" | "dangerOutline" | "successOutline";
   loading?: boolean;
   disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function Button({
@@ -16,6 +17,7 @@ export function Button({
   variant = "primary",
   loading = false,
   disabled = false,
+  style,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
   const background =
@@ -24,6 +26,15 @@ export function Button({
       : variant === "danger"
         ? colors.danger
         : "transparent";
+
+  const labelColor =
+    variant === "primary" || variant === "danger"
+      ? colors.white
+      : variant === "dangerOutline" || variant === "successOutline"
+        ? variant === "dangerOutline"
+          ? colors.danger
+          : colors.success
+        : colors.primary;
 
   return (
     <Pressable
@@ -34,22 +45,17 @@ export function Button({
         styles.base,
         { backgroundColor: background },
         variant === "outline" && styles.outline,
+        variant === "dangerOutline" && styles.dangerOutline,
+        variant === "successOutline" && styles.successOutline,
+        style,
         pressed && styles.pressed,
         isDisabled && styles.disabled,
       ]}
     >
       {loading ? (
-        <ActivityIndicator
-          color={variant === "primary" || variant === "danger" ? colors.white : colors.primary}
-        />
+        <ActivityIndicator color={labelColor} />
       ) : (
-        <Text
-          style={[
-            styles.label,
-            variant === "outline" && styles.outlineLabel,
-            variant === "ghost" && styles.ghostLabel,
-          ]}
-        >
+        <Text style={[styles.label, { color: labelColor }]}>
           {title}
         </Text>
       )}
@@ -69,6 +75,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  dangerOutline: {
+    borderWidth: 1,
+    borderColor: colors.danger,
+    backgroundColor: colors.surface,
+  },
+  successOutline: {
+    borderWidth: 1,
+    borderColor: colors.success,
+    backgroundColor: colors.surface,
+  },
   pressed: {
     opacity: 0.8,
   },
@@ -79,11 +95,5 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     fontWeight: "600",
-  },
-  outlineLabel: {
-    color: colors.primary,
-  },
-  ghostLabel: {
-    color: colors.primary,
   },
 });

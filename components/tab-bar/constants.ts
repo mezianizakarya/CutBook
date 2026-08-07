@@ -3,7 +3,7 @@ export const TAB_BAR = {
   /** Height of the floating capsule. */
   height: 60,
   /** Horizontal margin from the screen edges. */
-  horizontalMargin: 20,
+  horizontalMargin: 14,
   /** Gap between the screen content and the top of the capsule. */
   topMargin: 12,
   /** Gap between the capsule and the safe area bottom edge. */
