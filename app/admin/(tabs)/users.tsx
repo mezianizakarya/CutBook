@@ -8,6 +8,7 @@ import {
   Modal,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -255,7 +256,7 @@ export default function UsersScreen() {
   }
 
   return (
-    <Screen>
+    <Screen style={styles.screenPadding}>
       <View style={styles.header}>
         <Text style={styles.title}>Users</Text>
         <Text style={styles.subtitle}>
@@ -274,7 +275,12 @@ export default function UsersScreen() {
         clearButtonMode="while-editing"
       />
 
-      <View style={styles.chips}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={[styles.chipsScroll, styles.chipsScrollFirst]}
+        contentContainerStyle={styles.chipsRow}
+      >
         {STATUS_FILTERS.map((filter) => {
           const isActive = statusFilter === filter;
           return (
@@ -284,15 +290,20 @@ export default function UsersScreen() {
               style={[styles.chip, isActive && styles.chipActive]}
             >
               <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
-                {filter === "all" ? "All" : filter === "active" ? "Active" : "Deleted"} (
+                {filter === "all" ? "All users" : filter === "active" ? "Active" : "Deleted"} (
                 {counts[filter]})
               </Text>
             </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
 
-      <View style={styles.chips}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.chipsScroll}
+        contentContainerStyle={styles.chipsRow}
+      >
         {(["all", ...ROLES] as RoleFilter[]).map((role) => {
           const isActive = roleFilter === role;
           return (
@@ -307,7 +318,7 @@ export default function UsersScreen() {
             </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
 
       {!!error && <Text style={styles.error}>{error}</Text>}
 
@@ -489,6 +500,10 @@ function ActionModal({
 }
 
 const styles = StyleSheet.create({
+  screenPadding: {
+    paddingLeft: 14,
+    paddingRight: 14,
+  },
   header: {
     gap: spacing.xs,
     marginBottom: spacing.md,
@@ -513,11 +528,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     marginBottom: spacing.md,
   },
-  chips: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
+  chipsScroll: {
+    flexGrow: 0,
     marginBottom: spacing.md,
+    marginLeft: 0,
+    marginRight: -14,
+  },
+  chipsScrollFirst: {
+    marginBottom: spacing.sm,
+  },
+  chipsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingRight: 6,
   },
   chip: {
     paddingVertical: spacing.sm,
@@ -584,7 +608,7 @@ const styles = StyleSheet.create({
   },
   roleBadge: {
     backgroundColor: colors.primarySoft,
-    paddingVertical: 2,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
     borderRadius: radius.full,
   },
