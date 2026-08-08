@@ -83,8 +83,19 @@ export default function CompleteProfileScreen() {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
       });
+      const role = currentUser.unsafeMetadata?.role;
+      const onboardingStep =
+        role === "barber"
+          ? "professional"
+          : role === "owner"
+            ? "shop"
+            : "complete";
       await currentUser.updateMetadata({
-        unsafeMetadata: { phone: phone.trim() || undefined, profileCompleted: true },
+        unsafeMetadata: {
+          phone: phone.trim() || undefined,
+          profileCompleted: true,
+          onboardingStep,
+        },
       });
       const { error: dbError } = await supabase
         .from("profiles")
@@ -98,7 +109,13 @@ export default function CompleteProfileScreen() {
         }
         console.warn("Failed to sync profile to Supabase:", dbError.message);
       }
-      router.replace("/loading");
+      router.replace(
+        role === "barber"
+          ? "/onboarding/barber-professional"
+          : role === "owner"
+            ? "/onboarding/owner-shop"
+            : "/loading"
+      );
     } catch (e) {
       setError(errorMessageFromUnknown(e));
     } finally {

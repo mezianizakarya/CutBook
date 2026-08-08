@@ -17,10 +17,19 @@ type ScreenProps = {
   children: ReactNode;
   scroll?: boolean;
   centered?: boolean;
+  paddingHorizontal?: number;
+  paddingTop?: number;
   style?: StyleProp<ViewStyle>;
 };
 
-export function Screen({ children, scroll = false, centered = false, style }: ScreenProps) {
+export function Screen({
+  children,
+  scroll = false,
+  centered = false,
+  paddingHorizontal,
+  paddingTop,
+  style,
+}: ScreenProps) {
   const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
   const hasTabBar = tabBarHeight > 0;
   const bottomPadding = hasTabBar ? 0 : spacing.lg;
@@ -36,8 +45,11 @@ export function Screen({ children, scroll = false, centered = false, style }: Sc
             contentContainerStyle={[
               styles.scrollContent,
               { paddingBottom: bottomPadding },
+              paddingHorizontal != null && { paddingHorizontal },
+              paddingTop != null && { paddingTop },
             ]}
             keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
             <View style={[styles.column, centered && styles.centered, style]}>
               {children}
@@ -49,6 +61,8 @@ export function Screen({ children, scroll = false, centered = false, style }: Sc
               styles.content,
               centered && styles.centered,
               { paddingBottom: bottomPadding },
+              paddingHorizontal != null && { paddingHorizontal },
+              paddingTop != null && { paddingTop },
               style,
             ]}
           >

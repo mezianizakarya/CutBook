@@ -1,62 +1,116 @@
 import { useUser } from "@clerk/expo";
-import { StyleSheet, Text, View } from "react-native";
+import * as Clipboard from "expo-clipboard";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { emailIsVerified } from "@/lib/auth";
 import type { Role } from "@/lib/roles";
 import { ACCOUNT_TYPE_LABELS } from "@/lib/roles";
-import { colors, spacing } from "@/lib/theme";
+import { colors, radius, spacing } from "@/lib/theme";
 import { formatUsername } from "@/lib/username";
 
 type ProfileSummaryProps = {
   role: Role;
   username?: string | null;
-  phone?: string | null;
-  city?: string | null;
 };
 
-export function ProfileSummary({
-  role,
-  username,
-  phone,
-  city,
-}: ProfileSummaryProps) {
+export function ProfileSummary({ role, username }: ProfileSummaryProps) {
   const { user } = useUser();
   const name = user?.fullName ?? "Your name";
-  const email = user?.primaryEmailAddress?.emailAddress;
+  const verified = emailIsVerified(user);
+
+  async function handleCopyUsername() {
+    if (!username) {
+      return;
+    }
+    await Clipboard.setStringAsync(formatUsername(username));
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.name}>{name}</Text>
-      {!!username && <Text style={styles.username}>{formatUsername(username)}</Text>}
-      <Text style={styles.role}>{ACCOUNT_TYPE_LABELS[role]}</Text>
-      {!!email && <Text style={styles.meta}>{email}</Text>}
-      {!!phone && <Text style={styles.meta}>{phone}</Text>}
-      {!!city && <Text style={styles.meta}>{city}</Text>}
+      <View style={styles.nameRow}>
+        <Text style={styles.name} numberOfLines={1}>
+          {name}
+        </Text>
+        <View style={styles.badgeRow}>
+          <View style={styles.roleBadge}>
+            <Text style={styles.roleBadgeText}>{ACCOUNT_TYPE_LABELS[role]}</Text>
+          </View>
+          {verified && (
+            <View style={styles.verifiedBadge}>
+              <Text style={styles.verifiedBadgeText}>Verified</Text>
+            </View>
+          )}
+        </View>
+      </View>
+      {!!username && (
+        <Pressable
+          onPress={handleCopyUsername}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Copy username"
+          style={styles.usernameRow}
+        >
+          <Text style={styles.username}>{formatUsername(username)}</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    alignItems: "flex-start",
+    paddingTop: 2,
+  },
+  nameRow: {
+    flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: spacing.sm,
+    alignSelf: "stretch",
   },
   name: {
-    fontSize: 22,
+    fontSize: 18,
+    lineHeight: 20,
     fontWeight: "700",
     color: colors.text,
+    flexShrink: 1,
+  },
+  usernameRow: {
+    marginTop: 2,
   },
   username: {
-    fontSize: 15,
+    fontSize: 13,
     color: colors.primaryDark,
     fontWeight: "600",
   },
-  role: {
-    fontSize: 15,
-    color: colors.primary,
-    fontWeight: "600",
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    flexShrink: 0,
+    marginLeft: "auto",
   },
-  meta: {
-    fontSize: 13,
-    color: colors.muted,
+  roleBadge: {
+    backgroundColor: "#fef3c7",
+    paddingVertical: 2,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.full,
+  },
+  roleBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#b45309",
+  },
+  verifiedBadge: {
+    backgroundColor: colors.primarySoft,
+    paddingVertical: 2,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.full,
+  },
+  verifiedBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: colors.primaryDark,
   },
 });

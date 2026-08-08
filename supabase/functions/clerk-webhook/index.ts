@@ -66,6 +66,12 @@ async function upsertProfile(data: ClerkEvent["data"]): Promise<void> {
   if (typeof metadata.profileCompleted === "boolean") {
     record.onboarding_completed = metadata.profileCompleted;
   }
+  if (
+    typeof metadata.onboardingStep === "string" &&
+    ["basics", "professional", "shop", "complete"].includes(metadata.onboardingStep)
+  ) {
+    record.onboarding_step = metadata.onboardingStep;
+  }
   const phone = metadata.phone ?? data.phone_numbers?.[0]?.phone_number;
   if (typeof phone === "string" && phone.length > 0) {
     record.phone = phone;

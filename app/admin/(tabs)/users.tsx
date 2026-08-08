@@ -22,6 +22,7 @@ import {
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
+import { adminSetUserDeleted, adminSetUserRole } from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/roles";
 import { supabase } from "@/lib/supabase";
@@ -155,11 +156,28 @@ export default function UsersScreen() {
 
   const load = useCallback(async () => {
     setError(null);
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(PROFILE_SELECT)
-      .order("created_at", { ascending: false })
-      .range(0, PAGE_SIZE - 1);
+    const q = query.trim();
+    if (q === "") {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(PROFILE_SELECT)
+        .order("created_at", { ascending: false })
+        .range(0, PAGE_SIZE - 1);
+      if (error) {
+        setError(errorMessageFromUnknown(error));
+        setProfiles((previous) => previous ?? []);
+        return;
+      }
+      const rows = (data ?? []) as unknown as ProfileRow[];
+      setProfiles(rows);
+      setHasMore(rows.length === PAGE_SIZE);
+      return;
+    }
+    const { data, error } = await supabase.rpc("admin_search_profiles", {
+      p_query: q,
+      p_limit: PAGE_SIZE,
+      p_offset: 0,
+    });
     if (error) {
       setError(errorMessageFromUnknown(error));
       setProfiles((previous) => previous ?? []);
@@ -168,7 +186,7 @@ export default function UsersScreen() {
     const rows = (data ?? []) as unknown as ProfileRow[];
     setProfiles(rows);
     setHasMore(rows.length === PAGE_SIZE);
-  }, []);
+  }, [query]);
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) {
@@ -176,26 +194,37 @@ export default function UsersScreen() {
     }
     setLoadingMore(true);
     const start = profiles?.length ?? 0;
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(PROFILE_SELECT)
-      .order("created_at", { ascending: false })
-      .range(start, start + PAGE_SIZE - 1);
-    if (error) {
-      setError(errorMessageFromUnknown(error));
+    const q = query.trim();
+    let rows: ProfileRow[] = [];
+    let loadError: unknown = null;
+    if (q === "") {
+      const result = await supabase
+        .from("profiles")
+        .select(PROFILE_SELECT)
+        .order("created_at", { ascending: false })
+        .range(start, start + PAGE_SIZE - 1);
+      rows = (result.data ?? []) as unknown as ProfileRow[];
+      loadError = result.error;
     } else {
-      const rows = (data ?? []) as unknown as ProfileRow[];
-      setProfiles((previous) => {
-        const existing = new Set((previous ?? []).map((row) => row.id));
-        return [
-          ...(previous ?? []),
-          ...rows.filter((row) => !existing.has(row.id)),
-        ];
+      const result = await supabase.rpc("admin_search_profiles", {
+        p_query: q,
+        p_limit: PAGE_SIZE,
+        p_offset: start,
       });
+      rows = (result.data ?? []) as unknown as ProfileRow[];
+      loadError = result.error;
+    }
+    if (loadError) {
+      setError(errorMessageFromUnknown(loadError));
+    } else {
+      const unique = rows.filter(
+        (row) => !(profiles ?? []).some((existing) => existing.id === row.id)
+      );
+      setProfiles((previous) => [...(previous ?? []), ...unique]);
       setHasMore(rows.length === PAGE_SIZE);
     }
     setLoadingMore(false);
-  }, [loadingMore, hasMore, profiles?.length]);
+  }, [loadingMore, hasMore, profiles, query]);
 
   useFocusEffect(
     useCallback(() => {
@@ -287,10 +316,7 @@ export default function UsersScreen() {
 
   async function performChangeRole(row: ProfileRow, role: Role) {
     try {
-      const { error } = await supabase.from("profiles").update({ role }).eq("id", row.id);
-      if (error) {
-        throw error;
-      }
+      await adminSetUserRole(row.id, role);
       setSelected((previous) =>
         previous && previous.id === row.id ? { ...previous, role } : previous
       );
@@ -325,13 +351,7 @@ export default function UsersScreen() {
   async function performSetDeleted(row: ProfileRow, deleted: boolean) {
     setRemoving(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ deleted_at: deleted ? new Date().toISOString() : null })
-        .eq("id", row.id);
-      if (error) {
-        throw error;
-      }
+      await adminSetUserDeleted(row.id, deleted);
       setSelected(null);
       await load();
       showNotice(

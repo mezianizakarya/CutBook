@@ -19,7 +19,17 @@ export function useSupabaseSession() {
       return;
     }
 
-    setClerkTokenProvider(async () => (isSignedIn ? await getToken() : null));
+    setClerkTokenProvider(async () => {
+      if (!isSignedIn) {
+        return null;
+      }
+      try {
+        return await getToken();
+      } catch (error) {
+        console.error("[supabase-auth] Clerk getToken failed:", error);
+        throw error;
+      }
+    });
 
     return () => {
       setClerkTokenProvider(null);

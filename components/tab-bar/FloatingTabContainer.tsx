@@ -2,7 +2,7 @@ import { BlurView } from "expo-blur";
 import type { ReactNode } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 
-import { colors, radius } from "@/lib/theme";
+import { radius } from "@/lib/theme";
 
 type FloatingTabContainerProps = {
   children: ReactNode;

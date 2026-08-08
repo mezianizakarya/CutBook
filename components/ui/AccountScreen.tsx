@@ -1,33 +1,31 @@
 import { useUser } from "@clerk/expo";
-import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Image } from "expo-image";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState, type ReactNode } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
-import { DeleteAccountButton } from "@/components/ui/DeleteAccountButton";
 import { ProfilePicture } from "@/components/ui/ProfilePicture";
 import { ProfileSummary } from "@/components/ui/ProfileSummary";
 import { Screen } from "@/components/ui/Screen";
-import { SignOutButton } from "@/components/ui/SignOutButton";
-import { UsernameEditModal } from "@/components/ui/UsernameEditModal";
 import type { Role } from "@/lib/roles";
 import { supabase } from "@/lib/supabase";
-import { colors, spacing } from "@/lib/theme";
+import { colors, radius, spacing } from "@/lib/theme";
 
 type AccountScreenProps = {
   role: Role;
+  /** Role-specific section rendered between the profile header and footer. */
+  children?: ReactNode;
 };
 
 type ProfileData = {
   username: string | null;
-  phone: string | null;
-  city: string | null;
 };
 
-export function AccountScreen({ role }: AccountScreenProps) {
+export function AccountScreen({ role, children }: AccountScreenProps) {
   const { user } = useUser();
+  const router = useRouter();
   const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [showUsernameEdit, setShowUsernameEdit] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -38,7 +36,7 @@ export function AccountScreen({ role }: AccountScreenProps) {
         }
         const { data, error } = await supabase
           .from("profiles")
-          .select("username, phone, city")
+          .select("username")
           .eq("id", user.id)
           .maybeSingle();
         if (!cancelled && !error && data) {
@@ -53,54 +51,97 @@ export function AccountScreen({ role }: AccountScreenProps) {
   );
 
   return (
-    <Screen scroll>
+    <Screen scroll paddingHorizontal={14} paddingTop={spacing.sm}>
+      <View style={styles.pageHeader}>
+        <View style={styles.titleRow}>
+          <Text style={styles.pageTitle}>Profile</Text>
+          <Pressable
+            onPress={() => router.push("/settings")}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Settings"
+            style={styles.settingsButton}
+          >
+            <Image
+              source={require("@/assets/images/settings.png")}
+              style={styles.settingsIcon}
+              contentFit="contain"
+              tintColor={colors.text}
+            />
+          </Pressable>
+        </View>
+      </View>
       <View style={styles.header}>
-        <ProfilePicture />
-        <ProfileSummary
-          role={role}
-          username={profile?.username}
-          phone={profile?.phone}
-          city={profile?.city}
-        />
-        <Button
-          title="Edit username"
-          variant="outline"
-          onPress={() => setShowUsernameEdit(true)}
-          style={styles.editButton}
-        />
+        <View style={styles.identityRow}>
+          <ProfilePicture />
+          <ProfileSummary role={role} username={profile?.username} />
+        </View>
+        <View style={styles.buttonRow}>
+          <Button
+            title="Edit profile"
+            variant="outline"
+            onPress={() => router.push("/edit-profile")}
+            style={styles.flexButton}
+          />
+          <Button
+            title="Account info"
+            variant="outline"
+            onPress={() => router.push("/account-info")}
+            style={styles.flexButton}
+          />
+        </View>
       </View>
-      <View style={styles.footer}>
-        <SignOutButton />
-        <DeleteAccountButton />
-      </View>
-      <UsernameEditModal
-        visible={showUsernameEdit}
-        currentUsername={profile?.username ?? null}
-        onClose={() => setShowUsernameEdit(false)}
-        onSaved={(username) => {
-          setProfile((previous) =>
-            previous ? { ...previous, username } : previous
-          );
-          setShowUsernameEdit(false);
-        }}
-      />
+      {children}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  pageHeader: {
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  settingsButton: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  settingsIcon: {
+    width: 18,
+    height: 18,
+  },
   header: {
+    gap: spacing.md,
+    paddingTop: 3,
+    paddingBottom: spacing.md,
+  },
+  identityRow: {
+    flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    paddingVertical: spacing.xl,
   },
-  editButton: {
+  buttonRow: {
+    flexDirection: "row",
     alignSelf: "stretch",
-    backgroundColor: colors.surface,
+    gap: spacing.sm,
   },
-  footer: {
-    marginTop: "auto",
-    paddingBottom: spacing.xl,
-    gap: spacing.md,
+  flexButton: {
+    flex: 1,
+    backgroundColor: colors.surface,
   },
 });

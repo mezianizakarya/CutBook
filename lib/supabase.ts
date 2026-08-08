@@ -23,6 +23,9 @@ export function setClerkTokenProvider(provider: ClerkTokenProvider | null) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
+  db: {
+    timeout: 30_000,
+  },
   async accessToken() {
     return getClerkToken ? await getClerkToken() : null;
   },

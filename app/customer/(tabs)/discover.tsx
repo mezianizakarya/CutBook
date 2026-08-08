@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    paddingRight: 6,
+    paddingRight: 4,
   },
   chip: {
     paddingVertical: spacing.sm,

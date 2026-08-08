@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/expo";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { errorMessageFromUnknown } from "@/lib/errors";
@@ -11,44 +11,76 @@ export function DeleteAccountButton() {
   const { user } = useUser();
   const router = useRouter();
 
+  const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countRef = useRef(5);
+  const [confirmCount, setConfirmCount] = useState(5);
 
-  function confirmDelete() {
-    Alert.alert(
-      "Delete account",
-      "This permanently deletes your account. Your bookings, reviews and shop history are kept but can no longer be accessed by you. This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: handleDelete },
-      ]
-    );
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+    };
+  }, []);
+
+  function cancelCountdown() {
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+  }
+
+  function startCountdown() {
+    countRef.current = 5;
+    setConfirmCount(5);
+    cancelCountdown();
+    countdownRef.current = setInterval(() => {
+      countRef.current -= 1;
+      setConfirmCount(countRef.current);
+      if (countRef.current <= 0) {
+        cancelCountdown();
+        setConfirming(false);
+      }
+    }, 1000);
   }
 
   async function handleDelete() {
-    if (deleting || !user) {
-      return;
-    }
+    setConfirming(false);
+    cancelCountdown();
     setError(null);
     setDeleting(true);
     try {
-      await user.delete();
+      await user?.delete();
       router.replace("/welcome");
     } catch (e) {
       setError(errorMessageFromUnknown(e));
-    } finally {
       setDeleting(false);
+    }
+  }
+
+  function handlePress() {
+    if (confirming) {
+      void handleDelete();
+    } else {
+      setConfirming(true);
+      startCountdown();
     }
   }
 
   return (
     <View style={styles.container}>
       <Button
-        title="Delete Account"
-        onPress={confirmDelete}
-        variant="danger"
+        title={
+          confirming ? `Confirm delete (${confirmCount})` : "Delete Account"
+        }
+        onPress={handlePress}
+        variant={confirming ? "danger" : "dangerOutline"}
         loading={deleting}
         disabled={deleting}
+        style={!confirming ? styles.button : undefined}
       />
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
@@ -58,6 +90,9 @@ export function DeleteAccountButton() {
 const styles = StyleSheet.create({
   container: {
     gap: spacing.sm,
+  },
+  button: {
+    backgroundColor: colors.background,
   },
   errorText: {
     color: colors.danger,

@@ -25,5 +25,18 @@ export function errorMessageFromUnknown(error: unknown): string {
       return first.message;
     }
   }
-  return error instanceof Error ? error.message : "Something went wrong. Please try again.";
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string" && error.trim()) {
+    return error;
+  }
+  if (error && typeof error === "object") {
+    const candidate = (error as { message?: unknown }).message;
+    if (typeof candidate === "string" && candidate.trim()) {
+      return candidate;
+    }
+  }
+  console.error("Unhandled error thrown in app:", error);
+  return "Something went wrong. Please try again.";
 }

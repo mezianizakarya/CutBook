@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useUser } from "@clerk/expo";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
@@ -17,7 +16,7 @@ import { errorMessageFromUnknown } from "@/lib/errors";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
 
-const AVATAR_SIZE = 96;
+const AVATAR_SIZE = 80;
 
 async function syncAvatarUrl(user: { id: string; hasImage: boolean; imageUrl: string }) {
   const { error } = await supabase
@@ -113,9 +112,6 @@ export function ProfilePicture() {
           imageUrl={user?.hasImage ? user?.imageUrl : null}
           size={AVATAR_SIZE}
         />
-        <View style={styles.badge}>
-          <Ionicons name="camera" size={16} color={colors.white} />
-        </View>
         {uploading && (
           <View style={styles.overlay}>
             <ActivityIndicator color={colors.white} />
@@ -131,19 +127,6 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     gap: spacing.sm,
-  },
-  badge: {
-    position: "absolute",
-    right: 0,
-    bottom: 0,
-    width: 32,
-    height: 32,
-    borderRadius: radius.full,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: colors.white,
   },
   overlay: {
     position: "absolute",
