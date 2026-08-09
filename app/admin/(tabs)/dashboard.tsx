@@ -1,5 +1,5 @@
 import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -12,6 +12,7 @@ import {
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ShopAdminSheet } from "@/components/ui/ShopAdminSheet";
@@ -29,6 +30,7 @@ import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents, formatDate } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/roles";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useNotice } from "@/lib/useNotice";
 
 export default function AdminDashboardScreen() {
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -39,27 +41,7 @@ export default function AdminDashboardScreen() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<AdminShop | null>(null);
   const [approvingId, setApprovingId] = useState<number | null>(null);
-  const [notice, setNotice] = useState<{
-    message: string;
-    tone: "danger" | "success" | "role";
-  } | null>(null);
-  const noticeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function showNotice(message: string, tone: "danger" | "success" | "role") {
-    setNotice({ message, tone });
-    if (noticeTimeout.current) {
-      clearTimeout(noticeTimeout.current);
-    }
-    noticeTimeout.current = setTimeout(() => setNotice(null), 3000);
-  }
-
-  useEffect(() => {
-    return () => {
-      if (noticeTimeout.current) {
-        clearTimeout(noticeTimeout.current);
-      }
-    };
-  }, []);
+  const { notice, showNotice } = useNotice();
 
   const load = useCallback(async () => {
     setError(null);
@@ -173,38 +155,14 @@ export default function AdminDashboardScreen() {
           <Text style={styles.subtitle}>{dateLabel}</Text>
         </View>
 
-        {notice ? (
-          <View
-            style={[
-              styles.notice,
-              notice.tone === "danger"
-                ? styles.noticeDanger
-                : notice.tone === "role"
-                  ? styles.noticeRole
-                  : styles.noticeSuccess,
-            ]}
-          >
-            <Text
-              style={[
-                styles.noticeText,
-                notice.tone === "danger"
-                  ? styles.noticeTextDanger
-                  : notice.tone === "role"
-                    ? styles.noticeTextRole
-                    : styles.noticeTextSuccess,
-              ]}
-            >
-              {notice.message}
-            </Text>
-          </View>
-        ) : null}
+        {notice ? <NoticeBanner notice={notice} style={styles.noticeSpacing} /> : null}
 
         {!!error && <Text style={styles.error}>{error}</Text>}
 
         {!!stats && (
           <>
             <View style={styles.statsRow}>
-              <StatCard label="Users" value={String(stats.activeUsers)} accent />
+              <StatCard label="Users" value={String(stats.activeUsers)} />
               <StatCard label="Barbers" value={String(stats.barbers)} />
               <StatCard label="Owners" value={String(stats.owners)} />
               <StatCard label="Shops" value={String(stats.shops)} />
@@ -335,38 +293,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.muted,
   },
-  notice: {
-    height: 48,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  noticeSuccess: {
-    backgroundColor: "#dcfce7",
-    borderColor: colors.success,
-  },
-  noticeDanger: {
-    backgroundColor: "#fee2e2",
-    borderColor: colors.danger,
-  },
-  noticeRole: {
-    backgroundColor: colors.primarySoft,
-    borderColor: colors.primaryDark,
-  },
-  noticeText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  noticeTextSuccess: {
-    color: colors.success,
-  },
-  noticeTextDanger: {
-    color: colors.danger,
-  },
-  noticeTextRole: {
-    color: colors.primaryDark,
+  noticeSpacing: {
+    marginBottom: spacing.md,
   },
   error: {
     color: colors.danger,

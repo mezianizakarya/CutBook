@@ -5,7 +5,7 @@ import { colors, radius, spacing } from "@/lib/theme";
 type ButtonProps = {
   title: string;
   onPress: () => void;
-  variant?: "primary" | "outline" | "ghost" | "danger" | "dangerOutline" | "successOutline";
+  variant?: "primary" | "outline" | "ghost" | "danger" | "dangerOutline" | "successOutline" | "blue";
   loading?: boolean;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -25,10 +25,12 @@ export function Button({
       ? colors.primary
       : variant === "danger"
         ? colors.danger
-        : "transparent";
+        : variant === "blue"
+          ? colors.primaryDark
+          : "transparent";
 
   const labelColor =
-    variant === "primary" || variant === "danger"
+    variant === "primary" || variant === "danger" || variant === "blue"
       ? colors.white
       : variant === "dangerOutline" || variant === "successOutline"
         ? variant === "dangerOutline"

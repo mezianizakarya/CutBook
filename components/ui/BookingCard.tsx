@@ -5,18 +5,9 @@ import {
   BookingStatusBadge,
   type BookingStatus,
 } from "@/components/ui/BookingStatusBadge";
+import type { BookingCardRow } from "@/lib/booking";
 import { formatCents, formatDateTime } from "@/lib/format";
 import { colors, radius, spacing } from "@/lib/theme";
-
-export type BookingCardRow = {
-  id: number;
-  status: BookingStatus;
-  starts_at: string;
-  service_name: string;
-  service_price_cents: number;
-  shop: { id: number; name: string; logo_url: string | null } | null;
-  staff: { id: number; display_name: string; avatar_url: string | null } | null;
-};
 
 type BookingCardProps = {
   booking: BookingCardRow;

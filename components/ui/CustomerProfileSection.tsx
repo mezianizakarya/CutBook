@@ -88,7 +88,7 @@ export function CustomerProfileSection() {
         </View>
       ) : (
         <View style={styles.statsRow}>
-          <StatCard label="Bookings" value={String(counts?.all ?? 0)} accent />
+          <StatCard label="Bookings" value={String(counts?.all ?? 0)} />
           <StatCard label="Upcoming" value={String(counts?.upcoming ?? 0)} />
           <StatCard label="Favorites" value={String(favorites ?? 0)} />
         </View>

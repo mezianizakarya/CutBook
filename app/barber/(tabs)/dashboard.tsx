@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/expo";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -15,6 +15,7 @@ import {
 import { BookingCard } from "@/components/ui/BookingCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { JoinShopForm } from "@/components/ui/JoinShopForm";
+import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StaffBookingSheet } from "@/components/ui/StaffBookingSheet";
@@ -36,19 +37,10 @@ import {
   type TimeOffRow,
 } from "@/lib/barber";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { formatCents, formatOpenRange, startOfDay } from "@/lib/format";
+import { formatCents, formatOpenRange, greetingFor, startOfDay } from "@/lib/format";
 import { colors, radius, spacing } from "@/lib/theme";
-
-function greetingFor(now: Date): string {
-  const hour = now.getHours();
-  if (hour < 12) {
-    return "Good morning";
-  }
-  if (hour < 17) {
-    return "Good afternoon";
-  }
-  return "Good evening";
-}
+import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
+import { useNotice } from "@/lib/useNotice";
 
 type BarberContext = {
   memberships: BarberMember[];
@@ -75,33 +67,25 @@ export default function BarberDashboardScreen() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<BookingRow | null>(null);
   const [joinVisible, setJoinVisible] = useState(false);
-  const [notice, setNotice] = useState<{
-    message: string;
-    tone: "danger" | "success";
-  } | null>(null);
-  const noticeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { notice, showNotice } = useNotice();
   const [leaveArmed, setLeaveArmed] = useState(false);
-  const [leaveCountdown, setLeaveCountdown] = useState(5);
-  const leaveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const {
+    count: leaveCountdown,
+    start: startLeaveCountdown,
+    cancel: cancelLeaveCountdown,
+  } = useConfirmCountdown({
+    onExpire: () => setLeaveArmed(false),
+  });
 
-  function showNotice(message: string, tone: "danger" | "success") {
-    setNotice({ message, tone });
-    if (noticeTimeout.current) {
-      clearTimeout(noticeTimeout.current);
-    }
-    noticeTimeout.current = setTimeout(() => setNotice(null), 3000);
+  function armLeave() {
+    setLeaveArmed(true);
+    startLeaveCountdown();
   }
 
-  useEffect(() => {
-    return () => {
-      if (noticeTimeout.current) {
-        clearTimeout(noticeTimeout.current);
-      }
-      if (leaveTimer.current) {
-        clearInterval(leaveTimer.current);
-      }
-    };
-  }, []);
+  function disarmLeave() {
+    cancelLeaveCountdown();
+    setLeaveArmed(false);
+  }
 
   const load = useCallback(async () => {
     setError(null);
@@ -188,36 +172,6 @@ export default function BarberDashboardScreen() {
   const primaryMember = context?.memberships[0] ?? null;
   const shop = context?.shops[0] ?? null;
   const professionalDone = user?.unsafeMetadata?.onboardingStep === "complete";
-
-  function armLeave() {
-    setLeaveArmed(true);
-    setLeaveCountdown(5);
-    if (leaveTimer.current) {
-      clearInterval(leaveTimer.current);
-    }
-    leaveTimer.current = setInterval(() => {
-      setLeaveCountdown((previous) => {
-        if (previous <= 1) {
-          if (leaveTimer.current) {
-            clearInterval(leaveTimer.current);
-            leaveTimer.current = null;
-          }
-          setLeaveArmed(false);
-          return 5;
-        }
-        return previous - 1;
-      });
-    }, 1000);
-  }
-
-  function disarmLeave() {
-    if (leaveTimer.current) {
-      clearInterval(leaveTimer.current);
-      leaveTimer.current = null;
-    }
-    setLeaveArmed(false);
-    setLeaveCountdown(5);
-  }
 
   async function confirmLeave() {
     if (!primaryMember) {
@@ -375,23 +329,7 @@ export default function BarberDashboardScreen() {
           )}
         </View>
 
-        {notice ? (
-          <View
-            style={[
-              styles.notice,
-              notice.tone === "danger" ? styles.noticeDanger : styles.noticeSuccess,
-            ]}
-          >
-            <Text
-              style={[
-                styles.noticeText,
-                notice.tone === "danger" ? styles.noticeTextDanger : styles.noticeTextSuccess,
-              ]}
-            >
-              {notice.message}
-            </Text>
-          </View>
-        ) : null}
+        {notice ? <NoticeBanner notice={notice} /> : null}
 
         {!!error && <Text style={styles.error}>{error}</Text>}
 
@@ -430,7 +368,7 @@ export default function BarberDashboardScreen() {
         )}
 
         <View style={styles.statsRow}>
-          <StatCard label="Today" value={String(stats.todayCount)} accent />
+          <StatCard label="Today" value={String(stats.todayCount)} />
           <StatCard label="Pending" value={String(stats.pendingCount)} />
           <StatCard label="Completed" value={String(stats.completedCount)} />
           <StatCard label="Revenue" value={formatCents(stats.monthRevenueCents)} />
@@ -534,32 +472,6 @@ const styles = StyleSheet.create({
   },
   leaveButtonTextArmed: {
     color: "#fff",
-  },
-  notice: {
-    height: 48,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  noticeSuccess: {
-    backgroundColor: "#dcfce7",
-    borderColor: colors.success,
-  },
-  noticeDanger: {
-    backgroundColor: "#fee2e2",
-    borderColor: colors.danger,
-  },
-  noticeText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  noticeTextSuccess: {
-    color: colors.success,
-  },
-  noticeTextDanger: {
-    color: colors.danger,
   },
   error: {
     color: colors.danger,

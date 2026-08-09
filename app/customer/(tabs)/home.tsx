@@ -16,6 +16,7 @@ import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ShopCard } from "@/components/ui/ShopCard";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { greetingFor } from "@/lib/format";
 import { loadShopSummaries, type ShopSummary } from "@/lib/shop";
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -81,7 +82,7 @@ export default function HomeScreen() {
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
         <Text style={styles.title}>
-          {firstName ? `Hi ${firstName},` : "Hello,"}
+          {`${greetingFor(new Date())}${firstName ? `, ${firstName}` : ""}`}
         </Text>
         <Text style={styles.subtitle}>
           Find a barbershop and book your next cut.

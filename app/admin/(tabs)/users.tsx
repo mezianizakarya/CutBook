@@ -9,7 +9,6 @@ import {
   Animated,
   FlatList,
   Modal,
-  PanResponder,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -18,9 +17,11 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
+import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { adminSetUserDeleted, adminSetUserRole } from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
@@ -28,7 +29,9 @@ import { ROLES, ROLE_LABELS, type Role } from "@/lib/roles";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
 import { stripAtPrefix } from "@/lib/username";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
+import { useNotice } from "@/lib/useNotice";
+import { useSheetDrag } from "@/lib/useSheetDrag";
 
 type ProfileRow = {
   id: string;
@@ -78,45 +81,6 @@ function formatDate(value: string | null): string {
   });
 }
 
-function useSheetDrag(onClose: () => void) {
-  const translateY = useRef(new Animated.Value(0)).current;
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_event, gesture) =>
-        gesture.dy > 6 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
-      onPanResponderMove: (_event, gesture) => {
-        if (gesture.dy > 0) {
-          translateY.setValue(gesture.dy);
-        }
-      },
-      onPanResponderRelease: (_event, gesture) => {
-        if (gesture.dy > 80) {
-          Animated.timing(translateY, {
-            toValue: 600,
-            duration: 180,
-            useNativeDriver: true,
-          }).start(onClose);
-        } else {
-          Animated.spring(translateY, {
-            toValue: 0,
-            useNativeDriver: true,
-            bounciness: 6,
-          }).start();
-        }
-      },
-      onPanResponderTerminate: () => {
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-        }).start();
-      },
-    })
-  ).current;
-
-  return { translateY, panResponder };
-}
-
 export default function UsersScreen() {
   const { user } = useUser();
   const currentUserId = user?.id;
@@ -132,27 +96,7 @@ export default function UsersScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [selected, setSelected] = useState<ProfileRow | null>(null);
   const [removing, setRemoving] = useState(false);
-  const [notice, setNotice] = useState<{
-    message: string;
-    tone: "danger" | "success" | "role";
-  } | null>(null);
-  const noticeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function showNotice(message: string, tone: "danger" | "success" | "role") {
-    setNotice({ message, tone });
-    if (noticeTimeout.current) {
-      clearTimeout(noticeTimeout.current);
-    }
-    noticeTimeout.current = setTimeout(() => setNotice(null), 3000);
-  }
-
-  useEffect(() => {
-    return () => {
-      if (noticeTimeout.current) {
-        clearTimeout(noticeTimeout.current);
-      }
-    };
-  }, []);
+  const { notice, showNotice } = useNotice();
 
   const load = useCallback(async () => {
     setError(null);
@@ -408,29 +352,7 @@ export default function UsersScreen() {
       </View>
 
       {notice ? (
-        <View
-          style={[
-            styles.notice,
-            notice.tone === "danger"
-              ? styles.noticeDanger
-              : notice.tone === "role"
-                ? styles.noticeRole
-                : styles.noticeSuccess,
-          ]}
-        >
-          <Text
-            style={[
-              styles.noticeText,
-              notice.tone === "danger"
-                ? styles.noticeTextDanger
-                : notice.tone === "role"
-                  ? styles.noticeTextRole
-                  : styles.noticeTextSuccess,
-            ]}
-          >
-            {notice.message}
-          </Text>
-        </View>
+        <NoticeBanner notice={notice} style={styles.noticeSpacing} />
       ) : (
         <View style={styles.searchContainer}>
           <TextInput
@@ -651,20 +573,25 @@ function ActionModal({
   const [confirmingRestore, setConfirmingRestore] = useState(false);
   const [copiedField, setCopiedField] = useState<"email" | "phone" | "username" | null>(null);
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const countRef = useRef(5);
-  const [confirmCount, setConfirmCount] = useState(5);
 
   useEffect(() => {
     return () => {
       if (copyTimeout.current) {
         clearTimeout(copyTimeout.current);
       }
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
     };
   }, []);
+
+  const {
+    count: confirmCount,
+    start: startCountdown,
+    cancel: cancelCountdown,
+  } = useConfirmCountdown({
+    onExpire: () => {
+      setConfirmingDelete(false);
+      setConfirmingRestore(false);
+    },
+  });
 
   const { translateY, panResponder } = useSheetDrag(onClose);
 
@@ -678,28 +605,6 @@ function ActionModal({
       clearTimeout(copyTimeout.current);
     }
     copyTimeout.current = setTimeout(() => setCopiedField(null), 1500);
-  }
-
-  function cancelCountdown() {
-    if (countdownRef.current) {
-      clearInterval(countdownRef.current);
-      countdownRef.current = null;
-    }
-  }
-
-  function startCountdown() {
-    countRef.current = 5;
-    setConfirmCount(5);
-    cancelCountdown();
-    countdownRef.current = setInterval(() => {
-      countRef.current -= 1;
-      setConfirmCount(countRef.current);
-      if (countRef.current <= 0) {
-        cancelCountdown();
-        setConfirmingDelete(false);
-        setConfirmingRestore(false);
-      }
-    }, 1000);
   }
 
   function handleRoleBadgePress() {
@@ -1035,39 +940,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.muted,
   },
-  notice: {
-    height: 48,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    alignItems: "center",
-    justifyContent: "center",
+  noticeSpacing: {
     marginBottom: spacing.md,
-  },
-  noticeSuccess: {
-    backgroundColor: "#dcfce7",
-    borderColor: colors.success,
-  },
-  noticeDanger: {
-    backgroundColor: "#fee2e2",
-    borderColor: colors.danger,
-  },
-  noticeRole: {
-    backgroundColor: colors.primarySoft,
-    borderColor: colors.primaryDark,
-  },
-  noticeText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  noticeTextSuccess: {
-    color: colors.success,
-  },
-  noticeTextDanger: {
-    color: colors.danger,
-  },
-  noticeTextRole: {
-    color: colors.primaryDark,
   },
   searchContainer: {
     marginBottom: spacing.md,

@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/expo";
 import * as Clipboard from "expo-clipboard";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,6 +17,8 @@ import { Avatar } from "@/components/ui/Avatar";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { FilterChip } from "@/components/ui/FilterChip";
+import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { errorMessageFromUnknown } from "@/lib/errors";
@@ -37,6 +39,7 @@ import {
   type OwnerStaffRow,
 } from "@/lib/owner";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useNotice } from "@/lib/useNotice";
 
 export default function OwnerStaffScreen() {
   const { user } = useUser();
@@ -47,23 +50,11 @@ export default function OwnerStaffScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<{
-    message: string;
-    tone: "danger" | "success";
-  } | null>(null);
-  const noticeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pickShop, setPickShop] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState<ShopInvitation | null>(null);
   const [selectedStaff, setSelectedStaff] = useState<OwnerStaffRow | null>(null);
-
-  function showNotice(message: string, tone: "danger" | "success") {
-    setNotice({ message, tone });
-    if (noticeTimeout.current) {
-      clearTimeout(noticeTimeout.current);
-    }
-    noticeTimeout.current = setTimeout(() => setNotice(null), 3000);
-  }
+  const { notice, showNotice } = useNotice();
 
   const load = useCallback(async () => {
     setError(null);
@@ -264,23 +255,7 @@ export default function OwnerStaffScreen() {
           </Text>
         </View>
 
-        {notice ? (
-          <View
-            style={[
-              styles.notice,
-              notice.tone === "danger" ? styles.noticeDanger : styles.noticeSuccess,
-            ]}
-          >
-            <Text
-              style={[
-                styles.noticeText,
-                notice.tone === "danger" ? styles.noticeTextDanger : styles.noticeTextSuccess,
-              ]}
-            >
-              {notice.message}
-            </Text>
-          </View>
-        ) : null}
+        {notice ? <NoticeBanner notice={notice} variant="soft" /> : null}
 
         {!!error && <Text style={styles.errorText}>{error}</Text>}
 
@@ -542,31 +517,6 @@ function memberRoleLabel(role: OwnerStaffRow["member_role"]): string {
   return "Barber";
 }
 
-function FilterChip({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.chip,
-        selected && styles.chipSelected,
-        pressed && styles.chipPressed,
-      ]}
-    >
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
@@ -601,55 +551,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 14,
   },
-  notice: {
-    backgroundColor: colors.primarySoft,
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  noticeDanger: {
-    backgroundColor: "#fee2e2",
-  },
-  noticeSuccess: {
-    backgroundColor: "#dcfce7",
-  },
-  noticeText: {
-    color: colors.primaryDark,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  noticeTextDanger: {
-    color: colors.danger,
-  },
-  noticeTextSuccess: {
-    color: colors.success,
-  },
   chipRow: {
     gap: spacing.sm,
     paddingVertical: spacing.xs,
-  },
-  chip: {
-    paddingVertical: 6,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.full,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  chipPressed: {
-    opacity: 0.8,
-  },
-  chipText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  chipTextSelected: {
-    color: colors.white,
   },
   inviteEmpty: {
     alignItems: "center",

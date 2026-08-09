@@ -5,14 +5,13 @@ import { colors, radius, spacing } from "@/lib/theme";
 type StatCardProps = {
   label: string;
   value: string;
-  accent?: boolean;
 };
 
-export function StatCard({ label, value, accent = false }: StatCardProps) {
+export function StatCard({ label, value }: StatCardProps) {
   return (
-    <View style={[styles.card, accent && styles.cardAccent]}>
-      <Text style={[styles.value, accent && styles.valueAccent]}>{value}</Text>
-      <Text style={[styles.label, accent && styles.labelAccent]}>{label}</Text>
+    <View style={styles.card}>
+      <Text style={styles.value}>{value}</Text>
+      <Text style={styles.label}>{label}</Text>
     </View>
   );
 }
@@ -29,24 +28,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.xs,
   },
-  cardAccent: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
   value: {
     fontSize: 20,
     fontWeight: "700",
     color: colors.text,
   },
-  valueAccent: {
-    color: colors.white,
-  },
   label: {
     fontSize: 12,
     color: colors.muted,
     textAlign: "center",
-  },
-  labelAccent: {
-    color: "rgba(255, 255, 255, 0.8)",
   },
 });

@@ -1,5 +1,14 @@
-import type { BookingCardRow } from "@/components/ui/BookingCard";
 import { supabase } from "@/lib/supabase";
+
+export type BookingCardRow = {
+  id: number;
+  status: BookingStatus;
+  starts_at: string;
+  service_name: string;
+  service_price_cents: number;
+  shop: { id: number; name: string; logo_url: string | null } | null;
+  staff: { id: number; display_name: string; avatar_url: string | null } | null;
+};
 
 export type BookingStatus =
   | "pending"
@@ -102,6 +111,19 @@ export function customerDisplayName(
     .join(" ")
     .trim();
   return full || "Customer";
+}
+
+export function buildCustomerByIdMap(
+  customers: BookingCustomer[]
+): Map<number, BookingCustomer> {
+  return new Map(customers.map((customer) => [customer.booking_id, customer]));
+}
+
+export function patchBookingRow(
+  rows: BookingRow[],
+  updated: BookingRow
+): BookingRow[] {
+  return rows.map((row) => (row.id === updated.id ? updated : row));
 }
 
 /**

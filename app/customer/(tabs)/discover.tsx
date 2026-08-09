@@ -1,12 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
   FlatList,
   Modal,
-  PanResponder,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -22,6 +21,7 @@ import { Screen } from "@/components/ui/Screen";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useSheetDrag } from "@/lib/useSheetDrag";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type ShopInfo = {
@@ -62,45 +62,6 @@ function formatDate(value: string | null): string {
     month: "short",
     day: "numeric",
   });
-}
-
-function useSheetDrag(onClose: () => void) {
-  const translateY = useRef(new Animated.Value(0)).current;
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_event, gesture) =>
-        gesture.dy > 6 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
-      onPanResponderMove: (_event, gesture) => {
-        if (gesture.dy > 0) {
-          translateY.setValue(gesture.dy);
-        }
-      },
-      onPanResponderRelease: (_event, gesture) => {
-        if (gesture.dy > 80) {
-          Animated.timing(translateY, {
-            toValue: 600,
-            duration: 180,
-            useNativeDriver: true,
-          }).start(onClose);
-        } else {
-          Animated.spring(translateY, {
-            toValue: 0,
-            useNativeDriver: true,
-            bounciness: 6,
-          }).start();
-        }
-      },
-      onPanResponderTerminate: () => {
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-        }).start();
-      },
-    })
-  ).current;
-
-  return { translateY, panResponder };
 }
 
 export default function DiscoverScreen() {

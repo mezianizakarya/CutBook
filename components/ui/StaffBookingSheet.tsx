@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Animated,
@@ -25,6 +25,7 @@ import {
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents, formatDateTime } from "@/lib/format";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
 import { useSheetDrag } from "@/lib/useSheetDrag";
 
 type StaffBookingSheetProps = {
@@ -58,42 +59,17 @@ export function StaffBookingSheet({
   const [busy, setBusy] = useState(false);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const countRef = useRef(5);
-  const [confirmCount, setConfirmCount] = useState(5);
+  const {
+    count: confirmCount,
+    start: startCountdown,
+    cancel: cancelCountdown,
+  } = useConfirmCountdown({
+    onExpire: () => setConfirmingCancel(false),
+  });
 
   useEffect(() => {
     setCurrent(row);
   }, [row]);
-
-  useEffect(() => {
-    return () => {
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
-    };
-  }, []);
-
-  function cancelCountdown() {
-    if (countdownRef.current) {
-      clearInterval(countdownRef.current);
-      countdownRef.current = null;
-    }
-  }
-
-  function startCountdown() {
-    countRef.current = 5;
-    setConfirmCount(5);
-    cancelCountdown();
-    countdownRef.current = setInterval(() => {
-      countRef.current -= 1;
-      setConfirmCount(countRef.current);
-      if (countRef.current <= 0) {
-        cancelCountdown();
-        setConfirmingCancel(false);
-      }
-    }, 1000);
-  }
 
   async function handleStatusChange(status: "confirmed" | "completed" | "no_show") {
     setBusy(true);

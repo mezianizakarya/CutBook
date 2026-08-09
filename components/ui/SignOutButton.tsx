@@ -1,11 +1,12 @@
 import { useAuth } from "@clerk/expo";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { colors, spacing } from "@/lib/theme";
+import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
 
 export function SignOutButton() {
   const { signOut } = useAuth();
@@ -14,38 +15,13 @@ export function SignOutButton() {
   const [confirming, setConfirming] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const countRef = useRef(5);
-  const [confirmCount, setConfirmCount] = useState(5);
-
-  useEffect(() => {
-    return () => {
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
-    };
-  }, []);
-
-  function cancelCountdown() {
-    if (countdownRef.current) {
-      clearInterval(countdownRef.current);
-      countdownRef.current = null;
-    }
-  }
-
-  function startCountdown() {
-    countRef.current = 5;
-    setConfirmCount(5);
-    cancelCountdown();
-    countdownRef.current = setInterval(() => {
-      countRef.current -= 1;
-      setConfirmCount(countRef.current);
-      if (countRef.current <= 0) {
-        cancelCountdown();
-        setConfirming(false);
-      }
-    }, 1000);
-  }
+  const {
+    count: confirmCount,
+    start: startCountdown,
+    cancel: cancelCountdown,
+  } = useConfirmCountdown({
+    onExpire: () => setConfirming(false),
+  });
 
   async function handleSignOut() {
     setConfirming(false);

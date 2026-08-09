@@ -1,13 +1,12 @@
 import { useUser } from "@clerk/expo";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Animated,
   FlatList,
   Modal,
-  PanResponder,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -21,10 +20,12 @@ import { Avatar } from "@/components/ui/Avatar";
 import { BookingCard } from "@/components/ui/BookingCard";
 import { BookingStatusBadge } from "@/components/ui/BookingStatusBadge";
 import { Button } from "@/components/ui/Button";
+import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import {
   cancelBooking,
   isCancellable,
+  patchBookingRow,
   toBookingCard,
   type BookingRow,
 } from "@/lib/booking";
@@ -32,51 +33,15 @@ import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents, formatDateTime } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
+import { useNotice } from "@/lib/useNotice";
+import { useSheetDrag } from "@/lib/useSheetDrag";
 
 const PAGE_SIZE = 50;
 
 type BookingFilter = "all" | "upcoming" | "past";
 
 const BOOKING_FILTERS: BookingFilter[] = ["all", "upcoming", "past"];
-
-function useSheetDrag(onClose: () => void) {
-  const translateY = useRef(new Animated.Value(0)).current;
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_event, gesture) =>
-        gesture.dy > 6 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
-      onPanResponderMove: (_event, gesture) => {
-        if (gesture.dy > 0) {
-          translateY.setValue(gesture.dy);
-        }
-      },
-      onPanResponderRelease: (_event, gesture) => {
-        if (gesture.dy > 80) {
-          Animated.timing(translateY, {
-            toValue: 600,
-            duration: 180,
-            useNativeDriver: true,
-          }).start(onClose);
-        } else {
-          Animated.spring(translateY, {
-            toValue: 0,
-            useNativeDriver: true,
-            bounciness: 6,
-          }).start();
-        }
-      },
-      onPanResponderTerminate: () => {
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-        }).start();
-      },
-    })
-  ).current;
-
-  return { translateY, panResponder };
-}
 
 export default function BookingsScreen() {
   const { user } = useUser();
@@ -91,27 +56,7 @@ export default function BookingsScreen() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [selected, setSelected] = useState<BookingRow | null>(null);
-  const [notice, setNotice] = useState<{
-    message: string;
-    tone: "danger" | "success";
-  } | null>(null);
-  const noticeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function showNotice(message: string, tone: "danger" | "success") {
-    setNotice({ message, tone });
-    if (noticeTimeout.current) {
-      clearTimeout(noticeTimeout.current);
-    }
-    noticeTimeout.current = setTimeout(() => setNotice(null), 3000);
-  }
-
-  useEffect(() => {
-    return () => {
-      if (noticeTimeout.current) {
-        clearTimeout(noticeTimeout.current);
-      }
-    };
-  }, []);
+  const { notice, showNotice } = useNotice();
 
   const query = useCallback(
     (start: number, count: number) =>
@@ -229,9 +174,7 @@ export default function BookingsScreen() {
   async function handleCancel(row: BookingRow) {
     try {
       const updated = await cancelBooking(row.id);
-      setBookings((previous) =>
-        (previous ?? []).map((item) => (item.id === updated.id ? updated : item))
-      );
+      setBookings((previous) => patchBookingRow(previous ?? [], updated));
       setSelected((previous) =>
         previous && previous.id === updated.id ? updated : previous
       );
@@ -259,21 +202,7 @@ export default function BookingsScreen() {
       </View>
 
       {notice ? (
-        <View
-          style={[
-            styles.notice,
-            notice.tone === "danger" ? styles.noticeDanger : styles.noticeSuccess,
-          ]}
-        >
-          <Text
-            style={[
-              styles.noticeText,
-              notice.tone === "danger" ? styles.noticeTextDanger : styles.noticeTextSuccess,
-            ]}
-          >
-            {notice.message}
-          </Text>
-        </View>
+        <NoticeBanner notice={notice} style={styles.noticeSpacing} />
       ) : null}
 
       <ScrollView
@@ -394,39 +323,14 @@ function BookingDetailSheet({ row, onClose, onCancel }: BookingDetailSheetProps)
   const { translateY, panResponder } = useSheetDrag(onClose);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const countRef = useRef(5);
-  const [confirmCount, setConfirmCount] = useState(5);
+  const {
+    count: confirmCount,
+    start: startCountdown,
+    cancel: cancelCountdown,
+  } = useConfirmCountdown({
+    onExpire: () => setConfirmingCancel(false),
+  });
   const cancellable = isCancellable(row);
-
-  useEffect(() => {
-    return () => {
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
-    };
-  }, []);
-
-  function cancelCountdown() {
-    if (countdownRef.current) {
-      clearInterval(countdownRef.current);
-      countdownRef.current = null;
-    }
-  }
-
-  function startCountdown() {
-    countRef.current = 5;
-    setConfirmCount(5);
-    cancelCountdown();
-    countdownRef.current = setInterval(() => {
-      countRef.current -= 1;
-      setConfirmCount(countRef.current);
-      if (countRef.current <= 0) {
-        cancelCountdown();
-        setConfirmingCancel(false);
-      }
-    }, 1000);
-  }
 
   function handleCancelPress() {
     if (confirmingCancel) {
@@ -565,32 +469,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.muted,
   },
-  notice: {
-    height: 48,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    alignItems: "center",
-    justifyContent: "center",
+  noticeSpacing: {
     marginBottom: spacing.md,
-  },
-  noticeSuccess: {
-    backgroundColor: "#dcfce7",
-    borderColor: colors.success,
-  },
-  noticeDanger: {
-    backgroundColor: "#fee2e2",
-    borderColor: colors.danger,
-  },
-  noticeText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  noticeTextSuccess: {
-    color: colors.success,
-  },
-  noticeTextDanger: {
-    color: colors.danger,
   },
   chipsScroll: {
     flexGrow: 0,

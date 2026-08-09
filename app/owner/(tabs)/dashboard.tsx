@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/expo";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -13,6 +13,7 @@ import {
 
 import { BookingCard } from "@/components/ui/BookingCard";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StaffBookingSheet } from "@/components/ui/StaffBookingSheet";
@@ -25,20 +26,10 @@ import {
   type BookingRow,
 } from "@/lib/booking";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { formatCents, startOfDay } from "@/lib/format";
+import { formatCents, greetingFor, startOfDay } from "@/lib/format";
 import { loadOwnerShops, loadShopBookings, type OwnerShop } from "@/lib/owner";
-import { colors, radius, spacing } from "@/lib/theme";
-
-function greetingFor(now: Date): string {
-  const hour = now.getHours();
-  if (hour < 12) {
-    return "Good morning";
-  }
-  if (hour < 17) {
-    return "Good afternoon";
-  }
-  return "Good evening";
-}
+import { colors, spacing } from "@/lib/theme";
+import { useNotice } from "@/lib/useNotice";
 
 export default function OwnerDashboardScreen() {
   const { user } = useUser();
@@ -50,19 +41,7 @@ export default function OwnerDashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<BookingRow | null>(null);
-  const [notice, setNotice] = useState<{
-    message: string;
-    tone: "danger" | "success";
-  } | null>(null);
-  const noticeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function showNotice(message: string, tone: "danger" | "success") {
-    setNotice({ message, tone });
-    if (noticeTimeout.current) {
-      clearTimeout(noticeTimeout.current);
-    }
-    noticeTimeout.current = setTimeout(() => setNotice(null), 3000);
-  }
+  const { notice, showNotice } = useNotice();
 
   const load = useCallback(async () => {
     setError(null);
@@ -219,37 +198,24 @@ export default function OwnerDashboardScreen() {
         </View>
 
         {pendingShops.length > 0 ? (
-          <View style={styles.notice}>
-            <Text style={styles.noticeText}>
-              {pendingShops.length === 1
-                ? "Your shop is pending approval by CutBook."
-                : "Some of your shops are pending approval by CutBook."}
-            </Text>
-          </View>
+          <NoticeBanner
+            notice={{
+              message:
+                pendingShops.length === 1
+                  ? "Your shop is pending approval by CutBook."
+                  : "Some of your shops are pending approval by CutBook.",
+              tone: "role",
+            }}
+            variant="soft"
+          />
         ) : null}
 
-        {notice ? (
-          <View
-            style={[
-              styles.notice,
-              notice.tone === "danger" ? styles.noticeDanger : styles.noticeSuccess,
-            ]}
-          >
-            <Text
-              style={[
-                styles.noticeText,
-                notice.tone === "danger" ? styles.noticeTextDanger : styles.noticeTextSuccess,
-              ]}
-            >
-              {notice.message}
-            </Text>
-          </View>
-        ) : null}
+        {notice ? <NoticeBanner notice={notice} variant="soft" /> : null}
 
         {!!error && <Text style={styles.errorText}>{error}</Text>}
 
         <View style={styles.statsRow}>
-          <StatCard label="Today" value={String(stats.todayCount)} accent />
+          <StatCard label="Today" value={String(stats.todayCount)} />
           <StatCard label="Pending" value={String(stats.pendingCount)} />
           <StatCard label="Completed" value={String(stats.completedCount)} />
           <StatCard label="Revenue" value={formatCents(stats.monthRevenueCents)} />
@@ -344,29 +310,6 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: "row",
     gap: spacing.sm,
-  },
-  notice: {
-    backgroundColor: colors.primarySoft,
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  noticeDanger: {
-    backgroundColor: "#fee2e2",
-  },
-  noticeSuccess: {
-    backgroundColor: "#dcfce7",
-  },
-  noticeText: {
-    color: colors.primaryDark,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  noticeTextDanger: {
-    color: colors.danger,
-  },
-  noticeTextSuccess: {
-    color: colors.success,
   },
   emptyDay: {
     alignItems: "center",

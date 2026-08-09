@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -15,6 +15,7 @@ import {
 
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { ShopAdminSheet } from "@/components/ui/ShopAdminSheet";
 import {
@@ -25,6 +26,7 @@ import {
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDate } from "@/lib/format";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useNotice } from "@/lib/useNotice";
 
 type StatusFilter = "all" | ShopStatus;
 
@@ -56,27 +58,7 @@ export default function AdminShopsScreen() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [selected, setSelected] = useState<AdminShop | null>(null);
-  const [notice, setNotice] = useState<{
-    message: string;
-    tone: "danger" | "success" | "role";
-  } | null>(null);
-  const noticeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function showNotice(message: string, tone: "danger" | "success" | "role") {
-    setNotice({ message, tone });
-    if (noticeTimeout.current) {
-      clearTimeout(noticeTimeout.current);
-    }
-    noticeTimeout.current = setTimeout(() => setNotice(null), 3000);
-  }
-
-  useEffect(() => {
-    return () => {
-      if (noticeTimeout.current) {
-        clearTimeout(noticeTimeout.current);
-      }
-    };
-  }, []);
+  const { notice, showNotice } = useNotice();
 
   const load = useCallback(async () => {
     setError(null);
@@ -139,29 +121,7 @@ export default function AdminShopsScreen() {
       </View>
 
       {notice ? (
-        <View
-          style={[
-            styles.notice,
-            notice.tone === "danger"
-              ? styles.noticeDanger
-              : notice.tone === "role"
-                ? styles.noticeRole
-                : styles.noticeSuccess,
-          ]}
-        >
-          <Text
-            style={[
-              styles.noticeText,
-              notice.tone === "danger"
-                ? styles.noticeTextDanger
-                : notice.tone === "role"
-                  ? styles.noticeTextRole
-                  : styles.noticeTextSuccess,
-            ]}
-          >
-            {notice.message}
-          </Text>
-        </View>
+        <NoticeBanner notice={notice} style={styles.noticeSpacing} />
       ) : (
         <View style={styles.searchContainer}>
           <TextInput
@@ -265,7 +225,9 @@ export default function AdminShopsScreen() {
                     </Text>
                   </View>
                   {item.is_verified && (
-                    <Ionicons name="checkmark-circle" size={16} color={colors.primaryDark} />
+                    <View style={styles.badgeVerified}>
+                      <Text style={styles.badgeTextVerified}>Verified</Text>
+                    </View>
                   )}
                 </View>
               </Pressable>
@@ -307,39 +269,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.muted,
   },
-  notice: {
-    height: 48,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    alignItems: "center",
-    justifyContent: "center",
+  noticeSpacing: {
     marginBottom: spacing.md,
-  },
-  noticeSuccess: {
-    backgroundColor: "#dcfce7",
-    borderColor: colors.success,
-  },
-  noticeDanger: {
-    backgroundColor: "#fee2e2",
-    borderColor: colors.danger,
-  },
-  noticeRole: {
-    backgroundColor: colors.primarySoft,
-    borderColor: colors.primaryDark,
-  },
-  noticeText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  noticeTextSuccess: {
-    color: colors.success,
-  },
-  noticeTextDanger: {
-    color: colors.danger,
-  },
-  noticeTextRole: {
-    color: colors.primaryDark,
   },
   searchContainer: {
     marginBottom: spacing.md,
@@ -475,5 +406,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: "#b45309",
+  },
+  badgeVerified: {
+    backgroundColor: colors.primarySoft,
+    paddingVertical: 2,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.full,
+  },
+  badgeTextVerified: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.primaryDark,
   },
 });

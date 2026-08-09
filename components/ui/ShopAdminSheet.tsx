@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -12,6 +11,7 @@ import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDate } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
 
 type Tone = "danger" | "success" | "role";
 
@@ -44,11 +44,15 @@ export function ShopAdminSheet({
   const [shop, setShop] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [confirmingSuspend, setConfirmingSuspend] = useState(false);
-  const [confirmCount, setConfirmCount] = useState(5);
   const [ownerName, setOwnerName] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<"email" | "phone" | null>(null);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const countRef = useRef(5);
+  const {
+    count: confirmCount,
+    start: startCountdown,
+    cancel: cancelCountdown,
+  } = useConfirmCountdown({
+    onExpire: () => setConfirmingSuspend(false),
+  });
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -77,35 +81,11 @@ export function ShopAdminSheet({
 
   useEffect(() => {
     return () => {
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
       if (copyTimeout.current) {
         clearTimeout(copyTimeout.current);
       }
     };
   }, []);
-
-  function cancelCountdown() {
-    if (countdownRef.current) {
-      clearInterval(countdownRef.current);
-      countdownRef.current = null;
-    }
-  }
-
-  function startCountdown() {
-    countRef.current = 5;
-    setConfirmCount(5);
-    cancelCountdown();
-    countdownRef.current = setInterval(() => {
-      countRef.current -= 1;
-      setConfirmCount(countRef.current);
-      if (countRef.current <= 0) {
-        cancelCountdown();
-        setConfirmingSuspend(false);
-      }
-    }, 1000);
-  }
 
   function handleSuspendPress() {
     if (confirmingSuspend) {
@@ -185,7 +165,6 @@ export function ShopAdminSheet({
             </View>
             {shop.is_verified && (
               <View style={styles.verifiedBadge}>
-                <Ionicons name="checkmark-circle" size={14} color={colors.primaryDark} />
                 <Text style={styles.verifiedBadgeText}>Verified</Text>
               </View>
             )}
@@ -365,9 +344,6 @@ const styles = StyleSheet.create({
     color: "#b45309",
   },
   verifiedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
     paddingVertical: 2,
     paddingHorizontal: spacing.sm,
     borderRadius: radius.full,
