@@ -1,66 +1,49 @@
 import { useUser } from "@clerk/expo";
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useRouter } from "expo-router";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
+import { DetailRow, DetailsCard } from "@/components/ui/DetailsCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { loadMemberShops, loadMyMemberships } from "@/lib/barber";
-import { errorMessageFromUnknown } from "@/lib/errors";
 import { fetchOwnProfile } from "@/lib/profile";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useFocusLoad } from "@/lib/useFocusLoad";
+
+type ProfessionalData = {
+  specialty: string | null;
+  years: number | null;
+  shopNames: string[];
+};
 
 export function BarberProfileSection() {
   const { user } = useUser();
   const router = useRouter();
 
-  const [specialty, setSpecialty] = useState<string | null>(null);
-  const [years, setYears] = useState<number | null>(null);
-  const [shopNames, setShopNames] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useFocusEffect(
-    useCallback(() => {
-      let cancelled = false;
-      setLoading(true);
-      setError(null);
-      async function load() {
-        if (!user?.id) {
-          if (!cancelled) {
-            setLoading(false);
-          }
-          return;
-        }
-        try {
-          const [profile, memberships] = await Promise.all([
-            fetchOwnProfile(user.id),
-            loadMyMemberships(user.id),
-          ]);
-          const shops = await loadMemberShops(
-            memberships.map((member) => member.shop_id)
-          );
-          if (cancelled) {
-            return;
-          }
-          setSpecialty(profile?.specialty ?? null);
-          setYears(profile?.years_of_experience ?? null);
-          setShopNames(shops.map((shop) => shop.name));
-        } catch (e) {
-          if (!cancelled) {
-            setError(errorMessageFromUnknown(e));
-          }
-        } finally {
-          if (!cancelled) {
-            setLoading(false);
-          }
-        }
+  const { data, loading, error } = useFocusLoad<ProfessionalData>(
+    async () => {
+      if (!user?.id) {
+        return { specialty: null, years: null, shopNames: [] };
       }
-      void load();
-      return () => {
-        cancelled = true;
+      const [profile, memberships] = await Promise.all([
+        fetchOwnProfile(user.id),
+        loadMyMemberships(user.id),
+      ]);
+      const shops = await loadMemberShops(
+        memberships.map((member) => member.shop_id)
+      );
+      return {
+        specialty: profile?.specialty ?? null,
+        years: profile?.years_of_experience ?? null,
+        shopNames: shops.map((shop) => shop.name),
       };
-    }, [user?.id])
+    },
+    [user?.id]
   );
+
+  const yearsLabel =
+    data?.years != null
+      ? `${data.years} ${data.years === 1 ? "year" : "years"}`
+      : "Not set";
 
   return (
     <View style={styles.section}>
@@ -74,20 +57,10 @@ export function BarberProfileSection() {
           <ActivityIndicator color={colors.primary} />
         </View>
       ) : (
-        <View style={styles.card}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Specialty</Text>
-            <Text style={styles.value} numberOfLines={2}>
-              {specialty ?? "Not set"}
-            </Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Experience</Text>
-            <Text style={styles.value}>
-              {years != null ? `${years} ${years === 1 ? "year" : "years"}` : "Not set"}
-            </Text>
-          </View>
-        </View>
+        <DetailsCard>
+          <DetailRow label="Specialty" value={data?.specialty ?? "Not set"} numberOfLines={2} />
+          <DetailRow label="Experience" value={yearsLabel} />
+        </DetailsCard>
       )}
       {!!error && <Text style={styles.error}>{error}</Text>}
 
@@ -96,13 +69,13 @@ export function BarberProfileSection() {
         <View style={styles.loading}>
           <ActivityIndicator color={colors.primary} />
         </View>
-      ) : shopNames.length === 0 ? (
+      ) : !data || data.shopNames.length === 0 ? (
         <Text style={styles.emptyText}>
           You{"'"}re not part of any shop yet. Join with an invitation code.
         </Text>
       ) : (
         <View style={styles.card}>
-          {shopNames.map((name) => (
+          {data.shopNames.map((name) => (
             <View key={name} style={styles.row}>
               <Text style={styles.value} numberOfLines={1}>
                 {name}
@@ -137,11 +110,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-  },
-  label: {
-    width: 90,
-    fontSize: 13,
-    color: colors.muted,
   },
   value: {
     flex: 1,

@@ -2,10 +2,11 @@ import { useUser } from "@clerk/expo";
 import * as Clipboard from "expo-clipboard";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { emailIsVerified } from "@/lib/auth";
 import type { Role } from "@/lib/roles";
 import { ACCOUNT_TYPE_LABELS } from "@/lib/roles";
-import { colors, radius, spacing } from "@/lib/theme";
+import { colors, spacing } from "@/lib/theme";
 import { formatUsername } from "@/lib/username";
 
 type ProfileSummaryProps = {
@@ -32,14 +33,8 @@ export function ProfileSummary({ role, username }: ProfileSummaryProps) {
           {name}
         </Text>
         <View style={styles.badgeRow}>
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleBadgeText}>{ACCOUNT_TYPE_LABELS[role]}</Text>
-          </View>
-          {verified && (
-            <View style={styles.verifiedBadge}>
-              <Text style={styles.verifiedBadgeText}>Verified</Text>
-            </View>
-          )}
+          <StatusBadge label={ACCOUNT_TYPE_LABELS[role]} tone="warning" />
+          {verified && <StatusBadge label="Verified" tone="role" />}
         </View>
       </View>
       {!!username && (
@@ -90,27 +85,5 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     flexShrink: 0,
     marginLeft: "auto",
-  },
-  roleBadge: {
-    backgroundColor: "#fef3c7",
-    paddingVertical: 2,
-    paddingHorizontal: spacing.xs,
-    borderRadius: radius.full,
-  },
-  roleBadgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#b45309",
-  },
-  verifiedBadge: {
-    backgroundColor: colors.primarySoft,
-    paddingVertical: 2,
-    paddingHorizontal: spacing.xs,
-    borderRadius: radius.full,
-  },
-  verifiedBadgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: colors.primaryDark,
   },
 });

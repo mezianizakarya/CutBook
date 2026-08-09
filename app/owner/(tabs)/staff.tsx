@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -21,6 +22,7 @@ import { FilterChip } from "@/components/ui/FilterChip";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDate } from "@/lib/format";
 import {
@@ -237,9 +239,23 @@ export default function OwnerStaffScreen() {
 
   return (
     <Screen style={styles.screenPadding}>
-      <ScrollView
+      <View style={styles.header}>
+        <Text style={styles.title}>Staff</Text>
+        <Text style={styles.subtitle}>
+          Invite barbers with one-time codes and manage your team.
+        </Text>
+      </View>
+
+      {notice ? <NoticeBanner notice={notice} variant="soft" /> : null}
+
+      {!!error && <Text style={styles.errorText}>{error}</Text>}
+
+      <FlatList
+        style={styles.list}
+        data={visibleStaff}
+        keyExtractor={(member) => String(member.id)}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -247,122 +263,121 @@ export default function OwnerStaffScreen() {
             tintColor={colors.primary}
           />
         }
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>Staff</Text>
-          <Text style={styles.subtitle}>
-            Invite barbers with one-time codes and manage your team.
-          </Text>
-        </View>
+        ListHeaderComponent={
+          <View style={styles.listHeader}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chipRow}
+            >
+              <FilterChip
+                label={shops.length > 1 ? "All shops" : shops[0]?.name ?? "Shop"}
+                selected={shopFilter === "all"}
+                onPress={() => setShopFilter("all")}
+              />
+              {shops.map((shop) => (
+                <FilterChip
+                  key={shop.id}
+                  label={shop.name}
+                  selected={shopFilter === shop.id}
+                  onPress={() => setShopFilter(shop.id)}
+                />
+              ))}
+            </ScrollView>
 
-        {notice ? <NoticeBanner notice={notice} variant="soft" /> : null}
-
-        {!!error && <Text style={styles.errorText}>{error}</Text>}
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipRow}
-        >
-          <FilterChip
-            label={shops.length > 1 ? "All shops" : shops[0]?.name ?? "Shop"}
-            selected={shopFilter === "all"}
-            onPress={() => setShopFilter("all")}
-          />
-          {shops.map((shop) => (
-            <FilterChip
-              key={shop.id}
-              label={shop.name}
-              selected={shopFilter === shop.id}
-              onPress={() => setShopFilter(shop.id)}
-            />
-          ))}
-        </ScrollView>
-
-        <SectionHeader title="Invitations" />
-        {visibleInvitations.length === 0 ? (
-          <View style={styles.inviteEmpty}>
-            <Text style={styles.inviteEmptyTitle}>No invitations yet</Text>
-            <Text style={styles.inviteEmptySubtitle}>
-              Generate a code and share it privately with a barber. Each code
-              works once and expires in 7 days.
-            </Text>
-          </View>
-        ) : (
-          visibleInvitations.map((invite) => {
-            const status = invitationStatus(invite);
-            return (
-              <View key={invite.id} style={styles.inviteRow}>
-                <View style={styles.inviteInfo}>
-                  <Text style={styles.inviteCode}>{invite.code}</Text>
-                  <Text style={styles.inviteMeta}>
-                    {shopName(invite.shop_id)} · {inviteStatusLabel(status, invite)}
-                  </Text>
-                </View>
-                {status === "active" ? (
-                  <View style={styles.inviteActions}>
-                    <Pressable
-                      onPress={() => void handleCopy(invite.code)}
-                      hitSlop={8}
-                      style={styles.iconButton}
-                      accessibilityRole="button"
-                    >
-                      <Text style={styles.iconButtonText}>Copy</Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => handleRevoke(invite)}
-                      hitSlop={8}
-                      style={styles.revokeButton}
-                      accessibilityRole="button"
-                    >
-                      <Text style={styles.revokeButtonText}>Revoke</Text>
-                    </Pressable>
-                  </View>
-                ) : (
-                  <StatusBadge status={status} />
-                )}
+            <SectionHeader title="Invitations" />
+            {visibleInvitations.length === 0 ? (
+              <View style={styles.inviteEmpty}>
+                <Text style={styles.inviteEmptyTitle}>No invitations yet</Text>
+                <Text style={styles.inviteEmptySubtitle}>
+                  Generate a code and share it privately with a barber. Each code
+                  works once and expires in 7 days.
+                </Text>
               </View>
-            );
-          })
-        )}
+            ) : (
+              visibleInvitations.map((invite) => {
+                const status = invitationStatus(invite);
+                return (
+                  <View key={invite.id} style={styles.inviteRow}>
+                    <View style={styles.inviteInfo}>
+                      <Text style={styles.inviteCode}>{invite.code}</Text>
+                      <Text style={styles.inviteMeta}>
+                        {shopName(invite.shop_id)} · {inviteStatusLabel(status, invite)}
+                      </Text>
+                    </View>
+                    {status === "active" ? (
+                      <View style={styles.inviteActions}>
+                        <Pressable
+                          onPress={() => void handleCopy(invite.code)}
+                          hitSlop={8}
+                          style={styles.iconButton}
+                          accessibilityRole="button"
+                        >
+                          <Text style={styles.iconButtonText}>Copy</Text>
+                        </Pressable>
+                        <Pressable
+                          onPress={() => handleRevoke(invite)}
+                          hitSlop={8}
+                          style={styles.revokeButton}
+                          accessibilityRole="button"
+                        >
+                          <Text style={styles.revokeButtonText}>Revoke</Text>
+                        </Pressable>
+                      </View>
+                    ) : (
+                      <StatusBadge
+                        label={inviteStatusLabel(status, invite)}
+                        tone={
+                          status === "used"
+                            ? "success"
+                            : status === "revoked"
+                              ? "danger"
+                              : "warning"
+                        }
+                      />
+                    )}
+                  </View>
+                );
+              })
+            )}
 
-        <Button
-          title={generating ? "Creating…" : "Invite barber"}
-          onPress={handleInvitePress}
-          variant="outline"
-          loading={generating}
-          disabled={generating}
-        />
+            <Button
+              title={generating ? "Creating…" : "Invite barber"}
+              onPress={handleInvitePress}
+              variant="outline"
+              loading={generating}
+              disabled={generating}
+            />
 
-        <SectionHeader title="Staff" />
-        {visibleStaff.length === 0 ? (
+            <SectionHeader title="Staff" />
+          </View>
+        }
+        ListEmptyComponent={
           <View style={styles.inviteEmpty}>
             <Text style={styles.inviteEmptyTitle}>No staff yet</Text>
             <Text style={styles.inviteEmptySubtitle}>
               Once a barber redeems an invitation, they&apos;ll appear here.
             </Text>
           </View>
-        ) : (
-          visibleStaff.map((member) => (
-            <Pressable
-              key={member.id}
-              onPress={() => setSelectedStaff(member)}
-              style={({ pressed }) => [styles.staffRow, pressed && styles.staffRowPressed]}
-            >
-              <Avatar fullName={member.display_name} imageUrl={member.avatar_url} size={44} />
-              <View style={styles.staffInfo}>
-                <Text style={styles.staffName} numberOfLines={1}>
-                  {member.display_name || "Unnamed"}
-                </Text>
-                <Text style={styles.staffMeta} numberOfLines={1}>
-                  {memberRoleLabel(member.member_role)} · {shopName(member.shop_id)}
-                </Text>
-              </View>
-              <Text style={styles.chevron}>›</Text>
-            </Pressable>
-          ))
+        }
+        renderItem={({ item }) => (
+          <Pressable
+            onPress={() => setSelectedStaff(item)}
+            style={({ pressed }) => [styles.staffRow, pressed && styles.staffRowPressed]}
+          >
+            <Avatar fullName={item.display_name} imageUrl={item.avatar_url} size={44} />
+            <View style={styles.staffInfo}>
+              <Text style={styles.staffName} numberOfLines={1}>
+                {item.display_name || "Unnamed"}
+              </Text>
+              <Text style={styles.staffMeta} numberOfLines={1}>
+                {memberRoleLabel(item.member_role)} · {shopName(item.shop_id)}
+              </Text>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
         )}
-      </ScrollView>
+      />
 
       <BottomSheet
         visible={pickShop}
@@ -475,38 +490,6 @@ function inviteStatusLabel(
   }
 }
 
-function StatusBadge({ status }: { status: InvitationStatus }) {
-  return (
-    <View
-      style={[
-        styles.badge,
-        status === "used"
-          ? styles.badgeUsed
-          : status === "revoked"
-            ? styles.badgeDanger
-            : styles.badgeMuted,
-      ]}
-    >
-      <Text
-        style={[
-          styles.badgeText,
-          status === "used"
-            ? styles.badgeTextUsed
-            : status === "revoked"
-              ? styles.badgeTextDanger
-              : styles.badgeTextMuted,
-        ]}
-      >
-        {status === "used"
-          ? "Used"
-          : status === "revoked"
-            ? "Revoked"
-            : "Expired"}
-      </Text>
-    </View>
-  );
-}
-
 function memberRoleLabel(role: OwnerStaffRow["member_role"]): string {
   if (role === "owner") {
     return "Owner";
@@ -524,9 +507,15 @@ const styles = StyleSheet.create({
     paddingRight: 14,
     paddingBottom: 0,
   },
-  scrollContent: {
+  list: {
+    flex: 1,
+  },
+  listContent: {
     gap: spacing.md,
     paddingBottom: 98,
+  },
+  listHeader: {
+    gap: spacing.md,
   },
   header: {
     gap: spacing.xs,
@@ -618,41 +607,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: spacing.md,
     borderRadius: radius.full,
-    backgroundColor: "#fee2e2",
+    backgroundColor: colors.dangerSoft,
   },
   revokeButtonText: {
     fontSize: 13,
     fontWeight: "600",
     color: colors.danger,
-  },
-  badge: {
-    paddingVertical: 4,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.full,
-  },
-  badgeUsed: {
-    backgroundColor: "#dcfce7",
-  },
-  badgeDanger: {
-    backgroundColor: "#fee2e2",
-  },
-  badgeMuted: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  badgeTextUsed: {
-    color: colors.success,
-  },
-  badgeTextDanger: {
-    color: colors.danger,
-  },
-  badgeTextMuted: {
-    color: colors.muted,
   },
   staffRow: {
     flexDirection: "row",

@@ -1,11 +1,10 @@
 import { useFocusEffect } from "expo-router";
 import { useUser } from "@clerk/expo";
+import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   FlatList,
-  Modal,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -13,14 +12,15 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Avatar } from "@/components/ui/Avatar";
 import {
   BookingStatusBadge,
   type BookingStatus,
 } from "@/components/ui/BookingStatusBadge";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
+import { DetailRow, DetailsCard } from "@/components/ui/DetailsCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Screen } from "@/components/ui/Screen";
 import { fetchBookingCustomers, type BookingCustomer, type BookingRow } from "@/lib/booking";
@@ -33,7 +33,6 @@ import {
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents, formatDate, formatDateTime } from "@/lib/format";
 import { colors, radius, spacing } from "@/lib/theme";
-import { useSheetDrag } from "@/lib/useSheetDrag";
 
 export default function BarberClientsScreen() {
   const { user } = useUser();
@@ -171,7 +170,7 @@ export default function BarberClientsScreen() {
             hitSlop={8}
             accessibilityRole="button"
           >
-            <Text style={styles.clearText}>✕</Text>
+            <Ionicons name="close" size={18} color={colors.muted} />
           </Pressable>
         )}
       </View>
@@ -212,22 +211,13 @@ export default function BarberClientsScreen() {
         )}
       />
 
-      <Modal
-        visible={selected !== null}
-        transparent
-        animationType="slide"
-        statusBarTranslucent
-        navigationBarTranslucent
-        onRequestClose={() => setSelected(null)}
-      >
-        {!!selected && (
-          <ClientDetailSheet
-            client={selected}
-            history={historyFor(selected)}
-            onClose={() => setSelected(null)}
-          />
-        )}
-      </Modal>
+      {!!selected && (
+        <ClientDetailSheet
+          client={selected}
+          history={historyFor(selected)}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </Screen>
   );
 }
@@ -287,107 +277,78 @@ type ClientDetailSheetProps = {
 };
 
 function ClientDetailSheet({ client, history, onClose }: ClientDetailSheetProps) {
-  const insets = useSafeAreaInsets();
-  const { translateY, panResponder } = useSheetDrag(onClose);
   const fullName = [client.first_name, client.last_name].filter(Boolean).join(" ") || "Customer";
 
   return (
-    <Pressable style={styles.backdrop} onPress={onClose}>
-      <Pressable onPress={() => undefined}>
-        <Animated.View
-          style={[
-            styles.sheet,
-            {
-              transform: [{ translateY }],
-              paddingBottom: spacing.xl + insets.bottom,
-            },
-          ]}
-        >
-          <View style={styles.dragHandleArea} {...panResponder.panHandlers}>
-            <View style={styles.dragHandle} />
-          </View>
+    <BottomSheet visible onClose={onClose}>
+      <View style={styles.sheetHeader}>
+        <Avatar fullName={fullName} imageUrl={client.avatar_url} size={56} />
+        <View style={styles.sheetHeaderInfo}>
+          <Text style={styles.sheetName} numberOfLines={1}>
+            {fullName}
+          </Text>
+          <Text style={styles.sheetSubtitle} numberOfLines={1}>
+            {[client.phone, client.email].filter(Boolean).join(" · ") || "—"}
+          </Text>
+        </View>
+      </View>
 
-          <View style={styles.sheetHeader}>
-            <Avatar fullName={fullName} imageUrl={client.avatar_url} size={56} />
-            <View style={styles.sheetHeaderInfo}>
-              <Text style={styles.sheetName} numberOfLines={1}>
-                {fullName}
+      <View style={styles.sheetStats}>
+        <View style={styles.sheetStat}>
+          <Text style={styles.sheetStatValue}>{client.booking_count}</Text>
+          <Text style={styles.sheetStatLabel}>Bookings</Text>
+        </View>
+        <View style={styles.sheetStat}>
+          <Text style={styles.sheetStatValue}>{client.completed_count}</Text>
+          <Text style={styles.sheetStatLabel}>Completed</Text>
+        </View>
+        <View style={styles.sheetStat}>
+          <Text style={styles.sheetStatValue}>{client.upcoming_count}</Text>
+          <Text style={styles.sheetStatLabel}>Upcoming</Text>
+        </View>
+      </View>
+
+      <DetailsCard>
+        {!!client.phone && (
+          <DetailRow label="Phone" value={client.phone} />
+        )}
+        {!!client.email && (
+          <DetailRow label="Email" value={client.email} />
+        )}
+        {!!client.favorite_service && (
+          <DetailRow label="Favorite" value={client.favorite_service} />
+        )}
+        {!!client.last_booking && (
+          <DetailRow label="Last visit" value={formatDate(client.last_booking)} />
+        )}
+      </DetailsCard>
+
+      <Text style={styles.historyTitle}>Recent bookings</Text>
+      {history.length === 0 ? (
+        <Text style={styles.historyEmpty}>No bookings on record.</Text>
+      ) : (
+        history.map((row) => (
+          <View key={row.id} style={styles.historyRow}>
+            <View style={styles.historyInfo}>
+              <Text style={styles.historyName} numberOfLines={1}>
+                {row.service_name || "—"}
               </Text>
-              <Text style={styles.sheetSubtitle} numberOfLines={1}>
-                {[client.phone, client.email].filter(Boolean).join(" · ") || "—"}
+              <Text style={styles.historyMeta} numberOfLines={1}>
+                {formatDateTime(row.starts_at)} · {formatCents(row.service_price_cents)}
               </Text>
             </View>
+            <BookingStatusBadge status={row.status as BookingStatus} />
           </View>
+        ))
+      )}
 
-          <View style={styles.sheetStats}>
-            <View style={styles.sheetStat}>
-              <Text style={styles.sheetStatValue}>{client.booking_count}</Text>
-              <Text style={styles.sheetStatLabel}>Bookings</Text>
-            </View>
-            <View style={styles.sheetStat}>
-              <Text style={styles.sheetStatValue}>{client.completed_count}</Text>
-              <Text style={styles.sheetStatLabel}>Completed</Text>
-            </View>
-            <View style={styles.sheetStat}>
-              <Text style={styles.sheetStatValue}>{client.upcoming_count}</Text>
-              <Text style={styles.sheetStatLabel}>Upcoming</Text>
-            </View>
-          </View>
-
-          <View style={styles.sheetCard}>
-            {!!client.phone && (
-              <SheetRow label="Phone" value={client.phone} />
-            )}
-            {!!client.email && (
-              <SheetRow label="Email" value={client.email} />
-            )}
-            {!!client.favorite_service && (
-              <SheetRow label="Favorite" value={client.favorite_service} />
-            )}
-            {!!client.last_booking && (
-              <SheetRow label="Last visit" value={formatDate(client.last_booking)} />
-            )}
-          </View>
-
-          <Text style={styles.historyTitle}>Recent bookings</Text>
-          {history.length === 0 ? (
-            <Text style={styles.historyEmpty}>No bookings on record.</Text>
-          ) : (
-            history.map((row) => (
-              <View key={row.id} style={styles.historyRow}>
-                <View style={styles.historyInfo}>
-                  <Text style={styles.historyName} numberOfLines={1}>
-                    {row.service_name || "—"}
-                  </Text>
-                  <Text style={styles.historyMeta} numberOfLines={1}>
-                    {formatDateTime(row.starts_at)} · {formatCents(row.service_price_cents)}
-                  </Text>
-                </View>
-                <BookingStatusBadge status={row.status as BookingStatus} />
-              </View>
-            ))
-          )}
-
-          <Button
-            title="Close"
-            variant="outline"
-            onPress={onClose}
-            style={styles.sheetClose}
-          />
-        </Animated.View>
-      </Pressable>
-    </Pressable>
-  );
-}
-
-function SheetRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.sheetRow}>
-      <Text style={styles.sheetRowLabel}>{label}</Text>
-      <Text style={styles.sheetRowValue} numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
+      <Button
+        title="Close"
+        variant="outline"
+        onPress={onClose}
+        style={styles.sheetClose}
+      />
+    </BottomSheet>
   );
 }
 
@@ -432,10 +393,6 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     justifyContent: "center",
-  },
-  clearText: {
-    color: colors.muted,
-    fontSize: 16,
   },
   error: {
     color: colors.danger,
@@ -491,35 +448,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.primaryDark,
   },
-  backdrop: {
-    flex: 1,
-    backgroundColor: "transparent",
-    justifyContent: "flex-end",
-  },
-  sheet: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingLeft: 14,
-    paddingRight: 14,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
-    gap: spacing.md,
-  },
-  dragHandleArea: {
-    alignSelf: "center",
-    marginTop: -spacing.md,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.sm,
-  },
-  dragHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: radius.full,
-    backgroundColor: colors.border,
-  },
   sheetHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -560,29 +488,6 @@ const styles = StyleSheet.create({
   sheetStatLabel: {
     fontSize: 12,
     color: colors.muted,
-  },
-  sheetCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  sheetRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  sheetRowLabel: {
-    width: 72,
-    fontSize: 13,
-    color: colors.muted,
-  },
-  sheetRowValue: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.text,
   },
   historyTitle: {
     fontSize: 18,

@@ -14,9 +14,10 @@ import {
   View,
 } from "react-native";
 
-import { Button } from "@/components/ui/Button";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Screen } from "@/components/ui/Screen";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { formatRating } from "@/lib/format";
 import {
   loadFavoriteShops,
   removeFavorite,
@@ -125,18 +126,12 @@ export default function FavoritesScreen() {
           />
         }
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No favorites yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Tap the heart on any shop to save it here.
-            </Text>
-            <Button
-              title="Discover shops"
-              variant="outline"
-              onPress={() => router.push("/customer/discover")}
-              style={styles.discoverButton}
-            />
-          </View>
+          <EmptyState
+            title="No favorites yet"
+            subtitle="Tap the heart on any shop to save it here."
+            actionLabel="Discover shops"
+            onAction={() => router.push("/customer/discover")}
+          />
         }
         renderItem={({ item }) => (
           <Pressable
@@ -165,9 +160,7 @@ export default function FavoritesScreen() {
               <View style={styles.ratingRow}>
                 <Ionicons name="star" size={12} color={colors.success} />
                 <Text style={styles.ratingText}>
-                  {item.rating_avg != null
-                    ? `${Number(item.rating_avg).toFixed(1)} (${item.rating_count ?? 0})`
-                    : "New"}
+                  {formatRating(item.rating_avg, item.rating_count)}
                 </Text>
               </View>
             </View>
@@ -276,30 +269,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: radius.full,
-    backgroundColor: "#fee2e2",
+    backgroundColor: colors.dangerSoft,
     alignItems: "center",
     justifyContent: "center",
   },
   heartButtonPressed: {
     opacity: 0.7,
-  },
-  empty: {
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.xl,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: colors.muted,
-    textAlign: "center",
-  },
-  discoverButton: {
-    marginTop: spacing.sm,
-    backgroundColor: colors.surface,
   },
 });

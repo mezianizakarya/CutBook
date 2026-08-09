@@ -1,12 +1,12 @@
 import { useUser } from "@clerk/expo";
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useRouter } from "expo-router";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { errorMessageFromUnknown } from "@/lib/errors";
+import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
 import { loadOwnerShops, type OwnerShop } from "@/lib/owner";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useFocusLoad } from "@/lib/useFocusLoad";
 
 const STATUS_LABELS: Record<OwnerShop["status"], string> = {
   pending: "Pending",
@@ -14,57 +14,24 @@ const STATUS_LABELS: Record<OwnerShop["status"], string> = {
   suspended: "Suspended",
 };
 
-function statusBadgeStyles(status: OwnerShop["status"]) {
-  switch (status) {
-    case "approved":
-      return { badge: styles.badgeApproved, text: styles.badgeTextApproved };
-    case "suspended":
-      return { badge: styles.badgeSuspended, text: styles.badgeTextSuspended };
-    default:
-      return { badge: styles.badgePending, text: styles.badgeTextPending };
-  }
-}
+const STATUS_TONES: Record<OwnerShop["status"], StatusTone> = {
+  approved: "success",
+  suspended: "danger",
+  pending: "warning",
+};
 
 export function OwnerProfileSection() {
   const { user } = useUser();
   const router = useRouter();
 
-  const [shops, setShops] = useState<OwnerShop[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useFocusEffect(
-    useCallback(() => {
-      let cancelled = false;
-      setLoading(true);
-      setError(null);
-      async function load() {
-        if (!user?.id) {
-          if (!cancelled) {
-            setLoading(false);
-          }
-          return;
-        }
-        try {
-          const rows = await loadOwnerShops(user.id);
-          if (!cancelled) {
-            setShops(rows);
-          }
-        } catch (e) {
-          if (!cancelled) {
-            setError(errorMessageFromUnknown(e));
-          }
-        } finally {
-          if (!cancelled) {
-            setLoading(false);
-          }
-        }
+  const { data: shops, loading, error } = useFocusLoad<OwnerShop[]>(
+    async () => {
+      if (!user?.id) {
+        return [];
       }
-      void load();
-      return () => {
-        cancelled = true;
-      };
-    }, [user?.id])
+      return loadOwnerShops(user.id);
+    },
+    [user?.id]
   );
 
   return (
@@ -85,27 +52,23 @@ export function OwnerProfileSection() {
           </Text>
         </View>
       ) : (
-        (shops ?? []).map((shop) => {
-          const badge = statusBadgeStyles(shop.status);
-          return (
-            <View key={shop.id} style={styles.shopRow}>
-              <View style={styles.shopInfo}>
-                <Text style={styles.shopName} numberOfLines={1}>
-                  {shop.name}
-                </Text>
-                <Text style={styles.shopMeta}>
-                  {shop.city ?? "No city"} ·{" "}
-                  {shop.myRole === "owner" ? "Owner" : "Manager"}
-                </Text>
-              </View>
-              <View style={[styles.badge, badge.badge]}>
-                <Text style={[styles.badgeText, badge.text]}>
-                  {STATUS_LABELS[shop.status]}
-                </Text>
-              </View>
+        (shops ?? []).map((shop) => (
+          <View key={shop.id} style={styles.shopRow}>
+            <View style={styles.shopInfo}>
+              <Text style={styles.shopName} numberOfLines={1}>
+                {shop.name}
+              </Text>
+              <Text style={styles.shopMeta}>
+                {shop.city ?? "No city"} ·{" "}
+                {shop.myRole === "owner" ? "Owner" : "Manager"}
+              </Text>
             </View>
-          );
-        })
+            <StatusBadge
+              label={STATUS_LABELS[shop.status]}
+              tone={STATUS_TONES[shop.status]}
+            />
+          </View>
+        ))
       )}
       {!!error && <Text style={styles.error}>{error}</Text>}
     </View>
@@ -157,33 +120,6 @@ const styles = StyleSheet.create({
   shopMeta: {
     fontSize: 13,
     color: colors.muted,
-  },
-  badge: {
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.full,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  badgePending: {
-    backgroundColor: "#fef3c7",
-  },
-  badgeTextPending: {
-    color: "#b45309",
-  },
-  badgeApproved: {
-    backgroundColor: "#dcfce7",
-  },
-  badgeTextApproved: {
-    color: colors.success,
-  },
-  badgeSuspended: {
-    backgroundColor: "#fee2e2",
-  },
-  badgeTextSuspended: {
-    color: colors.danger,
   },
   error: {
     color: colors.danger,

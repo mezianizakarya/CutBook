@@ -19,6 +19,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { formatDate, formatRating } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useSheetDrag } from "@/lib/useSheetDrag";
@@ -48,21 +49,6 @@ const PAGE_SIZE = 50;
 
 const BARBER_SELECT =
   "id, display_name, avatar_url, joined_at, shops(id, name, city, rating_avg, rating_count, is_verified, logo_url)";
-
-function formatDate(value: string | null): string {
-  if (!value) {
-    return "—";
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-  return date.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 export default function DiscoverScreen() {
   const [barbers, setBarbers] = useState<BarberRow[] | null>(null);
@@ -375,9 +361,7 @@ export default function DiscoverScreen() {
               <View style={styles.ratingBadge}>
                 <Ionicons name="star" size={12} color={colors.success} />
                 <Text style={styles.ratingBadgeText}>
-                  {item.shops?.rating_avg != null
-                    ? Number(item.shops.rating_avg).toFixed(1)
-                    : "New"}
+                  {formatRating(item.shops?.rating_avg ?? null, item.shops?.rating_count ?? null, { showCount: false })}
                 </Text>
               </View>
             </View>
@@ -466,9 +450,11 @@ function BarberSheet({ row, onClose }: BarberSheetProps) {
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Rating</Text>
               <Text style={styles.detailValue}>
-                {row.shops?.rating_avg != null
-                  ? `${Number(row.shops.rating_avg).toFixed(1)} · ${row.shops.rating_count ?? 0} reviews`
-                  : "No reviews yet"}
+                {formatRating(row.shops?.rating_avg ?? null, row.shops?.rating_count ?? null, {
+                  suffix: "reviews",
+                  style: "dot",
+                  fallback: "No reviews yet",
+                })}
               </Text>
             </View>
             <View style={styles.detailRow}>

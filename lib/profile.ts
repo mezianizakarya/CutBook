@@ -1,3 +1,4 @@
+import { runMaybe } from "@/lib/db";
 import type { Role } from "@/lib/roles";
 import { supabase } from "@/lib/supabase";
 
@@ -29,15 +30,13 @@ const OWN_PROFILE_SELECT =
   "id, email, first_name, last_name, phone, avatar_url, bio, city, specialty, years_of_experience, role, username";
 
 export async function fetchOwnProfile(userId: string): Promise<OwnProfile | null> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select(OWN_PROFILE_SELECT)
-    .eq("id", userId)
-    .maybeSingle();
-  if (error) {
-    throw error;
-  }
-  return (data as unknown as OwnProfile | null) ?? null;
+  return runMaybe<OwnProfile>(
+    supabase
+      .from("profiles")
+      .select(OWN_PROFILE_SELECT)
+      .eq("id", userId)
+      .maybeSingle()
+  );
 }
 
 export async function saveBarberProfessional(

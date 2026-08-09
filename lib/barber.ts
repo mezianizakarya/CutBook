@@ -1,5 +1,6 @@
 import type { BookingCustomer, BookingRow } from "@/lib/booking";
 import { BOOKING_SELECT } from "@/lib/booking";
+import { runList, runQuery, uniqueIds } from "@/lib/db";
 import { startOfDay } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
 
@@ -45,16 +46,14 @@ const MEMBER_SELECT =
 export async function loadMyMemberships(
   profileId: string
 ): Promise<BarberMember[]> {
-  const { data, error } = await supabase
-    .from("shop_members")
-    .select(MEMBER_SELECT)
-    .eq("profile_id", profileId)
-    .is("removed_at", null)
-    .order("joined_at", { ascending: true });
-  if (error) {
-    throw error;
-  }
-  return (data ?? []) as unknown as BarberMember[];
+  return runList<BarberMember>(
+    supabase
+      .from("shop_members")
+      .select(MEMBER_SELECT)
+      .eq("profile_id", profileId)
+      .is("removed_at", null)
+      .order("joined_at", { ascending: true })
+  );
 }
 
 export async function leaveShop(memberId: number): Promise<void> {
@@ -65,55 +64,46 @@ export async function leaveShop(memberId: number): Promise<void> {
 }
 
 export async function loadMemberShops(shopIds: number[]): Promise<BarberShop[]> {
-  const ids = [...new Set(shopIds)];
+  const ids = uniqueIds(shopIds);
   if (ids.length === 0) {
     return [];
   }
-  const { data, error } = await supabase
-    .from("shops")
-    .select("id, name, logo_url")
-    .in("id", ids);
-  if (error) {
-    throw error;
-  }
-  return (data ?? []) as unknown as BarberShop[];
+  return runList<BarberShop>(
+    supabase.from("shops").select("id, name, logo_url").in("id", ids)
+  );
 }
 
 export async function loadMyAvailability(
   memberIds: number[]
 ): Promise<AvailabilityRow[]> {
-  const ids = [...new Set(memberIds)];
+  const ids = uniqueIds(memberIds);
   if (ids.length === 0) {
     return [];
   }
-  const { data, error } = await supabase
-    .from("availability")
-    .select("id, shop_member_id, day_of_week, starts_at, ends_at")
-    .in("shop_member_id", ids)
-    .order("day_of_week", { ascending: true })
-    .order("starts_at", { ascending: true });
-  if (error) {
-    throw error;
-  }
-  return (data ?? []) as unknown as AvailabilityRow[];
+  return runList<AvailabilityRow>(
+    supabase
+      .from("availability")
+      .select("id, shop_member_id, day_of_week, starts_at, ends_at")
+      .in("shop_member_id", ids)
+      .order("day_of_week", { ascending: true })
+      .order("starts_at", { ascending: true })
+  );
 }
 
 export async function loadMyTimeOffs(
   memberIds: number[]
 ): Promise<TimeOffRow[]> {
-  const ids = [...new Set(memberIds)];
+  const ids = uniqueIds(memberIds);
   if (ids.length === 0) {
     return [];
   }
-  const { data, error } = await supabase
-    .from("time_offs")
-    .select("id, shop_member_id, starts_at, ends_at, reason")
-    .in("shop_member_id", ids)
-    .order("starts_at", { ascending: false });
-  if (error) {
-    throw error;
-  }
-  return (data ?? []) as unknown as TimeOffRow[];
+  return runList<TimeOffRow>(
+    supabase
+      .from("time_offs")
+      .select("id, shop_member_id, starts_at, ends_at, reason")
+      .in("shop_member_id", ids)
+      .order("starts_at", { ascending: false })
+  );
 }
 
 export async function loadMyBookings(
@@ -121,7 +111,7 @@ export async function loadMyBookings(
   from?: Date,
   to?: Date
 ): Promise<BookingRow[]> {
-  const ids = [...new Set(memberIds)];
+  const ids = uniqueIds(memberIds);
   if (ids.length === 0) {
     return [];
   }
@@ -136,11 +126,7 @@ export async function loadMyBookings(
   if (to) {
     query = query.lt("starts_at", to.toISOString());
   }
-  const { data, error } = await query;
-  if (error) {
-    throw error;
-  }
-  return (data ?? []) as unknown as BookingRow[];
+  return runList<BookingRow>(query);
 }
 
 export async function addDayOff(
@@ -150,20 +136,18 @@ export async function addDayOff(
 ): Promise<TimeOffRow> {
   const start = startOfDay(date);
   const end = new Date(start.getTime() + 86_400_000);
-  const { data, error } = await supabase
-    .from("time_offs")
-    .insert({
-      shop_member_id: memberId,
-      starts_at: start.toISOString(),
-      ends_at: end.toISOString(),
-      reason,
-    })
-    .select("id, shop_member_id, starts_at, ends_at, reason")
-    .single();
-  if (error) {
-    throw error;
-  }
-  return data as unknown as TimeOffRow;
+  return runQuery<TimeOffRow>(
+    supabase
+      .from("time_offs")
+      .insert({
+        shop_member_id: memberId,
+        starts_at: start.toISOString(),
+        ends_at: end.toISOString(),
+        reason,
+      })
+      .select("id, shop_member_id, starts_at, ends_at, reason")
+      .single()
+  );
 }
 
 export async function removeDayOff(timeOffId: number): Promise<void> {

@@ -15,6 +15,7 @@ import {
   dayName,
   formatCents,
   formatOpenRange,
+  formatRating,
 } from "@/lib/format";
 import {
   addFavorite,
@@ -177,9 +178,7 @@ export default function ShopDetailScreen() {
           <View style={styles.metaRow}>
             <Ionicons name="star" size={13} color={colors.success} />
             <Text style={styles.metaText}>
-              {shop.rating_avg != null
-                ? `${Number(shop.rating_avg).toFixed(1)} (${shop.rating_count ?? 0} reviews)`
-                : "New"}
+              {formatRating(shop.rating_avg, shop.rating_count, { suffix: "reviews" })}
             </Text>
             {!!shop.city && (
               <>

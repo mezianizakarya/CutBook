@@ -1,3 +1,4 @@
+import { runList, runMaybe } from "@/lib/db";
 import { supabase } from "@/lib/supabase";
 
 export type ShopSummary = {
@@ -68,55 +69,49 @@ export async function loadShopSummaries(options: {
   } else {
     builder = builder.order("created_at", { ascending: false });
   }
-  const { data, error } = await builder.range(
-    options.start,
-    options.start + options.count - 1
+  return runList<ShopSummary>(
+    builder.range(options.start, options.start + options.count - 1)
   );
-  if (error) {
-    throw error;
-  }
-  return (data ?? []) as unknown as ShopSummary[];
 }
 
 /** The shops a customer has favorited, most recent first. */
 export async function loadFavoriteShops(customerId: string): Promise<ShopSummary[]> {
-  const { data, error } = await supabase
-    .from("favorites")
-    .select(`shop:shops(${SHOP_SUMMARY_SELECT})`)
-    .eq("customer_id", customerId)
-    .order("created_at", { ascending: false });
-  if (error) {
-    throw error;
-  }
-  return (data ?? [])
-    .map((row) => (row as unknown as { shop: ShopSummary | null }).shop)
+  const rows = await runList<{ shop: ShopSummary | null }>(
+    supabase
+      .from("favorites")
+      .select(`shop:shops(${SHOP_SUMMARY_SELECT})`)
+      .eq("customer_id", customerId)
+      .order("created_at", { ascending: false })
+  );
+  return rows
+    .map((row) => row.shop)
     .filter((shop): shop is ShopSummary => shop !== null);
 }
 
 export async function loadShopDetail(shopId: number): Promise<ShopDetail | null> {
-  const { data, error } = await supabase
-    .from("shops")
-    .select(
-      `${SHOP_SUMMARY_SELECT}, description, address_line1, address_line2, state, country, postal_code, phone, email, website, services:services(id, name, description, price_cents, duration_minutes, category, is_active), members:shop_members(id, display_name, avatar_url, member_role, joined_at), working_hours(id, day_of_week, opens_at, closes_at, is_closed)`
-    )
-    .eq("id", shopId)
-    .maybeSingle();
-  if (error) {
-    throw error;
-  }
+  const data = await runMaybe<
+    Omit<ShopDetail, "services" | "members"> & {
+      services: (ShopService & { is_active: boolean })[];
+      members: ShopMember[];
+    }
+  >(
+    supabase
+      .from("shops")
+      .select(
+        `${SHOP_SUMMARY_SELECT}, description, address_line1, address_line2, state, country, postal_code, phone, email, website, services:services(id, name, description, price_cents, duration_minutes, category, is_active), members:shop_members(id, display_name, avatar_url, member_role, joined_at), working_hours(id, day_of_week, opens_at, closes_at, is_closed)`
+      )
+      .eq("id", shopId)
+      .maybeSingle()
+  );
   if (!data) {
     return null;
   }
-  const raw = data as unknown as Omit<ShopDetail, "services" | "members"> & {
-    services: (ShopService & { is_active: boolean })[];
-    members: ShopMember[];
-  };
   return {
-    ...raw,
-    services: (raw.services ?? [])
+    ...data,
+    services: (data.services ?? [])
       .filter((service) => service.is_active !== false)
       .sort((a, b) => (a.category ?? "").localeCompare(b.category ?? "")),
-    members: (raw.members ?? []).filter((member) => member.member_role === "barber"),
+    members: (data.members ?? []).filter((member) => member.member_role === "barber"),
   };
 }
 

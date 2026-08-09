@@ -1,25 +1,26 @@
 import * as Clipboard from "expo-clipboard";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
+import { DetailRow, DetailsCard } from "@/components/ui/DetailsCard";
+import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
 import type { AdminShop, ShopStatus } from "@/lib/admin";
 import { updateShopFields } from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatRating } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
-import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
-
-type Tone = "danger" | "success" | "role";
+import { useConfirmAction } from "@/lib/useConfirmAction";
+import type { NoticeTone } from "@/lib/useNotice";
 
 type ShopAdminSheetProps = {
   shop: AdminShop;
   onClose: () => void;
   onUpdated: (shop: AdminShop) => void;
-  onNotice: (message: string, tone: Tone) => void;
+  onNotice: (message: string, tone: NoticeTone) => void;
 };
 
 const STATUS_LABELS: Record<ShopStatus, string> = {
@@ -28,11 +29,18 @@ const STATUS_LABELS: Record<ShopStatus, string> = {
   suspended: "Suspended",
 };
 
-function formatRating(shop: AdminShop): string {
-  if (shop.rating_count == null || shop.rating_count === 0) {
-    return "No reviews yet";
-  }
-  return `${Number(shop.rating_avg ?? 0).toFixed(1)} (${shop.rating_count})`;
+const STATUS_TONES: Record<ShopStatus, StatusTone> = {
+  approved: "success",
+  suspended: "danger",
+  pending: "warning",
+};
+
+function CopyPill({ copied }: { copied: boolean }) {
+  return (
+    <Text style={[styles.copyPill, copied ? styles.copyPillCopied : null]}>
+      {copied ? "Copied" : "Copy"}
+    </Text>
+  );
 }
 
 export function ShopAdminSheet({
@@ -43,15 +51,14 @@ export function ShopAdminSheet({
 }: ShopAdminSheetProps) {
   const [shop, setShop] = useState(initial);
   const [busy, setBusy] = useState(false);
-  const [confirmingSuspend, setConfirmingSuspend] = useState(false);
   const [ownerName, setOwnerName] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<"email" | "phone" | null>(null);
   const {
+    confirming: confirmingSuspend,
     count: confirmCount,
-    start: startCountdown,
-    cancel: cancelCountdown,
-  } = useConfirmCountdown({
-    onExpire: () => setConfirmingSuspend(false),
+    press: suspendPress,
+  } = useConfirmAction(() => {
+    void performUpdate({ status: "suspended" }, "Shop suspended");
   });
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -86,17 +93,6 @@ export function ShopAdminSheet({
       }
     };
   }, []);
-
-  function handleSuspendPress() {
-    if (confirmingSuspend) {
-      setConfirmingSuspend(false);
-      cancelCountdown();
-      void performUpdate({ status: "suspended" }, "Shop suspended");
-    } else {
-      setConfirmingSuspend(true);
-      startCountdown();
-    }
-  }
 
   async function performUpdate(
     patch: Parameters<typeof updateShopFields>[1],
@@ -140,99 +136,48 @@ export function ShopAdminSheet({
             @{shop.slug}
           </Text>
           <View style={styles.badgeRow}>
-            <View
-              style={[
-                styles.statusBadge,
-                shop.status === "approved"
-                  ? styles.statusApproved
-                  : shop.status === "suspended"
-                    ? styles.statusSuspended
-                    : styles.statusPending,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.statusBadgeText,
-                  shop.status === "approved"
-                    ? styles.statusTextApproved
-                    : shop.status === "suspended"
-                      ? styles.statusTextSuspended
-                      : styles.statusTextPending,
-                ]}
-              >
-                {STATUS_LABELS[shop.status]}
-              </Text>
-            </View>
-            {shop.is_verified && (
-              <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedBadgeText}>Verified</Text>
-              </View>
-            )}
-            {!shop.is_active && (
-              <View style={styles.inactiveBadge}>
-                <Text style={styles.inactiveBadgeText}>Closed</Text>
-              </View>
-            )}
+            <StatusBadge
+              label={STATUS_LABELS[shop.status]}
+              tone={STATUS_TONES[shop.status]}
+            />
+            {shop.is_verified && <StatusBadge label="Verified" tone="role" />}
+            {!shop.is_active && <StatusBadge label="Closed" tone="danger" />}
           </View>
         </View>
       </View>
 
-      <View style={styles.detailsCard}>
+      <DetailsCard>
         {shop.city ? (
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Location</Text>
-            <Text style={styles.detailValue} numberOfLines={1}>
-              {[shop.address_line1, shop.city, shop.state].filter(Boolean).join(", ")}
-            </Text>
-          </View>
+          <DetailRow
+            label="Location"
+            value={[shop.address_line1, shop.city, shop.state].filter(Boolean).join(", ")}
+          />
         ) : null}
         {shop.email ? (
-          <Pressable
+          <DetailRow
+            label="Email"
+            value={shop.email}
             onPress={() => copyToClipboard(shop.email ?? "", "email")}
-            style={styles.detailRow}
-          >
-            <Text style={styles.detailLabel}>Email</Text>
-            <Text style={styles.detailValue} numberOfLines={1}>
-              {shop.email}
-            </Text>
-            {copiedField === "email" ? (
-              <Text style={styles.copiedText}>Copied</Text>
-            ) : (
-              <Text style={styles.copyHint}>Copy</Text>
-            )}
-          </Pressable>
+            action={<CopyPill copied={copiedField === "email"} />}
+          />
         ) : null}
         {shop.phone ? (
-          <Pressable
+          <DetailRow
+            label="Phone"
+            value={shop.phone}
             onPress={() => copyToClipboard(shop.phone ?? "", "phone")}
-            style={styles.detailRow}
-          >
-            <Text style={styles.detailLabel}>Phone</Text>
-            <Text style={styles.detailValue} numberOfLines={1}>
-              {shop.phone}
-            </Text>
-            {copiedField === "phone" ? (
-              <Text style={styles.copiedText}>Copied</Text>
-            ) : (
-              <Text style={styles.copyHint}>Copy</Text>
-            )}
-          </Pressable>
+            action={<CopyPill copied={copiedField === "phone"} />}
+          />
         ) : null}
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Rating</Text>
-          <Text style={styles.detailValue}>{formatRating(shop)}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Owner</Text>
-          <Text style={styles.detailValue} numberOfLines={1}>
-            {ownerName ?? "—"}
-          </Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Registered</Text>
-          <Text style={styles.detailValue}>{formatDate(shop.created_at)}</Text>
-        </View>
-      </View>
+        <DetailRow
+          label="Rating"
+          value={formatRating(shop.rating_avg, shop.rating_count, {
+            fallback: "No reviews yet",
+          })}
+        />
+        <DetailRow label="Owner" value={ownerName ?? "—"} />
+        <DetailRow label="Registered" value={formatDate(shop.created_at)} />
+      </DetailsCard>
 
       {shop.status === "pending" ? (
         <Button
@@ -248,7 +193,7 @@ export function ShopAdminSheet({
           variant={confirmingSuspend ? "danger" : "dangerOutline"}
           loading={busy}
           disabled={busy}
-          onPress={handleSuspendPress}
+          onPress={suspendPress}
         />
       ) : (
         <Button
@@ -316,96 +261,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.xs,
   },
-  statusBadge: {
+  copyPill: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.primaryDark,
+    backgroundColor: colors.primarySoft,
     paddingVertical: 2,
     paddingHorizontal: spacing.sm,
     borderRadius: radius.full,
+    overflow: "hidden",
   },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  statusApproved: {
-    backgroundColor: "#dcfce7",
-  },
-  statusTextApproved: {
+  copyPillCopied: {
     color: colors.success,
-  },
-  statusSuspended: {
-    backgroundColor: "#fee2e2",
-  },
-  statusTextSuspended: {
-    color: colors.danger,
-  },
-  statusPending: {
-    backgroundColor: "#fef3c7",
-  },
-  statusTextPending: {
-    color: "#b45309",
-  },
-  verifiedBadge: {
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.full,
-    backgroundColor: colors.primarySoft,
-  },
-  verifiedBadgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.primaryDark,
-  },
-  inactiveBadge: {
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.full,
-    backgroundColor: "#fee2e2",
-  },
-  inactiveBadgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.danger,
-  },
-  detailsCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  detailRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  detailLabel: {
-    width: 90,
-    fontSize: 13,
-    color: colors.muted,
-  },
-  detailValue: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.text,
-  },
-  copiedText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.primaryDark,
-    backgroundColor: colors.primarySoft,
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.full,
-    overflow: "hidden",
-  },
-  copyHint: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.primaryDark,
-    backgroundColor: colors.primarySoft,
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.full,
-    overflow: "hidden",
+    backgroundColor: colors.successSoft,
   },
 });

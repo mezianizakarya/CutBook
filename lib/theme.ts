@@ -8,7 +8,11 @@ export const colors = {
   muted: "#71717a",
   border: "#e4e4e7",
   danger: "#dc2626",
+  dangerSoft: "#fee2e2",
   success: "#16a34a",
+  successSoft: "#dcfce7",
+  warning: "#b45309",
+  warningSoft: "#fef3c7",
   white: "#ffffff",
   black: "#000000",
 } as const;

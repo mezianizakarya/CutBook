@@ -38,11 +38,11 @@ const bordered = StyleSheet.create({
     justifyContent: "center",
   },
   success: {
-    backgroundColor: "#dcfce7",
+    backgroundColor: colors.successSoft,
     borderColor: colors.success,
   },
   danger: {
-    backgroundColor: "#fee2e2",
+    backgroundColor: colors.dangerSoft,
     borderColor: colors.danger,
   },
   role: {
@@ -72,10 +72,10 @@ const soft = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   success: {
-    backgroundColor: "#dcfce7",
+    backgroundColor: colors.successSoft,
   },
   danger: {
-    backgroundColor: "#fee2e2",
+    backgroundColor: colors.dangerSoft,
   },
   role: {
     backgroundColor: colors.primarySoft,

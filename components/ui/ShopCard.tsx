@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { formatRating } from "@/lib/format";
 import { colors, radius, spacing } from "@/lib/theme";
 
 export type ShopCardRow = {
@@ -55,9 +56,7 @@ export function ShopCard({ shop, onPress }: ShopCardProps) {
         <View style={styles.ratingRow}>
           <Ionicons name="star" size={12} color={colors.success} />
           <Text style={styles.rating}>
-            {shop.rating_avg != null
-              ? `${Number(shop.rating_avg).toFixed(1)} (${shop.rating_count ?? 0})`
-              : "New"}
+            {formatRating(shop.rating_avg, shop.rating_count)}
           </Text>
         </View>
       </View>

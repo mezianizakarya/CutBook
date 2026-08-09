@@ -101,14 +101,6 @@ export const COUNTRIES: readonly Country[] = [
 /** Default selection shown before the user picks anything. */
 export const DEFAULT_COUNTRY: Country = COUNTRIES[0];
 
-const COUNTRY_BY_CODE = new Map<string, Country>(
-  COUNTRIES.map((country) => [country.code, country])
-);
-
-export function findCountryByCode(code: string): Country | null {
-  return COUNTRY_BY_CODE.get(code) ?? null;
-}
-
 /**
  * Splits a phone value like "+2135550001234" into its country and the local
  * number. Matches the longest dial-code prefix; on ties the last match wins

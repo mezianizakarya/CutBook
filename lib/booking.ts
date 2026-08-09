@@ -1,3 +1,4 @@
+import { runList, runQuery, uniqueIds } from "@/lib/db";
 import { supabase } from "@/lib/supabase";
 
 export type BookingCardRow = {
@@ -56,28 +57,24 @@ export function isCancellable(row: BookingRow, now = new Date()): boolean {
 }
 
 export async function cancelBooking(bookingId: number): Promise<BookingRow> {
-  const { data, error } = await supabase
-    .rpc("cancel_booking", { p_booking_id: bookingId })
-    .select(BOOKING_SELECT)
-    .single();
-  if (error) {
-    throw error;
-  }
-  return data as unknown as BookingRow;
+  return runQuery<BookingRow>(
+    supabase
+      .rpc("cancel_booking", { p_booking_id: bookingId })
+      .select(BOOKING_SELECT)
+      .single()
+  );
 }
 
 export async function setBookingStatus(
   bookingId: number,
   status: "confirmed" | "completed" | "no_show"
 ): Promise<BookingRow> {
-  const { data, error } = await supabase
-    .rpc("set_booking_status", { p_booking_id: bookingId, p_status: status })
-    .select(BOOKING_SELECT)
-    .single();
-  if (error) {
-    throw error;
-  }
-  return data as unknown as BookingRow;
+  return runQuery<BookingRow>(
+    supabase
+      .rpc("set_booking_status", { p_booking_id: bookingId, p_status: status })
+      .select(BOOKING_SELECT)
+      .single()
+  );
 }
 
 export function nextStaffTransition(status: BookingStatus): string {
@@ -133,17 +130,11 @@ export function patchBookingRow(
 export async function fetchBookingCustomers(
   bookingIds: number[]
 ): Promise<BookingCustomer[]> {
-  const ids = [...new Set(bookingIds)].filter(
-    (id): id is number => Number.isFinite(id)
-  );
+  const ids = uniqueIds(bookingIds.filter((id) => Number.isFinite(id)));
   if (ids.length === 0) {
     return [];
   }
-  const { data, error } = await supabase.rpc("booking_customer_details", {
-    p_booking_ids: ids,
-  });
-  if (error) {
-    throw error;
-  }
-  return (data ?? []) as unknown as BookingCustomer[];
+  return runList<BookingCustomer>(
+    supabase.rpc("booking_customer_details", { p_booking_ids: ids })
+  );
 }

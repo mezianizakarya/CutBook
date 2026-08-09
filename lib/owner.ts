@@ -1,4 +1,5 @@
 import { BOOKING_SELECT, type BookingRow } from "@/lib/booking";
+import { runList, runQuery, uniqueIds } from "@/lib/db";
 import { waitForDbRole } from "@/lib/profile";
 import { supabase } from "@/lib/supabase";
 
@@ -43,6 +44,9 @@ export type OwnerService = {
   sort_order: number;
 };
 
+export const SERVICE_SELECT =
+  "id, name, description, price_cents, duration_minutes, category, is_active, sort_order";
+
 export type WorkingHoursRow = {
   day_of_week: number;
   opens_at: string | null;
@@ -62,36 +66,32 @@ export async function loadOwnerShops(profileId: string): Promise<OwnerShop[]> {
   if (!profileId) {
     return [];
   }
-  const { data: memberships, error: membershipsError } = await supabase
-    .from("shop_members")
-    .select("shop_id, member_role")
-    .eq("profile_id", profileId)
-    .in("member_role", ["owner", "manager"])
-    .is("removed_at", null);
-  if (membershipsError) {
-    throw membershipsError;
-  }
+  const memberships = await runList<{
+    shop_id: number;
+    member_role: "owner" | "manager";
+  }>(
+    supabase
+      .from("shop_members")
+      .select("shop_id, member_role")
+      .eq("profile_id", profileId)
+      .in("member_role", ["owner", "manager"])
+      .is("removed_at", null)
+  );
   const roleById = new Map<number, "owner" | "manager">();
-  for (const member of memberships ?? []) {
+  for (const member of memberships) {
     roleById.set(member.shop_id, member.member_role);
   }
   const shopIds = [...roleById.keys()];
   if (shopIds.length === 0) {
     return [];
   }
-  const { data, error } = await supabase
-    .from("shops")
-    .select(SHOP_MANAGE_SELECT)
-    .in("id", shopIds);
-  if (error) {
-    throw error;
-  }
-  return ((data ?? []) as unknown as Omit<OwnerShop, "myRole">[]).map(
-    (shop) => ({
-      ...shop,
-      myRole: roleById.get(shop.id) ?? "owner",
-    })
+  const shops = await runList<Omit<OwnerShop, "myRole">>(
+    supabase.from("shops").select(SHOP_MANAGE_SELECT).in("id", shopIds)
   );
+  return shops.map((shop) => ({
+    ...shop,
+    myRole: roleById.get(shop.id) ?? "owner",
+  }));
 }
 
 /** Bookings across the owned/managed shops in the [from, to) window. */
@@ -100,21 +100,19 @@ export async function loadShopBookings(
   from: Date,
   to: Date
 ): Promise<BookingRow[]> {
-  const ids = [...new Set(shopIds)];
+  const ids = uniqueIds(shopIds);
   if (ids.length === 0) {
     return [];
   }
-  const { data, error } = await supabase
-    .from("bookings")
-    .select(BOOKING_SELECT)
-    .in("shop_id", ids)
-    .gte("starts_at", from.toISOString())
-    .lt("starts_at", to.toISOString())
-    .order("starts_at", { ascending: false });
-  if (error) {
-    throw error;
-  }
-  return (data ?? []) as unknown as BookingRow[];
+  return runList<BookingRow>(
+    supabase
+      .from("bookings")
+      .select(BOOKING_SELECT)
+      .in("shop_id", ids)
+      .gte("starts_at", from.toISOString())
+      .lt("starts_at", to.toISOString())
+      .order("starts_at", { ascending: false })
+  );
 }
 
 const STAFF_SELECT =
@@ -124,20 +122,18 @@ const STAFF_SELECT =
 export async function loadShopStaff(
   shopIds: number[]
 ): Promise<OwnerStaffRow[]> {
-  const ids = [...new Set(shopIds)];
+  const ids = uniqueIds(shopIds);
   if (ids.length === 0) {
     return [];
   }
-  const { data, error } = await supabase
-    .from("shop_members")
-    .select(STAFF_SELECT)
-    .in("shop_id", ids)
-    .is("removed_at", null)
-    .neq("member_role", "owner");
-  if (error) {
-    throw error;
-  }
-  const rows = (data ?? []) as unknown as OwnerStaffRow[];
+  const rows = await runList<OwnerStaffRow>(
+    supabase
+      .from("shop_members")
+      .select(STAFF_SELECT)
+      .in("shop_id", ids)
+      .is("removed_at", null)
+      .neq("member_role", "owner")
+  );
   const rank: Record<OwnerStaffRow["member_role"], number> = {
     owner: 0,
     manager: 1,
@@ -162,18 +158,14 @@ export async function removeStaffMember(memberId: number): Promise<void> {
 }
 
 export async function loadShopServices(shopId: number): Promise<OwnerService[]> {
-  const { data, error } = await supabase
-    .from("services")
-    .select(
-      "id, name, description, price_cents, duration_minutes, category, is_active, sort_order"
-    )
-    .eq("shop_id", shopId)
-    .order("sort_order", { ascending: true })
-    .order("name", { ascending: true });
-  if (error) {
-    throw error;
-  }
-  return (data ?? []) as unknown as OwnerService[];
+  return runList<OwnerService>(
+    supabase
+      .from("services")
+      .select(SERVICE_SELECT)
+      .eq("shop_id", shopId)
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true })
+  );
 }
 
 export type ServiceInput = {
@@ -184,39 +176,48 @@ export type ServiceInput = {
   category?: string | null;
 };
 
+export function validateServiceInput(input: ServiceInput): string[] {
+  const errors: string[] = [];
+  if (!input.name.trim()) {
+    errors.push("Service name is required.");
+  }
+  if (!Number.isFinite(input.price_cents) || input.price_cents < 0) {
+    errors.push("Price must be zero or more.");
+  }
+  if (!Number.isInteger(input.duration_minutes) || input.duration_minutes <= 0) {
+    errors.push("Duration must be a positive number of minutes.");
+  }
+  return errors;
+}
+
 export async function createService(
   shopId: number,
   input: ServiceInput
 ): Promise<OwnerService> {
-  const { data, error } = await supabase
-    .from("services")
-    .insert({ ...input, shop_id: shopId })
-    .select(
-      "id, name, description, price_cents, duration_minutes, category, is_active, sort_order"
-    )
-    .single();
-  if (error) {
-    throw error;
+  const errors = validateServiceInput(input);
+  if (errors.length > 0) {
+    throw new Error(errors[0]);
   }
-  return data as unknown as OwnerService;
+  return runQuery<OwnerService>(
+    supabase
+      .from("services")
+      .insert({ ...input, shop_id: shopId })
+      .select(SERVICE_SELECT)
+      .single()
+  );
 }
 
 export async function updateService(
   id: number,
   input: ServiceInput
 ): Promise<OwnerService> {
-  const { data, error } = await supabase
-    .from("services")
-    .update(input)
-    .eq("id", id)
-    .select(
-      "id, name, description, price_cents, duration_minutes, category, is_active, sort_order"
-    )
-    .single();
-  if (error) {
-    throw error;
+  const errors = validateServiceInput(input);
+  if (errors.length > 0) {
+    throw new Error(errors[0]);
   }
-  return data as unknown as OwnerService;
+  return runQuery<OwnerService>(
+    supabase.from("services").update(input).eq("id", id).select(SERVICE_SELECT).single()
+  );
 }
 
 export async function setServiceActive(
@@ -233,15 +234,13 @@ export async function setServiceActive(
 }
 
 export async function loadWorkingHours(shopId: number): Promise<WorkingHoursRow[]> {
-  const { data, error } = await supabase
-    .from("working_hours")
-    .select("day_of_week, opens_at, closes_at, is_closed")
-    .eq("shop_id", shopId)
-    .order("day_of_week", { ascending: true });
-  if (error) {
-    throw error;
-  }
-  return (data ?? []) as unknown as WorkingHoursRow[];
+  return runList<WorkingHoursRow>(
+    supabase
+      .from("working_hours")
+      .select("day_of_week, opens_at, closes_at, is_closed")
+      .eq("shop_id", shopId)
+      .order("day_of_week", { ascending: true })
+  );
 }
 
 /** Replaces the whole weekly schedule (delete + insert in one call each). */
@@ -333,21 +332,20 @@ export async function createShop(draft: ShopDraft, ownerId: string): Promise<num
     );
   }
   const suffix = Math.random().toString(36).slice(2, 6);
-  const { data, error } = await supabase.rpc("create_shop", {
-    p_name: draft.name.trim(),
-    p_slug: `${slugify(draft.name)}-${suffix}`,
-    p_description: draft.description?.trim() || null,
-    p_city: draft.city?.trim() || null,
-    p_state: draft.state?.trim() || null,
-    p_country: draft.country?.trim() || null,
-    p_postal_code: draft.postal_code?.trim() || null,
-    p_address_line1: draft.address_line1?.trim() || null,
-    p_phone: draft.phone?.trim() || null,
-    p_email: draft.email?.trim() || null,
-    p_website: draft.website?.trim() || null,
-  });
-  if (error) {
-    throw error;
-  }
-  return (data as unknown as OwnerShop).id;
+  const shop = await runQuery<OwnerShop>(
+    supabase.rpc("create_shop", {
+      p_name: draft.name.trim(),
+      p_slug: `${slugify(draft.name)}-${suffix}`,
+      p_description: draft.description?.trim() || null,
+      p_city: draft.city?.trim() || null,
+      p_state: draft.state?.trim() || null,
+      p_country: draft.country?.trim() || null,
+      p_postal_code: draft.postal_code?.trim() || null,
+      p_address_line1: draft.address_line1?.trim() || null,
+      p_phone: draft.phone?.trim() || null,
+      p_email: draft.email?.trim() || null,
+      p_website: draft.website?.trim() || null,
+    })
+  );
+  return shop.id;
 }

@@ -138,3 +138,34 @@ export function formatOpenRange(
   }
   return `${formatTimeOfDay(opensAt)} – ${formatTimeOfDay(closesAt)}`;
 }
+
+type FormatRatingOptions = {
+  /** Whether to include the review count. Defaults to true. */
+  showCount?: boolean;
+  /** Word appended after the count, e.g. "reviews". */
+  suffix?: string;
+  /** "parens" renders "(12)", "dot" renders "· 12". Defaults to "parens". */
+  style?: "parens" | "dot";
+  /** Shown when there are no reviews. Defaults to "New". */
+  fallback?: string;
+};
+
+/** Formats a shop rating + review count, e.g. "4.5 (12)" or "4.5 · 12 reviews". */
+export function formatRating(
+  ratingAvg: number | null | undefined,
+  ratingCount: number | null | undefined,
+  options?: FormatRatingOptions
+): string {
+  if (ratingAvg == null || ratingCount == null || ratingCount <= 0) {
+    return options?.fallback ?? "New";
+  }
+  const avg = Number(ratingAvg).toFixed(1);
+  if (options?.showCount === false) {
+    return avg;
+  }
+  const suffix = options?.suffix ? `${ratingCount} ${options.suffix}` : String(ratingCount);
+  if (options?.style === "dot") {
+    return `${avg} · ${suffix}`;
+  }
+  return `${avg} (${suffix})`;
+}

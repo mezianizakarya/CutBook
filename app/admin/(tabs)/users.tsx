@@ -25,6 +25,7 @@ import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { adminSetUserDeleted, adminSetUserRole } from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { formatDate } from "@/lib/format";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/roles";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -64,21 +65,6 @@ function fullName(row: ProfileRow): string {
     .join(" ")
     .trim();
   return name || "—";
-}
-
-function formatDate(value: string | null): string {
-  if (!value) {
-    return "—";
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-  return date.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 }
 
 export default function UsersScreen() {

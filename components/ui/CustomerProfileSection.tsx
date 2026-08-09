@@ -1,82 +1,57 @@
 import { useUser } from "@clerk/expo";
-import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatCard } from "@/components/ui/StatCard";
-import { errorMessageFromUnknown } from "@/lib/errors";
 import { loadFavoriteShops } from "@/lib/shop";
 import { supabase } from "@/lib/supabase";
 import { colors, spacing } from "@/lib/theme";
+import { useFocusLoad } from "@/lib/useFocusLoad";
 
 type BookingCounts = {
   all: number;
   upcoming: number;
 };
 
+type ActivityData = {
+  counts: BookingCounts;
+  favorites: number;
+};
+
 export function CustomerProfileSection() {
   const { user } = useUser();
   const customerId = user?.id;
 
-  const [counts, setCounts] = useState<BookingCounts | null>(null);
-  const [favorites, setFavorites] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useFocusEffect(
-    useCallback(() => {
-      let cancelled = false;
-      setLoading(true);
-      setError(null);
-      async function load() {
-        if (!customerId) {
-          if (!cancelled) {
-            setCounts({ all: 0, upcoming: 0 });
-            setFavorites(0);
-          }
-          return;
-        }
-        try {
-          const [bookingResult, favoriteShops] = await Promise.all([
-            supabase
-              .from("bookings")
-              .select("status, starts_at")
-              .eq("customer_id", customerId),
-            loadFavoriteShops(customerId),
-          ]);
-          if (cancelled) {
-            return;
-          }
-          const rows = (bookingResult.data ?? []) as {
-            status: string;
-            starts_at: string;
-          }[];
-          const now = Date.now();
-          setCounts({
-            all: rows.length,
-            upcoming: rows.filter(
-              (row) =>
-                (row.status === "pending" || row.status === "confirmed") &&
-                new Date(row.starts_at).getTime() >= now
-            ).length,
-          });
-          setFavorites(favoriteShops.length);
-        } catch (e) {
-          if (!cancelled) {
-            setError(errorMessageFromUnknown(e));
-          }
-        } finally {
-          if (!cancelled) {
-            setLoading(false);
-          }
-        }
+  const { data, loading, error } = useFocusLoad<ActivityData>(
+    async () => {
+      if (!customerId) {
+        return { counts: { all: 0, upcoming: 0 }, favorites: 0 };
       }
-      void load();
-      return () => {
-        cancelled = true;
+      const [bookingResult, favoriteShops] = await Promise.all([
+        supabase
+          .from("bookings")
+          .select("status, starts_at")
+          .eq("customer_id", customerId),
+        loadFavoriteShops(customerId),
+      ]);
+      const rows = (bookingResult.data ?? []) as {
+        status: string;
+        starts_at: string;
+      }[];
+      const now = Date.now();
+      return {
+        counts: {
+          all: rows.length,
+          upcoming: rows.filter(
+            (row) =>
+              (row.status === "pending" || row.status === "confirmed") &&
+              new Date(row.starts_at).getTime() >= now
+          ).length,
+        },
+        favorites: favoriteShops.length,
       };
-    }, [customerId])
+    },
+    [customerId]
   );
 
   return (
@@ -88,9 +63,9 @@ export function CustomerProfileSection() {
         </View>
       ) : (
         <View style={styles.statsRow}>
-          <StatCard label="Bookings" value={String(counts?.all ?? 0)} />
-          <StatCard label="Upcoming" value={String(counts?.upcoming ?? 0)} />
-          <StatCard label="Favorites" value={String(favorites ?? 0)} />
+          <StatCard label="Bookings" value={String(data?.counts.all ?? 0)} />
+          <StatCard label="Upcoming" value={String(data?.counts.upcoming ?? 0)} />
+          <StatCard label="Favorites" value={String(data?.favorites ?? 0)} />
         </View>
       )}
       {!!error && <Text style={styles.error}>{error}</Text>}

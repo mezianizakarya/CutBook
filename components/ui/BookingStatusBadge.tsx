@@ -1,6 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
-
-import { colors, radius } from "@/lib/theme";
+import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
 
 export type BookingStatus =
   | "pending"
@@ -17,59 +15,18 @@ const STATUS_LABELS: Record<BookingStatus, string> = {
   no_show: "No-show",
 };
 
+const STATUS_TONES: Record<BookingStatus, StatusTone> = {
+  pending: "warning",
+  confirmed: "role",
+  completed: "success",
+  cancelled: "danger",
+  no_show: "danger",
+};
+
 type BookingStatusBadgeProps = {
   status: BookingStatus;
 };
 
 export function BookingStatusBadge({ status }: BookingStatusBadgeProps) {
-  return (
-    <View style={[styles.badge, styles[status]]}>
-      <Text style={[styles.label, styles[`${status}Label`]]}>
-        {STATUS_LABELS[status]}
-      </Text>
-    </View>
-  );
+  return <StatusBadge label={STATUS_LABELS[status]} tone={STATUS_TONES[status]} />;
 }
-
-const styles = StyleSheet.create({
-  badge: {
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    borderRadius: radius.full,
-    alignSelf: "flex-start",
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  pending: {
-    backgroundColor: "#fef3c7",
-  },
-  pendingLabel: {
-    color: "#b45309",
-  },
-  confirmed: {
-    backgroundColor: colors.primarySoft,
-  },
-  confirmedLabel: {
-    color: colors.primaryDark,
-  },
-  completed: {
-    backgroundColor: "#dcfce7",
-  },
-  completedLabel: {
-    color: colors.success,
-  },
-  cancelled: {
-    backgroundColor: "#fee2e2",
-  },
-  cancelledLabel: {
-    color: colors.danger,
-  },
-  no_show: {
-    backgroundColor: "#fee2e2",
-  },
-  no_showLabel: {
-    color: colors.danger,
-  },
-});

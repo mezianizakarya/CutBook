@@ -1,5 +1,6 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 
+import { runList } from "@/lib/db";
 import { startOfDay } from "@/lib/format";
 import type { Role } from "@/lib/roles";
 import { supabase } from "@/lib/supabase";
@@ -65,11 +66,7 @@ export async function loadAdminShops(
     const q = query.trim().toLowerCase();
     builder = builder.or(`name.ilike.%${q}%,city.ilike.%${q}%,slug.ilike.%${q}%`);
   }
-  const { data, error } = await builder.order("created_at", { ascending: false });
-  if (error) {
-    throw error;
-  }
-  return (data ?? []) as unknown as AdminShop[];
+  return runList<AdminShop>(builder.order("created_at", { ascending: false }));
 }
 
 export async function loadAdminStats(): Promise<AdminStats> {
@@ -146,15 +143,14 @@ export async function loadAdminStats(): Promise<AdminStats> {
       ),
     ]);
 
-  const { data: monthBookings, error: monthError } = await supabase
-    .from("bookings")
-    .select("service_price_cents")
-    .eq("status", "completed")
-    .gte("starts_at", monthStart)
-    .lt("starts_at", monthEnd);
-  if (monthError) {
-    throw monthError;
-  }
+  const monthBookings = await runList<{ service_price_cents: number }>(
+    supabase
+      .from("bookings")
+      .select("service_price_cents")
+      .eq("status", "completed")
+      .gte("starts_at", monthStart)
+      .lt("starts_at", monthEnd)
+  );
 
   return {
     activeUsers,
@@ -163,25 +159,23 @@ export async function loadAdminStats(): Promise<AdminStats> {
     shops,
     pendingShops,
     todayBookings,
-    monthRevenueCents: (monthBookings ?? []).reduce(
-      (sum, row) => sum + ((row as { service_price_cents: number }).service_price_cents ?? 0),
+    monthRevenueCents: monthBookings.reduce(
+      (sum, row) => sum + (row.service_price_cents ?? 0),
       0
     ),
   };
 }
 
 export async function loadRecentUsers(limit = 8): Promise<RecentUser[]> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select(
-      "id, email, username, first_name, last_name, avatar_url, role, account_status, created_at"
-    )
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (error) {
-    throw error;
-  }
-  return (data ?? []) as unknown as RecentUser[];
+  return runList<RecentUser>(
+    supabase
+      .from("profiles")
+      .select(
+        "id, email, username, first_name, last_name, avatar_url, role, account_status, created_at"
+      )
+      .order("created_at", { ascending: false })
+      .limit(limit)
+  );
 }
 
 export async function updateShopFields(

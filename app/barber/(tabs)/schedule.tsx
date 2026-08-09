@@ -4,7 +4,6 @@ import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -15,6 +14,7 @@ import {
 
 import { BookingCard } from "@/components/ui/BookingCard";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { StaffBookingSheet } from "@/components/ui/StaffBookingSheet";
 import { Button } from "@/components/ui/Button";
@@ -38,6 +38,7 @@ import {
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatOpenRange, isSameDay, startOfDay } from "@/lib/format";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useNotice } from "@/lib/useNotice";
 
 const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
 
@@ -66,6 +67,7 @@ export default function BarberScheduleScreen() {
   const [selectedDay, setSelectedDay] = useState(() => startOfDay(new Date()));
   const [selected, setSelected] = useState<BookingRow | null>(null);
   const [changing, setChanging] = useState(false);
+  const { notice, showNotice } = useNotice();
 
   const weekDays = useMemo(() => {
     const start = weekStart(new Date());
@@ -270,6 +272,8 @@ export default function BarberScheduleScreen() {
           </Text>
         </View>
 
+        {notice ? <NoticeBanner notice={notice} /> : null}
+
         {!!error && <Text style={styles.error}>{error}</Text>}
 
         <ScrollView
@@ -362,24 +366,16 @@ export default function BarberScheduleScreen() {
         )}
       </ScrollView>
 
-      <Modal
-        visible={selected !== null}
-        transparent
-        animationType="slide"
-        statusBarTranslucent
-        navigationBarTranslucent
-        onRequestClose={() => setSelected(null)}
-      >
-        {!!selected && (
-          <StaffBookingSheet
-            row={selected}
-            customer={customerById.get(selected.id) ?? null}
-            onClose={() => setSelected(null)}
-            onUpdated={handleUpdated}
-            onNotice={() => undefined}
-          />
-        )}
-      </Modal>
+      {!!selected && (
+        <StaffBookingSheet
+          key={selected.id}
+          row={selected}
+          customer={customerById.get(selected.id) ?? null}
+          onClose={() => setSelected(null)}
+          onUpdated={handleUpdated}
+          onNotice={showNotice}
+        />
+      )}
     </Screen>
   );
 }

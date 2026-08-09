@@ -1,13 +1,17 @@
 -- CutBook: Supabase schema for Clerk (third-party auth) + RLS.
 --
--- The canonical, production schema lives in:
---   supabase/migrations/20260806000000_initial_schema.sql
+-- The migrations directory (supabase/migrations/) is the SINGLE SOURCE OF
+-- TRUTH for the production schema. Every numbered migration file is required,
+-- and they must be applied IN ORDER — never apply only
+-- `20260806000000_initial_schema.sql` on its own, because later migrations
+-- alter columns, add indexes/constraints and define RPCs on top of it.
 --
--- Apply it via:
---   Supabase Dashboard -> SQL Editor -> paste the migration file contents, or
---   `supabase db push` once the Supabase CLI is set up.
+-- Apply the full set via:
+--   npx --yes supabase@latest db push --linked
+-- (The dashboard SQL editor is only a fallback for inspecting individual
+-- files; it is not the canonical apply path.)
 --
--- Identity notes (from the migration header):
+-- Identity notes (from the initial migration header):
 --   * Clerk user IDs are strings like "user_2abc..." (NOT UUIDs), so the
 --     ownership columns are TEXT and policies compare against
 --     auth.jwt() ->> 'sub' instead of auth.uid().

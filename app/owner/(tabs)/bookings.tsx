@@ -3,7 +3,7 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Modal,
+  FlatList,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -169,9 +169,56 @@ export default function OwnerBookingsScreen() {
 
   return (
     <Screen style={styles.screenPadding}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Bookings</Text>
+        <Text style={styles.subtitle}>All appointments across your shops.</Text>
+      </View>
+
+      {notice ? <NoticeBanner notice={notice} variant="soft" /> : null}
+
+      {!!error && <Text style={styles.errorText}>{error}</Text>}
+
       <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipRow}
+      >
+        <FilterChip
+          label={shops.length > 1 ? "All shops" : shops[0]?.name ?? "Shop"}
+          selected={shopFilter === "all"}
+          onPress={() => setShopFilter("all")}
+        />
+        {shops.map((shop) => (
+          <FilterChip
+            key={shop.id}
+            label={shop.name}
+            selected={shopFilter === shop.id}
+            onPress={() => setShopFilter(shop.id)}
+          />
+        ))}
+      </ScrollView>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chipRow}
+      >
+        {STATUS_FILTERS.map((filter) => (
+          <FilterChip
+            key={filter.key}
+            label={filter.label}
+            selected={statusFilter === filter.key}
+            onPress={() => setStatusFilter(filter.key)}
+          />
+        ))}
+      </ScrollView>
+
+      <FlatList
+        style={styles.list}
+        data={filtered}
+        keyExtractor={(row) => String(row.id)}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -179,90 +226,34 @@ export default function OwnerBookingsScreen() {
             tintColor={colors.primary}
           />
         }
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>Bookings</Text>
-          <Text style={styles.subtitle}>All appointments across your shops.</Text>
-        </View>
-
-        {notice ? <NoticeBanner notice={notice} variant="soft" /> : null}
-
-        {!!error && <Text style={styles.errorText}>{error}</Text>}
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipRow}
-        >
-          <FilterChip
-            label={shops.length > 1 ? "All shops" : shops[0]?.name ?? "Shop"}
-            selected={shopFilter === "all"}
-            onPress={() => setShopFilter("all")}
-          />
-          {shops.map((shop) => (
-            <FilterChip
-              key={shop.id}
-              label={shop.name}
-              selected={shopFilter === shop.id}
-              onPress={() => setShopFilter(shop.id)}
-            />
-          ))}
-        </ScrollView>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipRow}
-        >
-          {STATUS_FILTERS.map((filter) => (
-            <FilterChip
-              key={filter.key}
-              label={filter.label}
-              selected={statusFilter === filter.key}
-              onPress={() => setStatusFilter(filter.key)}
-            />
-          ))}
-        </ScrollView>
-
-        {filtered.length === 0 ? (
+        ListEmptyComponent={
           <EmptyState
             title="No bookings"
             subtitle="Try a different filter or check back later."
           />
-        ) : (
-          filtered.map((row) => (
-            <BookingCard
-              key={row.id}
-              booking={toBookingCard(row)}
-              onPress={(card) => {
-                const full = bookings?.find((b) => b.id === card.id) ?? null;
-                if (full) {
-                  setSelected(full);
-                }
-              }}
-            />
-          ))
-        )}
-      </ScrollView>
-
-      <Modal
-        visible={selected !== null}
-        transparent
-        animationType="slide"
-        statusBarTranslucent
-        navigationBarTranslucent
-        onRequestClose={() => setSelected(null)}
-      >
-        {!!selected && (
-          <StaffBookingSheet
-            row={selected}
-            customer={customerById.get(selected.id) ?? null}
-            onClose={() => setSelected(null)}
-            onUpdated={handleUpdated}
-            onNotice={showNotice}
+        }
+        renderItem={({ item }) => (
+          <BookingCard
+            booking={toBookingCard(item)}
+            onPress={(card) => {
+              const full = bookings?.find((b) => b.id === card.id) ?? null;
+              if (full) {
+                setSelected(full);
+              }
+            }}
           />
         )}
-      </Modal>
+      />
+
+      {!!selected && (
+        <StaffBookingSheet
+          row={selected}
+          customer={customerById.get(selected.id) ?? null}
+          onClose={() => setSelected(null)}
+          onUpdated={handleUpdated}
+          onNotice={showNotice}
+        />
+      )}
     </Screen>
   );
 }
@@ -274,7 +265,10 @@ const styles = StyleSheet.create({
     paddingRight: 14,
     paddingBottom: 0,
   },
-  scrollContent: {
+  list: {
+    flex: 1,
+  },
+  listContent: {
     gap: spacing.md,
     paddingBottom: 98,
   },

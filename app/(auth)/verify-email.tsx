@@ -6,7 +6,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
-import { errorMessage } from "@/lib/errors";
+import { errorMessage, errorMessageFromUnknown } from "@/lib/errors";
 import { colors, spacing } from "@/lib/theme";
 
 type VerifyMode = "signup" | "reset" | "verify";
@@ -53,7 +53,7 @@ export default function VerifyEmailScreen() {
       try {
         await email.prepareVerification({ strategy: "email_code" });
       } catch (error) {
-        setSendError(error instanceof Error ? error.message : "Failed to send the code.");
+        setSendError(errorMessageFromUnknown(error));
         return;
       }
     }

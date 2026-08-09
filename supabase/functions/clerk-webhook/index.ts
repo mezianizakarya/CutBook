@@ -45,7 +45,7 @@ async function upsertProfile(data: ClerkEvent["data"]): Promise<void> {
     data.email_addresses?.find((e) => e.id === data.primary_email_address_id)
       ?.email_address ??
     data.email_addresses?.[0]?.email_address ??
-    "";
+    null;
 
   const record: Record<string, unknown> = {
     id: data.id,
