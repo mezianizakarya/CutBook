@@ -158,7 +158,7 @@ export default function OwnerDashboardScreen() {
 
   if (shops.length === 0) {
     return (
-      <Screen scroll style={styles.screenPadding}>
+      <Screen scroll paddingHorizontal={14} style={styles.screenPadding}>
         <EmptyState
           title="You don't manage a shop yet"
           subtitle="Create your first shop to start taking bookings. It appears on CutBook once approved."
@@ -177,7 +177,7 @@ export default function OwnerDashboardScreen() {
   });
 
   return (
-    <Screen style={styles.screenPadding}>
+    <Screen paddingHorizontal={14} style={styles.screenPadding}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -270,8 +270,6 @@ export default function OwnerDashboardScreen() {
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
     paddingBottom: 0,
   },
   scrollContent: {

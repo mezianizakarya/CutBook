@@ -1,78 +1,151 @@
 import { useUser } from "@clerk/expo";
 import { useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
+import { Button } from "@/components/ui/Button";
+import { CompleteProfileFirstSheet } from "@/components/ui/CompleteProfileFirstSheet";
 import { DetailRow, DetailsCard } from "@/components/ui/DetailsCard";
+import { JoinShopForm } from "@/components/ui/JoinShopForm";
+import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { loadMemberShops, loadMyMemberships } from "@/lib/barber";
-import { fetchOwnProfile } from "@/lib/profile";
+import {
+  fetchOwnProfile,
+  isBarberProfessionalComplete,
+  type OwnProfile,
+} from "@/lib/profile";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useFocusLoad } from "@/lib/useFocusLoad";
+import { useNotice } from "@/lib/useNotice";
 
-type ProfessionalData = {
-  specialty: string | null;
-  years: number | null;
+type BarberProfileData = {
+  profile: OwnProfile | null;
   shopNames: string[];
 };
 
+/**
+ * Barber profile page sections: professional completion state (DB-backed) and
+ * shop membership. Joining a shop is gated on the same completion check the
+ * `redeem_shop_invitation` RPC enforces.
+ */
 export function BarberProfileSection() {
   const { user } = useUser();
   const router = useRouter();
+  const { notice, showNotice } = useNotice();
+  const [joinVisible, setJoinVisible] = useState(false);
+  const [completeProfileVisible, setCompleteProfileVisible] = useState(false);
 
-  const { data, loading, error } = useFocusLoad<ProfessionalData>(
-    async () => {
-      if (!user?.id) {
-        return { specialty: null, years: null, shopNames: [] };
-      }
-      const [profile, memberships] = await Promise.all([
-        fetchOwnProfile(user.id),
-        loadMyMemberships(user.id),
-      ]);
-      const shops = await loadMemberShops(
-        memberships.map((member) => member.shop_id)
-      );
-      return {
-        specialty: profile?.specialty ?? null,
-        years: profile?.years_of_experience ?? null,
-        shopNames: shops.map((shop) => shop.name),
-      };
-    },
+  const loader = useCallback(async () => {
+    if (!user?.id) {
+      return { profile: null, shopNames: [] };
+    }
+    const [profile, memberships] = await Promise.all([
+      fetchOwnProfile(user.id),
+      loadMyMemberships(user.id),
+    ]);
+    const shops = await loadMemberShops(
+      memberships.map((member) => member.shop_id)
+    );
+    return {
+      profile,
+      shopNames: shops.map((shop) => shop.name),
+    };
+  }, [user?.id]);
+
+  const { data, setData, loading, error } = useFocusLoad<BarberProfileData>(
+    loader,
     [user?.id]
   );
 
+  const complete = isBarberProfessionalComplete(data?.profile ?? null);
+
+  async function handleJoined(shopName: string) {
+    showNotice(`You joined ${shopName}`, "success");
+    setData(await loader());
+  }
+
+  function handleJoinPress() {
+    if (complete) {
+      setJoinVisible(true);
+    } else {
+      setCompleteProfileVisible(true);
+    }
+  }
+
   const yearsLabel =
-    data?.years != null
-      ? `${data.years} ${data.years === 1 ? "year" : "years"}`
-      : "Not set";
+    data?.profile?.years_of_experience != null
+      ? `${data.profile.years_of_experience} ${
+          data.profile.years_of_experience === 1 ? "year" : "years"
+        }`
+      : null;
 
   return (
     <View style={styles.section}>
       <SectionHeader
-        title="Professional"
+        title="Professional profile"
         actionLabel="Edit"
         onAction={() => router.push("/onboarding/barber-professional")}
       />
+
+      {complete ? (
+        <NoticeBanner
+          variant="soft"
+          notice={{ message: "Professional profile complete", tone: "success" }}
+        />
+      ) : (
+        <View style={styles.incompleteCard}>
+          <Text style={styles.incompleteText}>
+            Complete your professional profile to join a shop.
+          </Text>
+          <Button
+            title="Complete professional profile"
+            onPress={() => router.push("/onboarding/barber-professional")}
+          />
+        </View>
+      )}
+
       {loading ? (
         <View style={styles.loading}>
           <ActivityIndicator color={colors.primary} />
         </View>
       ) : (
         <DetailsCard>
-          <DetailRow label="Specialty" value={data?.specialty ?? "Not set"} numberOfLines={2} />
-          <DetailRow label="Experience" value={yearsLabel} />
+          <DetailRow
+            label="Specialty"
+            value={data?.profile?.specialty ?? "Not set"}
+            numberOfLines={2}
+          />
+          <DetailRow label="Experience" value={yearsLabel ?? "Not set"} />
+          {!!data?.profile?.bio && (
+            <DetailRow
+              label="Bio"
+              value={data.profile.bio}
+              numberOfLines={2}
+            />
+          )}
         </DetailsCard>
       )}
       {!!error && <Text style={styles.error}>{error}</Text>}
 
-      <SectionHeader title="My shops" />
+      <SectionHeader title="Shop" />
+
       {loading ? (
         <View style={styles.loading}>
           <ActivityIndicator color={colors.primary} />
         </View>
       ) : !data || data.shopNames.length === 0 ? (
-        <Text style={styles.emptyText}>
-          You{"'"}re not part of any shop yet. Join with an invitation code.
-        </Text>
+        <View style={styles.shopCard}>
+          <Text style={styles.shopEmpty}>Not joined yet.</Text>
+          <Text style={styles.shopHint}>
+            Ask your shop owner for an invitation code to join.
+          </Text>
+          <Button
+            title="Join a shop with code"
+            variant="outline"
+            onPress={handleJoinPress}
+          />
+        </View>
       ) : (
         <View style={styles.card}>
           {data.shopNames.map((name) => (
@@ -84,6 +157,25 @@ export function BarberProfileSection() {
           ))}
         </View>
       )}
+
+      {notice ? <NoticeBanner notice={notice} /> : null}
+
+      <JoinShopForm
+        visible={joinVisible}
+        onClose={() => setJoinVisible(false)}
+        onJoined={(shopName) => {
+          setJoinVisible(false);
+          void handleJoined(shopName);
+        }}
+      />
+      <CompleteProfileFirstSheet
+        visible={completeProfileVisible}
+        onClose={() => setCompleteProfileVisible(false)}
+        onCompleteProfile={() => {
+          setCompleteProfileVisible(false);
+          router.push("/onboarding/barber-professional");
+        }}
+      />
     </View>
   );
 }
@@ -92,6 +184,19 @@ const styles = StyleSheet.create({
   section: {
     gap: spacing.sm,
     paddingBottom: spacing.md,
+  },
+  incompleteCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  incompleteText: {
+    fontSize: 14,
+    color: colors.muted,
+    lineHeight: 20,
   },
   loading: {
     height: 74,
@@ -116,11 +221,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text,
   },
-  emptyText: {
-    fontSize: 14,
+  shopCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  shopEmpty: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  shopHint: {
+    fontSize: 13,
     color: colors.muted,
-    textAlign: "center",
-    paddingVertical: spacing.sm,
+    lineHeight: 18,
   },
   error: {
     color: colors.danger,

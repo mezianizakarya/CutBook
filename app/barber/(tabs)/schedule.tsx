@@ -237,7 +237,10 @@ export default function BarberScheduleScreen() {
 
   if (context && context.memberships.length === 0) {
     return (
-      <Screen scroll style={styles.screenPadding}>
+      <Screen scroll paddingHorizontal={14} paddingTop={spacing.sm}>
+        <View style={styles.pageHeader}>
+          <Text style={styles.pageTitle}>Schedule</Text>
+        </View>
         <EmptyState
           title="Not assigned to a shop"
           subtitle="You're not a member of any barbershop yet. Ask your shop owner to add you as staff."
@@ -431,6 +434,15 @@ const styles = StyleSheet.create({
     paddingLeft: 14,
     paddingRight: 14,
     paddingBottom: 0,
+  },
+  pageHeader: {
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.text,
   },
   scrollContent: {
     gap: spacing.md,

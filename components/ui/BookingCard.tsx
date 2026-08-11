@@ -1,10 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Avatar } from "@/components/ui/Avatar";
-import {
-  BookingStatusBadge,
-  type BookingStatus,
-} from "@/components/ui/BookingStatusBadge";
+import { BookingStatusBadge } from "@/components/ui/BookingStatusBadge";
 import type { BookingCardRow } from "@/lib/booking";
 import { formatCents, formatDateTime } from "@/lib/format";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -42,6 +39,13 @@ export function BookingCard({ booking, onPress }: BookingCardProps) {
         <Text style={styles.time} numberOfLines={1}>
           {formatDateTime(booking.starts_at)}
         </Text>
+        {booking.applied_reward_title ? (
+          <View style={styles.rewardBadge}>
+            <Text style={styles.rewardBadgeText} numberOfLines={1}>
+              {booking.applied_reward_title} applied
+            </Text>
+          </View>
+        ) : null}
       </View>
       <View style={styles.trailing}>
         <BookingStatusBadge status={booking.status} />
@@ -81,6 +85,19 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 12,
     color: colors.muted,
+  },
+  rewardBadge: {
+    marginTop: spacing.xs,
+    paddingVertical: 2,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.full,
+    alignSelf: "flex-start",
+    backgroundColor: colors.primarySoft,
+  },
+  rewardBadgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.primaryDark,
   },
   trailing: {
     alignItems: "flex-end",

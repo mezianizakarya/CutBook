@@ -9,6 +9,7 @@ export type BookingCardRow = {
   service_price_cents: number;
   shop: { id: number; name: string; logo_url: string | null } | null;
   staff: { id: number; display_name: string; avatar_url: string | null } | null;
+  applied_reward_title: string | null;
 };
 
 export type BookingStatus =
@@ -23,18 +24,24 @@ export type BookingRow = {
   status: BookingStatus;
   starts_at: string;
   ends_at: string | null;
+  started_at: string | null;
+  extended_minutes: number;
+  paused_at: string | null;
+  paused_minutes: number;
+  completed_at: string | null;
   service_name: string;
   service_price_cents: number;
   service_duration_minutes: number;
   note: string | null;
   cancel_reason: string | null;
   cancelled_at: string | null;
+  applied_reward_title: string | null;
   shop: { id: number; name: string; logo_url: string | null } | null;
   staff: { id: number; display_name: string; avatar_url: string | null } | null;
 };
 
 export const BOOKING_SELECT =
-  "id, status, starts_at, ends_at, service_name, service_price_cents, service_duration_minutes, note, cancel_reason, cancelled_at, shop:shops(id, name, logo_url), staff:shop_members(id, display_name, avatar_url)";
+  "id, status, starts_at, ends_at, started_at, extended_minutes, paused_at, paused_minutes, completed_at, service_name, service_price_cents, service_duration_minutes, note, cancel_reason, cancelled_at, applied_reward_title, shop:shops(id, name, logo_url), staff:shop_members(id, display_name, avatar_url)";
 
 export function toBookingCard(row: BookingRow): BookingCardRow {
   return {
@@ -45,6 +52,7 @@ export function toBookingCard(row: BookingRow): BookingCardRow {
     service_price_cents: row.service_price_cents,
     shop: row.shop,
     staff: row.staff,
+    applied_reward_title: row.applied_reward_title,
   };
 }
 

@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Keyboard, StyleSheet, Text, View } from "react-native";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { redeemShopInvitation } from "@/lib/invitations";
-import { colors, spacing } from "@/lib/theme";
+import { colors, radius, spacing } from "@/lib/theme";
 
 type JoinShopFormProps = {
   visible: boolean;
@@ -43,6 +43,7 @@ export function JoinShopForm({ visible, onClose, onJoined }: JoinShopFormProps) 
     try {
       const result = await redeemShopInvitation(trimmed);
       setJoined(result.shop_name);
+      Keyboard.dismiss();
     } catch (e) {
       setError(errorMessageFromUnknown(e));
     } finally {
@@ -67,7 +68,7 @@ export function JoinShopForm({ visible, onClose, onJoined }: JoinShopFormProps) 
             Welcome to {joined}. Your schedule and clients will appear on your
             dashboard.
           </Text>
-          <Button title="Done" onPress={handleClose} />
+          <Button title="Done" onPress={handleClose} style={styles.doneButton} />
         </View>
       ) : (
         <>
@@ -115,13 +116,21 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   successTitle: {
-    fontSize: 20,
-    fontWeight: "700",
+    backgroundColor: "#dcfce7",
     color: colors.success,
+    fontSize: 17,
+    fontWeight: "700",
+    borderRadius: radius.full,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    overflow: "hidden",
   },
   successText: {
     fontSize: 14,
     color: colors.muted,
     textAlign: "center",
+  },
+  doneButton: {
+    alignSelf: "stretch",
   },
 });

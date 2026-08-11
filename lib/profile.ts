@@ -39,9 +39,29 @@ export async function fetchOwnProfile(userId: string): Promise<OwnProfile | null
   );
 }
 
+/**
+ * Whether a barber has completed their required professional fields.
+ * Mirrors the authoritative gate in `redeem_shop_invitation`: BOTH a
+ * non-blank specialty and a valid years_of_experience are required. Bio is
+ * optional and never gates joining a shop.
+ */
+export function isBarberProfessionalComplete(
+  profile: Pick<OwnProfile, "specialty" | "years_of_experience"> | null
+): boolean {
+  return (
+    profile?.specialty != null &&
+    profile.specialty.trim() !== "" &&
+    profile.years_of_experience != null
+  );
+}
+
 export async function saveBarberProfessional(
   userId: string,
-  input: { specialty: string | null; yearsOfExperience: number | null }
+  input: {
+    specialty: string | null;
+    yearsOfExperience: number | null;
+    bio?: string | null;
+  }
 ): Promise<void> {
   const specialty = input.specialty?.trim() ? input.specialty.trim() : null;
   const { error } = await supabase
@@ -49,6 +69,9 @@ export async function saveBarberProfessional(
     .update({
       specialty,
       years_of_experience: input.yearsOfExperience,
+      ...(input.bio !== undefined && {
+        bio: input.bio?.trim() ? input.bio.trim() : null,
+      }),
     })
     .eq("id", userId);
   if (error) {

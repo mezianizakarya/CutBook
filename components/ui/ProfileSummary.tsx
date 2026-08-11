@@ -2,6 +2,7 @@ import { useUser } from "@clerk/expo";
 import * as Clipboard from "expo-clipboard";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { ReputationBadge } from "@/components/ui/ReputationBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { emailIsVerified } from "@/lib/auth";
 import type { Role } from "@/lib/roles";
@@ -18,6 +19,7 @@ export function ProfileSummary({ role, username }: ProfileSummaryProps) {
   const { user } = useUser();
   const name = user?.fullName ?? "Your name";
   const verified = emailIsVerified(user);
+  const isCustomer = role === "customer";
 
   async function handleCopyUsername() {
     if (!username) {
@@ -34,7 +36,11 @@ export function ProfileSummary({ role, username }: ProfileSummaryProps) {
         </Text>
         <View style={styles.badgeRow}>
           <StatusBadge label={ACCOUNT_TYPE_LABELS[role]} tone="warning" />
-          {verified && <StatusBadge label="Verified" tone="role" />}
+          {isCustomer ? (
+            <ReputationBadge />
+          ) : (
+            verified && <StatusBadge label="Verified" tone="role" />
+          )}
         </View>
       </View>
       {!!username && (

@@ -37,7 +37,7 @@ export function Screen({
   return (
     <SafeAreaView style={styles.safe} edges={hasTabBar ? ["top"] : ["top", "bottom"]}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
       >
         {scroll ? (

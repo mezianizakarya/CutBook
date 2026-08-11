@@ -8,8 +8,13 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View
 import { Avatar } from "@/components/ui/Avatar";
 import { BookingModal } from "@/components/ui/BookingModal";
 import { Button } from "@/components/ui/Button";
+import { NoticeBanner } from "@/components/ui/NoticeBanner";
+import { ReviewCard } from "@/components/ui/ReviewCard";
+import { ReviewSheet } from "@/components/ui/ReviewSheet";
 import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { ShopLoyaltyCard } from "@/components/ui/ShopLoyaltyCard";
+import { StarRating } from "@/components/ui/StarRating";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import {
   dayName,
@@ -17,6 +22,12 @@ import {
   formatOpenRange,
   formatRating,
 } from "@/lib/format";
+import {
+  loadCompletedBookingId,
+  loadMyShopReview,
+  loadShopReviews,
+  type ReviewRow,
+} from "@/lib/reviews";
 import {
   addFavorite,
   fetchFavoriteShopIds,
@@ -26,6 +37,7 @@ import {
   type ShopService,
 } from "@/lib/shop";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useNotice } from "@/lib/useNotice";
 
 function serviceDurationLabel(service: ShopService): string {
   return service.duration_minutes >= 60
@@ -47,6 +59,11 @@ export default function ShopDetailScreen() {
   const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
   const [togglingFavorite, setTogglingFavorite] = useState(false);
   const [bookingVisible, setBookingVisible] = useState(false);
+  const [reviews, setReviews] = useState<ReviewRow[]>([]);
+  const [myReview, setMyReview] = useState<ReviewRow | null>(null);
+  const [completedBookingId, setCompletedBookingId] = useState<number | null>(null);
+  const [reviewVisible, setReviewVisible] = useState(false);
+  const { notice, showNotice } = useNotice();
 
   const load = useCallback(async () => {
     if (!Number.isFinite(shopId)) {
@@ -56,8 +73,16 @@ export default function ShopDetailScreen() {
     }
     setError(null);
     try {
-      const detail = await loadShopDetail(shopId);
+      const [detail, publishedReviews, ownReview, completedBooking] = await Promise.all([
+        loadShopDetail(shopId),
+        loadShopReviews(shopId),
+        user?.id ? loadMyShopReview(shopId, user.id) : Promise.resolve(null),
+        user?.id ? loadCompletedBookingId(shopId, user.id) : Promise.resolve(null),
+      ]);
       setShop(detail);
+      setReviews(publishedReviews);
+      setMyReview(ownReview);
+      setCompletedBookingId(completedBooking);
       if (detail === null) {
         setError("This shop is not available right now.");
       }
@@ -68,6 +93,23 @@ export default function ShopDetailScreen() {
       setError(errorMessageFromUnknown(e));
     }
   }, [shopId, user?.id]);
+
+  function handleReviewSaved(review: ReviewRow) {
+    setMyReview(review);
+    showNotice(
+      review.status === "pending"
+        ? "Review submitted — pending approval"
+        : "Review updated",
+      "success"
+    );
+    void load().catch(() => undefined);
+  }
+
+  function handleReviewDeleted() {
+    setMyReview(null);
+    showNotice("Review removed", "success");
+    void load().catch(() => undefined);
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -323,6 +365,70 @@ export default function ShopDetailScreen() {
         </View>
       )}
 
+      {!!user?.id && (
+        <ShopLoyaltyCard shopId={shop.id} customerId={user.id} />
+      )}
+
+      <SectionHeader title="Reviews" />
+
+      {notice ? <NoticeBanner notice={notice} /> : null}
+
+      {!!user?.id && !!completedBookingId && (
+        <Button
+          title={myReview ? "Edit your review" : "Leave a review"}
+          variant={myReview ? "outline" : "primary"}
+          onPress={() => setReviewVisible(true)}
+          style={styles.reviewCta}
+        />
+      )}
+
+      {myReview?.status === "pending" && (
+        <Text style={styles.reviewPending}>Your review is awaiting approval.</Text>
+      )}
+
+      {reviews.length === 0 ? (
+        <View style={styles.reviewEmptyCard}>
+          <Text style={styles.reviewEmptyTitle}>No reviews yet</Text>
+          <Text style={styles.reviewEmptySubtitle}>
+            Be the first to share your experience after your visit.
+          </Text>
+        </View>
+      ) : (
+        <>
+          <View style={styles.reviewSummaryCard}>
+            <View style={styles.reviewSummaryMain}>
+              <Text style={styles.reviewSummaryAvg}>
+                {Number(shop.rating_avg ?? 0).toFixed(1)}
+              </Text>
+              <StarRating value={Math.round(shop.rating_avg ?? 0)} size={16} />
+              <Text style={styles.reviewSummaryCount}>
+                {shop.rating_count} {shop.rating_count === 1 ? "review" : "reviews"}
+              </Text>
+            </View>
+            <View style={styles.reviewDistribution}>
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = reviews.filter((review) => review.rating === star).length;
+                const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                return (
+                  <View key={star} style={styles.distributionRow}>
+                    <Text style={styles.distributionStar}>{star}</Text>
+                    <View style={styles.distributionTrack}>
+                      <View style={[styles.distributionFill, { width: `${pct}%` }]} />
+                    </View>
+                    <Text style={styles.distributionCount}>{count}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+          <View style={styles.reviewList}>
+            {reviews.map((review) => (
+              <ReviewCard key={review.id} review={review} />
+            ))}
+          </View>
+        </>
+      )}
+
       <Button
         title="Book an appointment"
         onPress={() => setBookingVisible(true)}
@@ -337,6 +443,18 @@ export default function ShopDetailScreen() {
         members={shop.members}
         onClose={() => setBookingVisible(false)}
         onBooked={() => router.push("/customer/bookings")}
+      />
+
+      <ReviewSheet
+        visible={reviewVisible}
+        onClose={() => setReviewVisible(false)}
+        shopId={shop.id}
+        shopName={shop.name}
+        customerId={user?.id ?? ""}
+        bookingId={completedBookingId ?? undefined}
+        existing={myReview}
+        onSaved={handleReviewSaved}
+        onDeleted={handleReviewDeleted}
       />
       </ScrollView>
     </Screen>
@@ -525,5 +643,101 @@ const styles = StyleSheet.create({
   },
   bookButton: {
     marginTop: spacing.sm,
+  },
+  reviewCta: {
+    marginTop: spacing.sm,
+  },
+  reviewPending: {
+    marginTop: spacing.sm,
+    alignSelf: "flex-start",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+    backgroundColor: "#fef3c7",
+    color: "#b45309",
+    fontSize: 12,
+    fontWeight: "600",
+    overflow: "hidden",
+  },
+  reviewEmptyCard: {
+    marginTop: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  reviewEmptyTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  reviewEmptySubtitle: {
+    marginTop: spacing.xs,
+    fontSize: 13,
+    color: colors.muted,
+  },
+  reviewSummaryCard: {
+    flexDirection: "row",
+    marginTop: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  reviewSummaryMain: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingRight: spacing.lg,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderRightColor: colors.border,
+  },
+  reviewSummaryAvg: {
+    fontSize: 34,
+    fontWeight: "700",
+    color: colors.text,
+    lineHeight: 38,
+  },
+  reviewSummaryCount: {
+    marginTop: spacing.xs,
+    fontSize: 12,
+    color: colors.muted,
+  },
+  reviewDistribution: {
+    flex: 1,
+    justifyContent: "center",
+    paddingLeft: spacing.lg,
+  },
+  distributionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 2,
+  },
+  distributionStar: {
+    width: 12,
+    fontSize: 12,
+    color: colors.text,
+  },
+  distributionTrack: {
+    flex: 1,
+    height: 6,
+    marginHorizontal: spacing.sm,
+    borderRadius: radius.full,
+    backgroundColor: colors.border,
+    overflow: "hidden",
+  },
+  distributionFill: {
+    height: "100%",
+    borderRadius: radius.full,
+    backgroundColor: "#b45309",
+  },
+  distributionCount: {
+    width: 16,
+    fontSize: 12,
+    color: colors.muted,
+  },
+  reviewList: {
+    marginTop: spacing.md,
   },
 });

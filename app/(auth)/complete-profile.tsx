@@ -124,7 +124,7 @@ export default function CompleteProfileScreen() {
   }
 
   return (
-    <Screen scroll centered>
+    <Screen scroll centered paddingHorizontal={14}>
       <View style={styles.header}>
         <Text style={styles.title}>Complete your profile</Text>
         <Text style={styles.subtitle}>

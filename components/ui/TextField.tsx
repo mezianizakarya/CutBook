@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TextInput, View } from "react-native";
+import type { StyleProp, ViewStyle } from "react-native";
 
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -13,6 +14,9 @@ type TextFieldProps = {
   error?: string | null;
   /** Text rendered inside the left edge of the input, e.g. "@" for a username. */
   prefix?: string;
+  /** Renders a taller, top-aligned multi-line input instead of a 50px pill. */
+  multiline?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function TextField({
@@ -25,14 +29,22 @@ export function TextField({
   keyboardType = "default",
   error,
   prefix,
+  multiline = false,
+  style,
 }: TextFieldProps) {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <Text style={styles.label}>{label}</Text>
-      <View style={[styles.inputRow, !!error && styles.inputRowError]}>
+      <View
+        style={[
+          styles.inputRow,
+          multiline && styles.inputRowMultiline,
+          !!error && styles.inputRowError,
+        ]}
+      >
         {!!prefix && <Text style={styles.prefix}>{prefix}</Text>}
         <TextInput
-          style={styles.input}
+          style={[styles.input, multiline && styles.inputMultiline]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -41,6 +53,8 @@ export function TextField({
           autoCapitalize={autoCapitalize}
           autoCorrect={false}
           keyboardType={keyboardType}
+          multiline={multiline}
+          textAlignVertical={multiline ? "top" : "center"}
         />
       </View>
       {!!error && <Text style={styles.error}>{error}</Text>}
@@ -67,8 +81,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     backgroundColor: colors.surface,
   },
+  inputMultiline: {
+    height: "auto",
+    minHeight: 50,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    borderRadius: radius.md,
+  },
   inputRowError: {
     borderColor: colors.danger,
+  },
+  inputRowMultiline: {
+    height: "auto",
+    minHeight: 50,
+    alignItems: "flex-start",
+    borderRadius: radius.md,
+    overflow: "hidden",
   },
   prefix: {
     fontSize: 16,

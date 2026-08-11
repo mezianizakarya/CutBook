@@ -17,7 +17,7 @@ The admin Users page (`app/admin/(tabs)/users.tsx`) is the reference implementat
 - Allowed hard-coded badge hexes (from Users page): `#dcfce7` (active), `#fee2e2` (deleted/danger), `#fef3c7` bg + `#b45309` text (role/amber). Everything else must come from tokens.
 
 ## Shared UI components (`components/ui/`)
-- **`Screen`** — root wrapper for every screen. Props: `scroll`, `centered`, `style`. `SafeAreaView` edges: top-only when inside a tab (content must run behind the floating tab bar to the screen edge), top+bottom otherwise. **Keyboard handling: `KeyboardAvoidingView` is iOS-only (`behavior={Platform.OS === "ios" ? "padding" : undefined}`); on Android rely on native resize. NEVER set KAV behavior on Android — it gets stuck and leaves a white strip.**
+- **`Screen`** — root wrapper for every screen. Props: `scroll`, `centered`, `style`. `SafeAreaView` edges: top-only when inside a tab (content must run behind the floating tab bar to the screen edge), top+bottom otherwise. **Keyboard handling (SDK 54 edge-to-edge): `KeyboardAvoidingView` uses `behavior={Platform.OS === "ios" ? "padding" : "height"}` — Android `softwareKeyboardLayoutMode: "resize"` is a NO-OP on Android 15+ (edge-to-edge is enforced), so the keyboard overlays content unless KAV has a real behavior. The old "never set KAV behavior on Android" rule applied pre-edge-to-edge when resize actually resized the window (KAV then double-handled → white strip). Do not revert to `undefined` on Android.**
 - **`Button`** — variants: `primary | outline | ghost | danger | dangerOutline | successOutline`; props `loading`, `disabled`, `style`. Height 50, radius full.
 - **`TextField`** — label + pill input; props: `label, value, onChangeText, placeholder, secureTextEntry, autoCapitalize, keyboardType, error, prefix` (prefix = left adornment like `@`).
 - **`Avatar`** — `fullName`, `imageUrl`, `size`. Initials fallback on primarySoft.
@@ -41,7 +41,7 @@ The admin Users page (`app/admin/(tabs)/users.tsx`) is the reference implementat
 8. Confirm buttons: double-press pattern — first press swaps label to "Confirm … (5)" and starts a 5s countdown (`setInterval` ref); reverts automatically at 0; timer cleared on confirm/cancel/close.
 
 ## Keyboard handling rules (hard-won)
-- Main `Screen`: KAV iOS-only (see above). Never Android.
+- Main `Screen`: KAV on BOTH platforms — `behavior={Platform.OS === "ios" ? "padding" : "height"}` (see Screen above). Android native resize is inert under edge-to-edge (SDK 54), so KAV must handle it — without it the keyboard covers the focused field.
 - Bottom-sheet modals: KAV iOS-only (`padding`); on Android add bottom padding to the sheet's scroll content = `keyboardHeight` from `lib/useKeyboardHeight` so the sheet stays glued to the bottom edge.
 - Always `Keyboard.dismiss()` before closing a modal that had focus.
 
@@ -82,3 +82,95 @@ The admin Users page (`app/admin/(tabs)/users.tsx`) is the reference implementat
 - `components/ui/DeleteAccountButton.tsx`, `AccountScreen.tsx`, `SignOutButton.tsx`, `ProfilePicture.tsx`
 - `app/(auth)/complete-profile.tsx`, `choose-role.tsx`; `app/admin/(tabs)/users.tsx`
 - `docs/er-diagram.md`, `docs/clerk-supabase-audit.md`
+
+# Shop Loyalty System (hard-won facts — do not re-litigate)
+
+## Model
+- One program per shop (`loyalty_programs`, `shop_id` unique). Milestones = `loyalty_milestones` ladder (unique `(loyalty_program_id, visit_count)`).
+- `customer_loyalty` is the per-customer-per-shop card (`total_completed_visits`, `current_streak`, `best_streak`). Counters CHECK `>= 0`; `best_streak`/`total_completed_visits` never decrease.
+- `loyalty_visits` = per-booking award, `booking_id` UNIQUE → idempotent (double FINISH CUT cannot double-count). `increment_streak` records streak math at award time.
+- `customer_rewards` per `(customer_loyalty_id, milestone_id)` UNIQUE → each milestone can only be redeemed once. Status: `unlocked → redeemed → expired`.
+- **Visits count even when the program is disabled** — `enabled` only gates milestone unlocks, reconciliation, redemption, and customer UI. Streak breakers: `no_show`, or customer-initiated cancel < 24h before `starts_at`.
+
+## Backend rules (business logic lives in the DB, never client)
+- `award_loyalty_visit` trigger (on booking → completed) + `reconcile_customer_loyalty` RPC compute visits/streak/rewards. Idempotent on re-run.
+- Rewards unlock via reconcile → insert `notifications` row `type='loyalty_reward_unlocked'`. Deleting a milestone cascades its rewards.
+- Redemption (`redeem_reward`) only against an upcoming `pending|confirmed` booking at the same shop, only while program `enabled`; sets `redeemed_at` + `redeemed_booking_id` (FK `SET NULL` on booking delete) and snapshots the reward onto `bookings.applied_reward_type/title/value` so barbers can see it (they can't read `customer_rewards` — RLS is owner/manager/admin). BookingCard + barber work-session show an "… applied" badge.
+- All writes via SECURITY DEFINER RPCs granted to `authenticated`: `award_loyalty_visit` (trigger), `reconcile_customer_loyalty`, `set_loyalty_program`, `save_loyalty_milestone`, `delete_loyalty_milestone`, `redeem_reward`. Owner/manager/admin for program+milestones; reward owner + enabled program for redemption. Tables are SELECT-only under RLS.
+- Reward types: `percentage_discount | fixed_discount | free_service | custom`; value CHECKs — percentage 1–100, fixed/free 0 or null, custom 0–100000. `custom` requires a reward_title/description the owner displays (no built-in redemption).
+
+## Frontend
+- `lib/loyalty.ts` — types, SELECT constants, loaders (`loadShopLoyalty`, `loadCustomerLoyalty`) and RPC wrappers (`setLoyaltyProgram`, `saveLoyaltyMilestone`, `deleteLoyaltyMilestone`, `redeemReward`).
+- `components/ui/ShopLoyaltyCard.tsx` — customer card (stats, progress, milestone ladder, redeem buttons; BottomSheet picker when >1 upcoming booking). Integrated in `app/customer/shop/[id].tsx` (after Barbers), guarded by `!!user?.id`.
+- `components/ui/OwnerLoyaltySection.tsx` — owner/manager Switch + milestone edit/delete (double-press `useConfirmAction`) + MilestoneSheet add/edit. Integrated in `app/owner/(tabs)/shop.tsx` after the Save hours button.
+- `TextField.keyboardType` only accepts `"numeric" | "phone-pad" | "default" | "email-address"`; `Button` has no `size` prop.
+
+## Seed / verify
+- `supabase/seed.sql` truncates loyalty tables and seeds shop 1: program enabled, milestones 3→10% off / 5→Free haircut / 10→20% off, plus 2 extra completed zkrmznbeta bookings (3 visits, 10% off unlocked). `zkrmznbeta@gmail.com` has multiple profile rows — resolve the active one via `deleted_at is null` (`user_3Hg4ilkuLJiIVhvoQOLpKBDYoCC`).
+- Regression suite: `C:\Users\zakar\AppData\Local\Temp\opencode\loyalty_tests.sql` (in-transaction, rolls back). CLI `db query` only prints the last result set.
+- Migration: `supabase/migrations/20260811140000_shop_loyalty.sql`, `20260811150000_booking_applied_reward.sql` (booking reward snapshot), `20260811160000_backfill_booking_applied_reward.sql` (applied remotely). Full ER: `docs/er-diagram.md`.
+
+# DATABASE-FIRST DEVELOPMENT RULES
+
+IMPORTANT: READ THIS BEFORE IMPLEMENTING ANY NEW FEATURE
+
+Supabase is the source of truth. Do NOT build frontend-only/mock systems for persistent application data.
+
+Authorized to: inspect the database, create/alter tables, add/remove columns, create indexes, FKs, constraints, database functions, triggers, RPCs, migrations, RLS policies, remove obsolete structures when safe, create seed/test data. MUST be extremely careful not to break existing CutBook functionality.
+
+## 1. Database first
+Before writing frontend code for any feature: inspect the current Supabase schema; identify existing tables, relationships, enums/statuses, functions/RPCs, triggers, RLS policies, indexes/constraints, and where the source of truth lives. Do not assume the database is empty — it contains important production logic. Reuse existing structures instead of duplicating.
+
+## 2. Do not create duplicate systems
+Before creating a new table/column/function/status: SEARCH the existing database. If something already exists (booking completion, customer info, etc.), extend it when appropriate.
+
+## 3. Database must be the source of truth
+Anything that must survive app restart, logout/login, device change, reinstall, or access by another user/device MUST be stored in Supabase. Never store persistent business data only in React state, Context, AsyncStorage, local variables, mock arrays, or hard-coded constants. Local state is for UI state only.
+
+## 4. Every new data model must be related
+Every new entity must have proper relationships (Customer → Booking → Barber → Shop). No isolated tables with duplicated user/shop IDs. Use proper FKs, unique constraints, indexes, nullable rules, cascading behavior where appropriate. Make relationships explicit.
+
+## 5. Authentication vs database user
+Respect the existing Clerk + Supabase architecture. Do NOT create another auth system. Reference users via the existing CutBook user/profile relationship. Ensure customer/barber/owner/admin map to the correct database user.
+
+## 6. Enums and status values
+Before creating a new enum/status, check whether one already exists. Don't create `booking_status_v2`/`booking_state_new` when the existing system needs a small extension. Maintain one authoritative state model; extend it carefully.
+
+## 7. Business logic belongs in the backend
+Important rules (booking completion, loyalty visit calculation, customer reputation, reward unlocking/redemption, cancellation penalties, no-show handling, shop membership, invitation codes, permissions) must NOT exist only in React Native. The backend enforces; the frontend requests and displays. Never trust the client to enforce critical business rules.
+
+## 8. Atomic operations
+When one user action modifies multiple data points, prefer a transaction-safe backend operation (e.g., booking COMPLETED may update status, record completion, update customer stats, loyalty, unlock reward — must not partially succeed) unless the architecture intentionally handles async processing.
+
+## 9. Idempotency
+Critical operations must be safe if executed twice (e.g., barber presses FINISH CUT twice → no +2 loyalty visits). Use unique constraints, event records, status checks, database functions, transaction logic where necessary.
+
+## 10. RLS is mandatory
+Every new table must have appropriate RLS. Before adding a table determine per role (customer/barber/owner/admin): what they can read, create, update, and never modify. Then implement the policies.
+
+## 11. Never trust client-supplied business values
+Do NOT allow the client to directly control reputation level/score, loyalty visit count/streak, reward status/ownership, booking completion, shop ownership, barber membership, verification state, or admin privileges. The client requests an action; the backend decides validity.
+
+## 12. Audit important changes
+Consider preserving who/when/what/why for important operations (admin overrides, reputation changes, reward redemption, booking state changes, shop membership, invitation codes). Use the simplest robust solution; don't over-engineer.
+
+## 13. Database migrations
+Every database modification MUST go through a proper migration — no undocumented manual changes. Files must be clear, ordered, reproducible, safe, understandable, with descriptive names (e.g., `20260804_add_customer_reputation.sql`, not `fix.sql`).
+
+## 14. Safe migrations
+Before changing an existing table, understand existing data, FKs, RLS, app queries, RPCs, triggers. Do not blindly DROP TABLE/COLUMN/TYPE unless verified nothing depends on it. If something is obsolete, explain why it's safe to remove.
+
+## 15. Data integrity
+Use database constraints (NOT NULL, UNIQUE, CHECK, FK, indexes, valid ranges, valid states). Don't rely exclusively on frontend validation (e.g., the DB must prevent negative loyalty counts, not just the UI).
+
+## 16. Performance
+Add indexes for commonly queried fields (customer_id, shop_id, barber_id, booking_id, status, created_at, scheduled_at) on tables that will grow — based on actual queries, not randomly.
+
+## 17. Data consistency
+If info can be derived from another source, avoid duplication. If denormalized counters are required for performance, ensure the backend updates them consistently.
+
+## 18. Existing data
+Before schema changes, inspect existing records. Provide a safe migration/backfill strategy for existing users (e.g., sensible initial reputation state; consider existing completed bookings for loyalty per the spec). Do not silently lose historical data.
+
+## 19. Frontend must match the database
+After implementing the database, update the frontend to use the real model. Do NOT create fake arrays/mock data in frontend code as the source of truth.

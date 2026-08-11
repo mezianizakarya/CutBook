@@ -34,8 +34,41 @@ truncate table
   public.portfolio_images,
   public.notifications,
   public.settings,
-  public.audit_log
+  public.audit_log,
+  public.customer_rewards,
+  public.loyalty_visits,
+  public.customer_loyalty,
+  public.loyalty_milestones,
+  public.loyalty_programs
 cascade;
+
+-- ----------------------------------------------------------------------------
+-- 1b. Shop 1 loyalty program (created BEFORE bookings so the award trigger
+--     unlocks milestones while the bookings below are inserted)
+-- ----------------------------------------------------------------------------
+insert into public.loyalty_programs (shop_id, enabled)
+values (1, true)
+on conflict (shop_id) do update set enabled = true;
+
+insert into public.loyalty_milestones (
+  loyalty_program_id, visit_count, reward_type, reward_title,
+  reward_description, reward_value, sort_order
+)
+select lp.id, m.visit_count, m.reward_type, m.reward_title,
+       m.reward_description, m.reward_value, m.sort_order
+from public.loyalty_programs lp
+cross join (values
+  (3,  'percentage_discount', '10% off',      'Save 10% on any service.',        10,  1),
+  (5,  'free_service',        'Free haircut', 'A free Classic Haircut on us.',   null, 2),
+  (10, 'percentage_discount', '20% off',      'Save 20% on any service.',        20,  3)
+) as m(visit_count, reward_type, reward_title, reward_description, reward_value, sort_order)
+where lp.shop_id = 1
+on conflict (loyalty_program_id, visit_count) do update
+  set reward_type        = excluded.reward_type,
+      reward_title       = excluded.reward_title,
+      reward_description = excluded.reward_description,
+      reward_value       = excluded.reward_value,
+      sort_order         = excluded.sort_order;
 
 -- ----------------------------------------------------------------------------
 -- 2. Fake profiles (user_seed_* — dev only, no Clerk account)
@@ -245,6 +278,8 @@ select
   now() - interval '1 day'
 from (values
   -- James Carter (shop 1)
+  ('zkrmznbeta@gmail.com',    'James Carter', 'Classic Haircut',   -20, 540,  30, 'completed', 'Quick lunch break cut.'),
+  ('zkrmznbeta@gmail.com',    'James Carter', 'Fade & Finish',     -16, 660,  45, 'completed', null),
   ('zkrmznbeta@gmail.com',    'James Carter', 'Classic Haircut',   -12, 600,  30, 'completed', 'Quick lunch break cut.'),
   ('mateo.alvarez@cutbook.test',  'James Carter', 'Fade & Finish',     -6, 840,  45, 'completed', null),
   ('ava.thompson@cutbook.test',   'James Carter', 'Beard Trim',        -2, 660,  20, 'completed', null),
@@ -452,3 +487,62 @@ values
    'Ava Thompson left a 5-star review for The Corner Cut.', now() - interval '1 day', now() - interval '1 day'),
   ('user_3HbfXE21HI9gEEkkyX5qL1fe5dc', 'new_booking',       'New booking request',
    'Priya Patel requested a Fade & Finish at Fade District.', null, now() - interval '2 hours');
+
+-- ----------------------------------------------------------------------------
+-- 15. Work-session demo — today's queue for the dev barber
+--     (Zakarya Meziani, member 54, The Corner Cut). Recreates a realistic
+--     serving day so the work-session screen shows every state: one completed
+--     earlier (with completed_at, recording an early finish), one in progress
+--     with a +5 min extension (running countdown), one upcoming confirmed, and
+--     one still pending. Idempotent: clears this member's bookings for today
+--     first, so it is safe to run standalone. No-op where the profile is absent.
+-- ----------------------------------------------------------------------------
+delete from public.bookings
+where staff_id = (
+        select id from public.shop_members
+        where profile_id = 'user_3Hg4ilkuLJiIVhvoQOLpKBDYoCC' and removed_at is null
+      )
+  and starts_at >= date_trunc('day', now());
+
+insert into public.bookings (
+  shop_id, customer_id, staff_id, service_id, status, starts_at, ends_at,
+  service_name, service_price_cents, service_duration_minutes, note,
+  created_at, started_at, extended_minutes, paused_minutes, completed_at
+)
+select
+  s.id,
+  c.id,
+  sm.id,
+  svc.id,
+  b.status,
+  date_trunc('day', now()) + b.start_minute * interval '1 minute',
+  date_trunc('day', now()) + b.start_minute * interval '1 minute' + b.duration * interval '1 minute',
+  svc.name,
+  svc.price_cents,
+  b.duration,
+  b.note,
+  now() - interval '2 hours',
+  case when b.started_ago_minutes is not null
+       then now() - b.started_ago_minutes * interval '1 minute' end,
+  b.extended_minutes,
+  0,
+  case when b.completed_after_minutes is not null
+       then now() - b.started_ago_minutes * interval '1 minute'
+            + b.completed_after_minutes * interval '1 minute' end
+from (values
+  -- Completed early: 30 min booked, done in 20 (actual finish recorded).
+  ('mateo.alvarez@cutbook.test', 'Classic Haircut', 570, 30, 'completed', 120,  0,  20, 'Morning appointment.'),
+  -- In progress: started 22 min ago, +5 min extension -> ~13 min left.
+  ('ava.thompson@cutbook.test',  'Hot Towel Shave', 630, 30, 'confirmed',  22,  5, null, null),
+  -- Up next, confirmed.
+  ('priya.patel@cutbook.test',   'Fade & Finish',   690, 45, 'confirmed', null, 0, null, 'Skin fade, please.'),
+  -- Still pending, needs confirmation.
+  ('zkrmznbeta@gmail.com',       'Beard Trim',      780, 20, 'pending',   null, 0, null, null)
+) as b(customer_email, service_name, start_minute, duration, status,
+       started_ago_minutes, extended_minutes, completed_after_minutes, note)
+join public.profiles c on c.email = b.customer_email and c.deleted_at is null
+join public.shop_members sm
+  on sm.profile_id = 'user_3Hg4ilkuLJiIVhvoQOLpKBDYoCC' and sm.removed_at is null
+join public.shops s on s.id = sm.shop_id
+join public.services svc
+  on svc.shop_id = s.id and lower(svc.name) = lower(b.service_name) and svc.is_active;

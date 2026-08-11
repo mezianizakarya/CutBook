@@ -138,7 +138,7 @@ export default function AdminDashboardScreen() {
   }
 
   return (
-    <Screen style={styles.screenPadding}>
+    <Screen paddingHorizontal={14} style={styles.screenPadding}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -273,8 +273,6 @@ function fullName(user: RecentUser): string {
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
     paddingBottom: 0,
   },
   scrollContent: {

@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/expo";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -21,7 +21,9 @@ import { BookingCard } from "@/components/ui/BookingCard";
 import { BookingStatusBadge } from "@/components/ui/BookingStatusBadge";
 import { Button } from "@/components/ui/Button";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
+import { ReviewSheet } from "@/components/ui/ReviewSheet";
 import { Screen } from "@/components/ui/Screen";
+import { StarRating } from "@/components/ui/StarRating";
 import {
   cancelBooking,
   isCancellable,
@@ -31,11 +33,19 @@ import {
 } from "@/lib/booking";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents, formatDateTime } from "@/lib/format";
+import { loadMyShopReview, type ReviewRow } from "@/lib/reviews";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
 import { useNotice } from "@/lib/useNotice";
 import { useSheetDrag } from "@/lib/useSheetDrag";
+import { useNow } from "@/lib/workSession";
+import {
+  customerProgress,
+  formatCountdown,
+  staffDaySchedule,
+  type CustomerProgress,
+} from "@/lib/workSession";
 
 const PAGE_SIZE = 50;
 
@@ -63,7 +73,7 @@ export default function BookingsScreen() {
       supabase
         .from("bookings")
         .select(
-          "id, status, starts_at, ends_at, service_name, service_price_cents, service_duration_minutes, note, cancel_reason, cancelled_at, shop:shops(id, name, logo_url), staff:shop_members(id, display_name, avatar_url)"
+          "id, status, starts_at, ends_at, started_at, extended_minutes, paused_at, paused_minutes, service_name, service_price_cents, service_duration_minutes, note, cancel_reason, cancelled_at, applied_reward_title, shop:shops(id, name, logo_url), staff:shop_members(id, display_name, avatar_url)"
         )
         .eq("customer_id", customerId ?? "")
         .order("starts_at", { ascending: false })
@@ -184,6 +194,13 @@ export default function BookingsScreen() {
     }
   }
 
+  const handleRowUpdate = useCallback((updated: BookingRow) => {
+    setBookings((previous) => patchBookingRow(previous ?? [], updated));
+    setSelected((previous) =>
+      previous && previous.id === updated.id ? updated : previous
+    );
+  }, []);
+
   if (loading && !bookings) {
     return (
       <Screen centered>
@@ -303,8 +320,10 @@ export default function BookingsScreen() {
         {!!selected && (
           <BookingDetailSheet
             row={selected}
+            customerId={customerId ?? ""}
             onClose={() => setSelected(null)}
             onCancel={handleCancel}
+            onRowUpdate={handleRowUpdate}
           />
         )}
       </Modal>
@@ -314,15 +333,24 @@ export default function BookingsScreen() {
 
 type BookingDetailSheetProps = {
   row: BookingRow;
+  customerId: string;
   onClose: () => void;
   onCancel: (row: BookingRow) => void;
+  onRowUpdate: (row: BookingRow) => void;
 };
 
-function BookingDetailSheet({ row, onClose, onCancel }: BookingDetailSheetProps) {
+function BookingDetailSheet({
+  row,
+  customerId,
+  onClose,
+  onCancel,
+  onRowUpdate,
+}: BookingDetailSheetProps) {
   const insets = useSafeAreaInsets();
   const { translateY, panResponder } = useSheetDrag(onClose);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const { notice, showNotice } = useNotice();
   const {
     count: confirmCount,
     start: startCountdown,
@@ -331,6 +359,108 @@ function BookingDetailSheet({ row, onClose, onCancel }: BookingDetailSheetProps)
     onExpire: () => setConfirmingCancel(false),
   });
   const cancellable = isCancellable(row);
+
+  const [staffSchedule, setStaffSchedule] = useState<BookingRow[] | null>(null);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const now = useNow();
+
+  const [myReview, setMyReview] = useState<ReviewRow | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewVisible, setReviewVisible] = useState(false);
+
+  useEffect(() => {
+    if (row.status !== "completed" || !row.shop?.id || !customerId) {
+      setMyReview(null);
+      return;
+    }
+    let active = true;
+    setReviewLoading(true);
+    loadMyShopReview(row.shop.id, customerId)
+      .then((review) => {
+        if (active) {
+          setMyReview(review);
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) {
+          setReviewLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [row.id, row.status, row.shop?.id, customerId]);
+
+  function handleReviewSaved(review: ReviewRow) {
+    const editing = myReview !== null;
+    setMyReview(review);
+    showNotice(editing ? "Review updated" : "Review submitted", "success");
+  }
+
+  function handleReviewDeleted() {
+    setMyReview(null);
+    showNotice("Review removed", "success");
+  }
+
+  const loadSchedule = useCallback(async () => {
+    if (row.status !== "pending" && row.status !== "confirmed") {
+      return;
+    }
+    try {
+      const rows = await staffDaySchedule(row.id);
+      setStaffSchedule(rows);
+      setLiveError(null);
+      const mine = rows.find((item) => item.id === row.id);
+      if (mine && mine.status !== row.status) {
+        onRowUpdate(mine);
+      }
+    } catch (e) {
+      setLiveError(errorMessageFromUnknown(e));
+    }
+  }, [row.id, row.status, onRowUpdate]);
+
+  useEffect(() => {
+    if (row.status !== "pending" && row.status !== "confirmed") {
+      return;
+    }
+    let active = true;
+    setStaffSchedule(null);
+    setLiveError(null);
+    void loadSchedule();
+    const channel = supabase
+      .channel(`customer-booking-${row.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "bookings",
+          filter: `id=eq.${row.id}`,
+        },
+        () => {
+          if (active) {
+            void loadSchedule();
+          }
+        }
+      )
+      .subscribe();
+    const poll = setInterval(() => {
+      if (active) {
+        void loadSchedule();
+      }
+    }, 20_000);
+    return () => {
+      active = false;
+      clearInterval(poll);
+      void supabase.removeChannel(channel);
+    };
+  }, [row.id, row.status, loadSchedule]);
+
+  const live = useMemo(
+    () => (staffSchedule ? customerProgress(staffSchedule, row.id, now) : null),
+    [staffSchedule, row.id, now]
+  );
 
   function handleCancelPress() {
     if (confirmingCancel) {
@@ -350,8 +480,9 @@ function BookingDetailSheet({ row, onClose, onCancel }: BookingDetailSheetProps)
   const shopName = row.shop?.name ?? "—";
 
   return (
-    <Pressable style={styles.modalBackdrop} onPress={onClose}>
-      <Pressable onPress={() => undefined}>
+    <>
+      <Pressable style={styles.modalBackdrop} onPress={onClose}>
+        <Pressable onPress={() => undefined}>
         <Animated.View
           style={[
             styles.modalCard,
@@ -380,6 +511,8 @@ function BookingDetailSheet({ row, onClose, onCancel }: BookingDetailSheetProps)
             </View>
             <BookingStatusBadge status={row.status} />
           </View>
+
+          {notice ? <NoticeBanner notice={notice} /> : null}
 
           <View style={styles.detailsCard}>
             <View style={styles.detailRow}>
@@ -418,6 +551,49 @@ function BookingDetailSheet({ row, onClose, onCancel }: BookingDetailSheetProps)
             )}
           </View>
 
+          {(row.status === "pending" || row.status === "confirmed") && (
+            <LiveProgressCard live={live} error={liveError} />
+          )}
+
+          {row.status === "completed" && !!row.shop?.id && !!customerId && (
+            <View style={styles.reviewSection}>
+              <View style={styles.reviewHeader}>
+                <Text style={styles.reviewLabel}>Your review</Text>
+                {!!myReview && (
+                  <Pressable
+                    onPress={() => setReviewVisible(true)}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.reviewEditLabel}>Edit</Text>
+                  </Pressable>
+                )}
+              </View>
+              {reviewLoading ? (
+                <Text style={styles.reviewHint}>Loading…</Text>
+              ) : myReview ? (
+                <View style={styles.yourReviewCard}>
+                  <StarRating value={myReview.rating} />
+                  {myReview.status === "pending" && (
+                    <Text style={styles.reviewPending}>Awaiting approval</Text>
+                  )}
+                  {!!myReview.comment && (
+                    <Text style={styles.reviewComment} numberOfLines={2}>
+                      {myReview.comment}
+                    </Text>
+                  )}
+                </View>
+              ) : (
+                <Button
+                  title="Leave a review"
+                  variant="outline"
+                  onPress={() => setReviewVisible(true)}
+                  style={styles.reviewButton}
+                />
+              )}
+            </View>
+          )}
+
           {cancellable && (
             <Button
               title={
@@ -444,8 +620,61 @@ function BookingDetailSheet({ row, onClose, onCancel }: BookingDetailSheetProps)
             style={styles.cancelButton}
           />
         </Animated.View>
+        </Pressable>
       </Pressable>
-    </Pressable>
+      <ReviewSheet
+        visible={reviewVisible}
+        onClose={() => setReviewVisible(false)}
+        shopId={row.shop?.id ?? 0}
+        shopName={row.shop?.name ?? "—"}
+        customerId={customerId}
+        bookingId={row.id}
+        existing={myReview}
+        onSaved={handleReviewSaved}
+        onDeleted={handleReviewDeleted}
+      />
+    </>
+  );
+}
+
+type LiveProgressCardProps = {
+  live: CustomerProgress | null;
+  error: string | null;
+};
+
+function LiveProgressCard({ live, error }: LiveProgressCardProps) {
+  if (error) {
+    return null;
+  }
+  if (!live) {
+    return (
+      <View style={styles.liveCard}>
+        <Text style={styles.liveLabel}>Live status</Text>
+        <Text style={styles.liveSubtitle}>Checking your barber schedule…</Text>
+      </View>
+    );
+  }
+  let tone: string = colors.primaryDark;
+  let title = `You're up next`;
+  let subtitle = `Appointment ${live.position} of ${live.total} today`;
+  if (live.beingServed) {
+    tone = colors.success;
+    title = "You're being served now";
+    subtitle =
+      live.activeRemainingMs >= 0
+        ? `Roughly ${formatCountdown(live.activeRemainingMs)} left`
+        : "Running over the estimated time";
+  } else if (live.delayed) {
+    tone = colors.warning;
+    title = "Running a bit late";
+    subtitle = `Appointment ${live.position} of ${live.total} today`;
+  }
+  return (
+    <View style={styles.liveCard}>
+      <View style={styles.liveBadge} />
+      <Text style={[styles.liveTitle, { color: tone }]}>{title}</Text>
+      <Text style={styles.liveSubtitle}>{subtitle}</Text>
+    </View>
   );
 }
 
@@ -618,5 +847,85 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: colors.surface,
+  },
+  reviewSection: {
+    gap: spacing.sm,
+  },
+  reviewHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  reviewLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.muted,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  reviewEditLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.primaryDark,
+  },
+  reviewHint: {
+    fontSize: 13,
+    color: colors.muted,
+  },
+  yourReviewCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  reviewPending: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.warningSoft,
+    color: colors.warning,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    fontSize: 11,
+    fontWeight: "600",
+    overflow: "hidden",
+  },
+  reviewComment: {
+    fontSize: 13,
+    color: colors.text,
+  },
+  reviewButton: {
+    backgroundColor: colors.surface,
+  },
+  liveCard: {
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  liveBadge: {
+    position: "absolute",
+    top: spacing.md,
+    left: spacing.md,
+    width: 8,
+    height: 8,
+    borderRadius: radius.full,
+    backgroundColor: colors.success,
+  },
+  liveTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  liveLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.muted,
+  },
+  liveSubtitle: {
+    fontSize: 13,
+    color: colors.muted,
   },
 });

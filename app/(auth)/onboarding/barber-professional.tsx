@@ -1,4 +1,5 @@
 import { useUser } from "@clerk/expo";
+import { Ionicons } from "@expo/vector-icons";
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -8,7 +9,12 @@ import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
 import { FullScreenLoader } from "@/lib/auth";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { fetchOwnProfile, saveBarberProfessional } from "@/lib/profile";
+import {
+  fetchOwnProfile,
+  isBarberProfessionalComplete,
+  saveBarberProfessional,
+  type OwnProfile,
+} from "@/lib/profile";
 import { colors, radius, spacing } from "@/lib/theme";
 
 const SPECIALTY_SUGGESTIONS = [
@@ -26,9 +32,11 @@ export default function BarberProfessionalScreen() {
 
   const [specialty, setSpecialty] = useState("");
   const [years, setYears] = useState("");
+  const [bio, setBio] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadedProfile, setLoadedProfile] = useState<OwnProfile | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,12 +49,14 @@ export default function BarberProfessionalScreen() {
         if (cancelled) {
           return;
         }
+        setLoadedProfile(profile);
         setSpecialty(profile?.specialty ?? "");
         setYears(
           profile?.years_of_experience != null
             ? String(profile.years_of_experience)
             : ""
         );
+        setBio(profile?.bio ?? "");
       })
       .catch(() => {
         // Prefill is best-effort; the form still works without it.
@@ -78,27 +88,42 @@ export default function BarberProfessionalScreen() {
   }
 
   const currentUser = user;
+  const wasComplete = isBarberProfessionalComplete(loadedProfile);
+  const isOnboarding =
+    user.unsafeMetadata?.onboardingStep === "professional" && !wasComplete;
 
   async function handleSave() {
     setError(null);
+    const parsedSpecialty = specialty.trim() ? specialty.trim() : null;
+    if (!parsedSpecialty) {
+      setError("Add your specialty to complete your barber profile.");
+      return;
+    }
     const parsedYears = years.trim() === "" ? null : Number(years);
     if (
-      parsedYears !== null &&
-      (!Number.isFinite(parsedYears) || parsedYears < 0 || parsedYears > 100)
+      parsedYears == null ||
+      !Number.isInteger(parsedYears) ||
+      parsedYears < 0 ||
+      parsedYears > 100
     ) {
-      setError("Experience must be between 0 and 100 years.");
+      setError("Experience must be a whole number between 0 and 100 years.");
       return;
     }
     setSubmitting(true);
     try {
       await saveBarberProfessional(currentUser.id, {
-        specialty: specialty.trim() ? specialty.trim() : null,
+        specialty: parsedSpecialty,
         yearsOfExperience: parsedYears,
+        bio,
       });
       await currentUser.updateMetadata({
         unsafeMetadata: { onboardingStep: "complete" },
       });
-      router.replace("/loading");
+      if (wasComplete) {
+        router.back();
+      } else {
+        router.replace("/loading");
+      }
     } catch (e) {
       setError(errorMessageFromUnknown(e));
     } finally {
@@ -106,8 +131,27 @@ export default function BarberProfessionalScreen() {
     }
   }
 
+  function handleSkip() {
+    if (wasComplete) {
+      router.back();
+    } else {
+      router.replace("/loading");
+    }
+  }
+
   return (
-    <Screen scroll centered>
+    <Screen scroll paddingHorizontal={14}>
+      <Pressable
+        onPress={() => router.back()}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        style={styles.backRow}
+      >
+        <Ionicons name="chevron-back" size={22} color={colors.text} />
+        <Text style={styles.backLabel}>Back</Text>
+      </Pressable>
+
       <View style={styles.header}>
         <Text style={styles.title}>Tell customers about your work</Text>
         <Text style={styles.subtitle}>
@@ -128,7 +172,8 @@ export default function BarberProfessionalScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chips}
+          style={styles.chipsScroll}
+          contentContainerStyle={styles.chipsRow}
         >
           {SPECIALTY_SUGGESTIONS.map((suggestion) => {
             const active =
@@ -155,20 +200,39 @@ export default function BarberProfessionalScreen() {
           keyboardType="numeric"
         />
 
+        <TextField
+          label="Bio"
+          value={bio}
+          onChangeText={setBio}
+          placeholder="Tell clients about your craft, style and what to expect."
+          autoCapitalize="sentences"
+          multiline
+        />
+
         {!!error && <Text style={styles.errorText}>{error}</Text>}
 
         <Button title="Save" onPress={handleSave} loading={submitting} />
-        <Button
-          title="Skip for now"
-          variant="ghost"
-          onPress={() => router.replace("/loading")}
-        />
+        {isOnboarding && (
+          <Button title="Skip for now" variant="ghost" onPress={handleSkip} />
+        )}
       </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  backRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    alignSelf: "flex-start",
+    marginBottom: spacing.lg,
+  },
+  backLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.text,
+  },
   header: {
     gap: spacing.xs,
     marginBottom: spacing.xl,
@@ -185,10 +249,17 @@ const styles = StyleSheet.create({
   form: {
     gap: spacing.md,
   },
-  chips: {
+  chipsScroll: {
+    flexGrow: 0,
+    marginLeft: 0,
+    marginRight: -14,
+  },
+  chipsRow: {
     flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
     paddingVertical: spacing.xs,
+    paddingRight: spacing.xs,
   },
   chip: {
     borderRadius: radius.full,

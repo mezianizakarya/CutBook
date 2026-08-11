@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
+import { OwnerLoyaltySection } from "@/components/ui/OwnerLoyaltySection";
 import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { TextField } from "@/components/ui/TextField";
@@ -540,6 +541,12 @@ export default function OwnerShopScreen() {
           onPress={() => void handleSaveHours()}
           loading={saving}
           disabled={saving}
+        />
+
+        {/* Loyalty program */}
+        <OwnerLoyaltySection
+          shopId={selectedShop.id}
+          onNotice={showNotice}
         />
       </ScrollView>
 

@@ -1,5 +1,5 @@
 import type { BookingCustomer, BookingRow } from "@/lib/booking";
-import { BOOKING_SELECT } from "@/lib/booking";
+import { BOOKING_SELECT, fetchBookingCustomers } from "@/lib/booking";
 import { runList, runQuery, uniqueIds } from "@/lib/db";
 import { startOfDay } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
@@ -317,4 +317,20 @@ export function weekStart(value: Date): Date {
   const mondayOffset = (start.getDay() + 6) % 7;
   start.setDate(start.getDate() - mondayOffset);
   return start;
+}
+
+/** Every distinct customer who ever booked this barber (for walk-in picker). */
+export async function loadBarberClients(
+  memberIds: number[]
+): Promise<BarberClient[]> {
+  const ids = uniqueIds(memberIds);
+  if (ids.length === 0) {
+    return [];
+  }
+  const now = new Date();
+  const from = new Date(now.getTime() - 90 * 86_400_000);
+  const to = new Date(now.getTime() + 14 * 86_400_000);
+  const rows = await loadMyBookings(ids, from, to);
+  const customers = await fetchBookingCustomers(rows.map((row) => row.id));
+  return groupClients(rows, customers);
 }

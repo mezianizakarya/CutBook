@@ -1,6 +1,7 @@
 import { useUser } from "@clerk/expo";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
+import { CustomerReputationSection } from "@/components/ui/CustomerReputationSection";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatCard } from "@/components/ui/StatCard";
 import { loadFavoriteShops } from "@/lib/shop";
@@ -55,21 +56,24 @@ export function CustomerProfileSection() {
   );
 
   return (
-    <View style={styles.section}>
-      <SectionHeader title="Activity" />
-      {loading ? (
-        <View style={styles.loading}>
-          <ActivityIndicator color={colors.primary} />
-        </View>
-      ) : (
-        <View style={styles.statsRow}>
-          <StatCard label="Bookings" value={String(data?.counts.all ?? 0)} />
-          <StatCard label="Upcoming" value={String(data?.counts.upcoming ?? 0)} />
-          <StatCard label="Favorites" value={String(data?.favorites ?? 0)} />
-        </View>
-      )}
-      {!!error && <Text style={styles.error}>{error}</Text>}
-    </View>
+    <>
+      <CustomerReputationSection />
+      <View style={styles.section}>
+        <SectionHeader title="Activity" />
+        {loading ? (
+          <View style={styles.loading}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : (
+          <View style={styles.statsRow}>
+            <StatCard label="Bookings" value={String(data?.counts.all ?? 0)} />
+            <StatCard label="Upcoming" value={String(data?.counts.upcoming ?? 0)} />
+            <StatCard label="Favorites" value={String(data?.favorites ?? 0)} />
+          </View>
+        )}
+        {!!error && <Text style={styles.error}>{error}</Text>}
+      </View>
+    </>
   );
 }
 

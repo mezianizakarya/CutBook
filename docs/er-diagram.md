@@ -1,8 +1,8 @@
 # CutBook — Database ER Diagram
 
-Review-only artifact generated from `supabase/migrations/20260806000000_initial_schema.sql`. No schema changes.
+Review-only artifact generated from `supabase/migrations/20260806000000_initial_schema.sql` plus later migrations, including the shop loyalty system (`20260811140000_shop_loyalty.sql`).
 
-- **18 tables** in schema `public`
+- **23 tables** in schema `public`
 - Auth identity = `profiles.id` (Clerk `sub`, text)
 - Renders in GitHub, VS Code, and Mermaid live editors
 
@@ -18,6 +18,7 @@ erDiagram
     profiles ||--o| settings : "preferences (1:1)"
     profiles |o--o{ audit_log : "actor"
     profiles |o--o{ platform_settings : "updated_by"
+    profiles ||--o{ customer_loyalty : "loyalty card per shop"
 
     shops ||--o{ shop_members : "employs"
     shops ||--o{ services : "offers"
@@ -26,6 +27,9 @@ erDiagram
     shops ||--o{ favorites : "favorited"
     shops ||--o{ reviews : "rated"
     shops ||--o{ shop_gallery : "gallery"
+    shops ||--o| loyalty_programs : "loyalty program (1:1)"
+    shops ||--o{ customer_loyalty : "customer loyalty cards"
+    shops ||--o{ loyalty_visits : "awarded visits"
 
     shop_members ||--o{ staff_services : "qualified for"
     shop_members ||--o{ bookings : "staff"
@@ -37,6 +41,13 @@ erDiagram
     services ||--o{ bookings : "booked"
 
     bookings ||--o| reviews : "reviewed (0..1)"
+    bookings ||--o| loyalty_visits : "awarded (0..1)"
+    bookings |o--o{ customer_rewards : "redeemed on"
+
+    loyalty_programs ||--o{ loyalty_milestones : "reward ladder"
+    customer_loyalty ||--o{ loyalty_visits : "visit history"
+    customer_loyalty ||--o{ customer_rewards : "unlocked rewards"
+    loyalty_milestones ||--o{ customer_rewards : "reward per milestone"
 
     profiles {
         text id PK "Clerk sub"
@@ -129,6 +140,9 @@ erDiagram
         text service_name "snapshot"
         integer service_price_cents "snapshot"
         integer service_duration_minutes "snapshot"
+        text applied_reward_type "nullable; reward snapshot"
+        text applied_reward_title "nullable; reward snapshot"
+        numeric applied_reward_value "nullable; reward snapshot"
         text note
         text cancel_reason
         timestamptz cancelled_at
@@ -248,6 +262,58 @@ erDiagram
         text updated_by FK "nullable, SET NULL"
         timestamptz updated_at
     }
+    loyalty_programs {
+        bigint id PK
+        bigint shop_id FK "unique, 1:1"
+        boolean enabled "gates unlocks + redemption + UI"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    loyalty_milestones {
+        bigint id PK
+        bigint loyalty_program_id FK
+        integer visit_count "unique per program"
+        text reward_type "percentage_discount|fixed_discount|free_service|custom"
+        text reward_title
+        text reward_description
+        numeric reward_value "nullable; value check per type"
+        boolean active
+        integer sort_order
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    customer_loyalty {
+        bigint id PK
+        text customer_id FK
+        bigint shop_id FK
+        integer total_completed_visits ">= 0"
+        integer current_streak ">= 0"
+        integer best_streak ">= 0"
+        timestamptz last_qualifying_visit_at
+        timestamptz last_streak_break_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    loyalty_visits {
+        bigint id PK
+        bigint customer_loyalty_id FK
+        bigint shop_id FK
+        bigint booking_id FK "unique -> idempotent award"
+        timestamptz awarded_at
+        boolean increment_streak
+    }
+    customer_rewards {
+        bigint id PK
+        bigint customer_loyalty_id FK
+        bigint milestone_id FK
+        text status "unlocked|redeemed|expired"
+        timestamptz unlocked_at
+        timestamptz redeemed_at
+        bigint redeemed_booking_id FK "nullable, SET NULL"
+        timestamptz expires_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
 ```
 
 ## Storage bucket relationships
@@ -281,6 +347,7 @@ erDiagram
 | Left | Right | Via |
 |---|---|---|
 | `profiles` | `settings` | `settings.profile_id` PK+FK (cascade) |
+| `shops` | `loyalty_programs` | `loyalty_programs.shop_id` unique FK (cascade) |
 
 ### 1:N
 | Parent | Child | FK on child | On delete |
@@ -294,6 +361,7 @@ erDiagram
 | `profiles` | `push_tokens` | `profile_id` | cascade |
 | `profiles` | `audit_log` | `actor_id` (nullable) | set null |
 | `profiles` | `platform_settings` | `updated_by` (nullable) | set null |
+| `profiles` | `customer_loyalty` | `customer_id` | cascade |
 | `shops` | `shop_members` | `shop_id` | restrict |
 | `shops` | `services` | `shop_id` | restrict |
 | `shops` | `working_hours` | `shop_id` | cascade |
@@ -301,6 +369,14 @@ erDiagram
 | `shops` | `favorites` | `shop_id` | cascade |
 | `shops` | `reviews` | `shop_id` | restrict |
 | `shops` | `shop_gallery` | `shop_id` | cascade |
+| `shops` | `customer_loyalty` | `shop_id` | cascade |
+| `shops` | `loyalty_visits` | `shop_id` | cascade |
+| `loyalty_programs` | `loyalty_milestones` | `loyalty_program_id` | cascade |
+| `customer_loyalty` | `loyalty_visits` | `customer_loyalty_id` | cascade |
+| `customer_loyalty` | `customer_rewards` | `customer_loyalty_id` | cascade |
+| `loyalty_milestones` | `customer_rewards` | `milestone_id` | cascade |
+| `bookings` | `loyalty_visits` | `booking_id` (unique) | cascade |
+| `bookings` | `customer_rewards` (redeemed on) | `redeemed_booking_id` (nullable) | set null |
 | `shop_members` | `bookings` (staff) | `staff_id` | restrict |
 | `shop_members` | `availability` | `shop_member_id` | cascade |
 | `shop_members` | `time_offs` | `shop_member_id` | cascade |
@@ -317,7 +393,10 @@ erDiagram
 ## Notable constraints
 
 - **`bookings_no_overlap`** — GiST EXCLUDE on `(staff_id, tstzrange(starts_at, ends_at, '[)'))` WHERE `status NOT IN ('cancelled','no_show')` → DB-level double-booking prevention.
-- **Unique** — `profiles.phone` (partial, non-null), `shops.slug`, `working_hours(shop_id, day_of_week)`, `availability(shop_member_id, day_of_week, starts_at)`, `favorites(customer_id, shop_id)`, `reviews(shop_id, customer_id)`, `push_tokens.token`.
+- **Unique** — `profiles.phone` (partial, non-null), `shops.slug`, `working_hours(shop_id, day_of_week)`, `availability(shop_member_id, day_of_week, starts_at)`, `favorites(customer_id, shop_id)`, `reviews(shop_id, customer_id)`, `push_tokens.token`, `loyalty_programs.shop_id`, `loyalty_milestones(loyalty_program_id, visit_count)`, `customer_loyalty(customer_id, shop_id)`, `loyalty_visits.booking_id` (idempotent award), `customer_rewards(customer_loyalty_id, milestone_id)`.
 - **Soft deletes** — `profiles.deleted_at`, `shops.deleted_at`, `shop_members.removed_at` preserve history while RLS filters active rows.
 - **History snapshots** — `bookings` copies service name/price/duration; `reviews.author_name` snapshot via trigger.
+- **Loyalty booking snapshot** — `redeem_reward` copies the milestone's reward (type/title/value) onto `bookings.applied_reward_*` at redemption time so shop staff can see it (barbers can't read `customer_rewards` under RLS); backfilled by `20260811160000_backfill_booking_applied_reward.sql`.
 - **Aggregates** — `shops.rating_avg` / `rating_count` maintained by triggers.
+- **Loyalty integrity** — `customer_loyalty` counters CHECK `>= 0`; `loyalty_milestones.reward_value` CHECK per reward type (percentage_discount 1–100, fixed_discount/free_service 0 or null, custom 0–100000); `customer_rewards.status` CHECK `unlocked|redeemed|expired`; `loyalty_visits.increment_streak` bool.
+- **Loyalty writes** — all mutations go through SECURITY DEFINER RPCs (`award_loyalty_visit` trigger-driven; `reconcile_customer_loyalty`; `set_loyalty_program`; `save_loyalty_milestone`; `delete_loyalty_milestone`; `redeem_reward`) granted to `authenticated`; loyalty tables are SELECT-only under RLS (customer sees own cards/rewards, owner sees own shop's data, admin all).

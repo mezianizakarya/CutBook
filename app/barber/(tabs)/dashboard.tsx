@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/expo";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -13,6 +13,8 @@ import {
 } from "react-native";
 
 import { BookingCard } from "@/components/ui/BookingCard";
+import { Button } from "@/components/ui/Button";
+import { CompleteProfileFirstSheet } from "@/components/ui/CompleteProfileFirstSheet";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { JoinShopForm } from "@/components/ui/JoinShopForm";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
@@ -20,7 +22,13 @@ import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StaffBookingSheet } from "@/components/ui/StaffBookingSheet";
 import { StatCard } from "@/components/ui/StatCard";
-import { fetchBookingCustomers, toBookingCard, type BookingCustomer, type BookingRow } from "@/lib/booking";
+import {
+  customerDisplayName,
+  fetchBookingCustomers,
+  toBookingCard,
+  type BookingCustomer,
+  type BookingRow,
+} from "@/lib/booking";
 import {
   availabilityForDay,
   computeDashboardStats,
@@ -37,10 +45,18 @@ import {
   type TimeOffRow,
 } from "@/lib/barber";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { formatCents, formatOpenRange, greetingFor, startOfDay } from "@/lib/format";
+import {
+  formatCents,
+  formatOpenRange,
+  formatTime,
+  greetingFor,
+  startOfDay,
+} from "@/lib/format";
+import { fetchOwnProfile, isBarberProfessionalComplete } from "@/lib/profile";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
 import { useNotice } from "@/lib/useNotice";
+import { activeEntry, buildTodaySchedule, nextEntry } from "@/lib/workSession";
 
 type BarberContext = {
   memberships: BarberMember[];
@@ -62,11 +78,15 @@ export default function BarberDashboardScreen() {
   const [context, setContext] = useState<BarberContext | null>(null);
   const [bookings, setBookings] = useState<BookingRow[] | null>(null);
   const [customers, setCustomers] = useState<BookingCustomer[]>([]);
+  const [profileComplete, setProfileComplete] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<BookingRow | null>(null);
   const [joinVisible, setJoinVisible] = useState(false);
+  const [completeProfileVisible, setCompleteProfileVisible] = useState(false);
+  const [joinedShop, setJoinedShop] = useState<string | null>(null);
+  const joinedTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { notice, showNotice } = useNotice();
   const [leaveArmed, setLeaveArmed] = useState(false);
   const {
@@ -87,15 +107,28 @@ export default function BarberDashboardScreen() {
     setLeaveArmed(false);
   }
 
+  useEffect(() => {
+    return () => {
+      if (joinedTimeout.current) {
+        clearTimeout(joinedTimeout.current);
+      }
+    };
+  }, []);
+
   const load = useCallback(async () => {
     setError(null);
     if (!user?.id) {
       setContext(EMPTY_CONTEXT);
       setBookings([]);
       setCustomers([]);
+      setProfileComplete(false);
       return;
     }
-    const memberships = await loadMyMemberships(user.id);
+    const [profile, memberships] = await Promise.all([
+      fetchOwnProfile(user.id),
+      loadMyMemberships(user.id),
+    ]);
+    setProfileComplete(isBarberProfessionalComplete(profile));
     if (memberships.length === 0) {
       setContext(EMPTY_CONTEXT);
       setBookings([]);
@@ -169,9 +202,18 @@ export default function BarberDashboardScreen() {
     );
   }, [bookings]);
 
+  const workSchedule = useMemo(
+    () => buildTodaySchedule(todayBookings),
+    [todayBookings]
+  );
+  const workActive = useMemo(
+    () => activeEntry(workSchedule),
+    [workSchedule]
+  );
+  const workNext = useMemo(() => nextEntry(workSchedule), [workSchedule]);
+
   const primaryMember = context?.memberships[0] ?? null;
   const shop = context?.shops[0] ?? null;
-  const professionalDone = user?.unsafeMetadata?.onboardingStep === "complete";
 
   async function confirmLeave() {
     if (!primaryMember) {
@@ -232,43 +274,45 @@ export default function BarberDashboardScreen() {
 
   if (context && context.memberships.length === 0) {
     return (
-      <Screen scroll style={styles.screenPadding}>
-        {!professionalDone && (
-          <Pressable
-            style={[styles.pill, styles.pillSetup]}
-            onPress={() => router.push("/onboarding/barber-professional")}
-          >
-            <Text style={styles.pillSetupText}>
-              Finish your profile — add your specialty and experience
-            </Text>
-          </Pressable>
-        )}
+      <Screen scroll paddingHorizontal={14} paddingTop={spacing.sm}>
+        <View style={styles.pageHeader}>
+          <Text style={styles.pageTitle}>Dashboard</Text>
+        </View>
         <EmptyState
-          title={professionalDone ? "Not assigned to a shop" : "Finish your profile first"}
-          subtitle={
-            professionalDone
-              ? "You're not a member of any barbershop yet. Ask your shop owner to share an invitation code with you."
-              : "Add your specialty and experience to your profile before you can join a shop."
-          }
-          actionLabel={
-            professionalDone ? "Join a shop with a code" : "Finish your profile"
-          }
-          onAction={() =>
-            professionalDone
-              ? setJoinVisible(true)
-              : router.push("/onboarding/barber-professional")
-          }
+          title="Not assigned to a shop"
+          subtitle="You're not a member of any barbershop yet. Ask your shop owner to add you as staff."
+          actionLabel="Join a shop with a code"
+          onAction={() => {
+            if (profileComplete) {
+              setJoinVisible(true);
+            } else {
+              setCompleteProfileVisible(true);
+            }
+          }}
         />
-        {professionalDone && (
-          <JoinShopForm
-            visible={joinVisible}
-            onClose={() => setJoinVisible(false)}
-            onJoined={(shopName) => {
-              showNotice(`You joined ${shopName}`, "success");
-              void load();
-            }}
-          />
-        )}
+        <JoinShopForm
+          visible={joinVisible}
+          onClose={() => setJoinVisible(false)}
+          onJoined={(shopName) => {
+            setJoinedShop(shopName);
+            if (joinedTimeout.current) {
+              clearTimeout(joinedTimeout.current);
+            }
+            joinedTimeout.current = setTimeout(
+              () => setJoinedShop(null),
+              3000
+            );
+            void load();
+          }}
+        />
+        <CompleteProfileFirstSheet
+          visible={completeProfileVisible}
+          onClose={() => setCompleteProfileVisible(false)}
+          onCompleteProfile={() => {
+            setCompleteProfileVisible(false);
+            router.push("/onboarding/barber-professional");
+          }}
+        />
       </Screen>
     );
   }
@@ -282,7 +326,7 @@ export default function BarberDashboardScreen() {
   });
 
   return (
-    <Screen style={styles.screenPadding}>
+    <Screen paddingHorizontal={14} style={styles.screenPadding}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -333,18 +377,13 @@ export default function BarberDashboardScreen() {
 
         {!!error && <Text style={styles.error}>{error}</Text>}
 
-        {!professionalDone && (
-          <Pressable
-            style={[styles.pill, styles.pillSetup]}
-            onPress={() => router.push("/onboarding/barber-professional")}
-          >
-            <Text style={styles.pillSetupText}>
-              Finish your profile — add your specialty and experience
+        {joinedShop ? (
+          <View style={[styles.pill, styles.pillAvailable]}>
+            <Text style={styles.pillAvailableText}>
+              You joined {joinedShop}
             </Text>
-          </Pressable>
-        )}
-
-        {leaveToday ? (
+          </View>
+        ) : leaveToday ? (
           <View style={[styles.pill, styles.pillLeave]}>
             <Text style={styles.pillLeaveText}>
               On leave today — {leaveToday.reason ?? "Unavailable"}
@@ -375,26 +414,50 @@ export default function BarberDashboardScreen() {
         </View>
 
         <SectionHeader title="Today's schedule" />
-        {todayBookings.length === 0 ? (
-          <View style={styles.emptyDay}>
-            <Text style={styles.emptyDayTitle}>Nothing scheduled today</Text>
-            <Text style={styles.emptyDaySubtitle}>
-              Enjoy the breather — bookings will show up here.
-            </Text>
-          </View>
+        {workSchedule.length === 0 ? (
+          <EmptyState
+            title="Nothing scheduled today"
+            subtitle="Enjoy the breather — bookings will show up here."
+          />
         ) : (
-          todayBookings.map((row) => (
-            <BookingCard
-              key={row.id}
-              booking={toBookingCard(row)}
-              onPress={(card) => {
-                const full = bookings?.find((b) => b.id === card.id) ?? null;
-                if (full) {
-                  setSelected(full);
-                }
-              }}
-            />
-          ))
+          <>
+            <View style={styles.workdayRow}>
+              <View style={styles.workdayInfo}>
+                <Text style={styles.workdayTitle}>
+                  {workSchedule.length} appointment
+                  {workSchedule.length === 1 ? "" : "s"}
+                </Text>
+                <Text style={styles.workdaySubtitle}>
+                  {workActive
+                    ? `Serving ${customerDisplayName(customerById.get(workActive.row.id))} now`
+                    : workNext
+                      ? `Next up at ${formatTime(new Date(workNext.expectedStartMs).toISOString())}`
+                      : "All appointments completed"}
+                </Text>
+              </View>
+              {(workActive || workNext) && (
+                <Button
+                  title={
+                    workActive ? "Continue Work Session" : "Start Workday"
+                  }
+                  onPress={() => router.push("/barber/work-session")}
+                  style={styles.workdayButton}
+                />
+              )}
+            </View>
+            {todayBookings.map((row) => (
+              <BookingCard
+                key={row.id}
+                booking={toBookingCard(row)}
+                onPress={(card) => {
+                  const full = bookings?.find((b) => b.id === card.id) ?? null;
+                  if (full) {
+                    setSelected(full);
+                  }
+                }}
+              />
+            ))}
+          </>
         )}
       </ScrollView>
 
@@ -426,6 +489,15 @@ const styles = StyleSheet.create({
     paddingLeft: 14,
     paddingRight: 14,
     paddingBottom: 0,
+  },
+  pageHeader: {
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.text,
   },
   scrollContent: {
     gap: spacing.md,
@@ -471,7 +543,7 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   leaveButtonTextArmed: {
-    color: "#fff",
+    color: colors.white,
   },
   error: {
     color: colors.danger,
@@ -513,32 +585,30 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.primaryDark,
   },
-  pillSetup: {
-    backgroundColor: colors.primarySoft,
-    borderColor: colors.primarySoft,
-  },
-  pillSetupText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: colors.primaryDark,
-  },
   statsRow: {
     flexDirection: "row",
     gap: spacing.sm,
   },
-  emptyDay: {
+  workdayRow: {
+    flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.lg,
+    justifyContent: "space-between",
+    gap: spacing.sm,
   },
-  emptyDayTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+  workdayInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  workdayTitle: {
+    fontSize: 15,
+    fontWeight: "700",
     color: colors.text,
   },
-  emptyDaySubtitle: {
-    fontSize: 14,
+  workdaySubtitle: {
+    fontSize: 13,
     color: colors.muted,
-    textAlign: "center",
+  },
+  workdayButton: {
+    minWidth: 148,
   },
 });

@@ -6,6 +6,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Avatar } from "@/components/ui/Avatar";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
+import { TextField } from "@/components/ui/TextField";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents, parseTimeToMinutes, toDateKey } from "@/lib/format";
 import type { ShopMember, ShopService } from "@/lib/shop";
@@ -64,6 +65,7 @@ export function BookingModal({
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdId, setCreatedId] = useState<number | null>(null);
@@ -75,6 +77,7 @@ export function BookingModal({
       setDateKey(null);
       setSlots(null);
       setSelectedSlot(null);
+      setNote("");
       setSubmitting(false);
       setError(null);
       setCreatedId(null);
@@ -156,6 +159,7 @@ export function BookingModal({
           service_name: selectedService.name,
           service_price_cents: selectedService.price_cents,
           service_duration_minutes: selectedService.duration_minutes,
+          note: note.trim() || null,
         })
         .select("id")
         .single();
@@ -324,6 +328,16 @@ export function BookingModal({
 
       {!!error && <Text style={styles.error}>{error}</Text>}
 
+      <TextField
+        label="Note for your barber (optional)"
+        value={note}
+        onChangeText={setNote}
+        placeholder="Anything they should know before your visit"
+        multiline
+        autoCapitalize="sentences"
+        style={styles.noteField}
+      />
+
       <Button
         title="Request Booking"
         onPress={handleBook}
@@ -464,6 +478,9 @@ const styles = StyleSheet.create({
   error: {
     fontSize: 13,
     color: colors.danger,
+  },
+  noteField: {
+    marginTop: spacing.sm,
   },
   cancelButton: {
     backgroundColor: colors.surface,

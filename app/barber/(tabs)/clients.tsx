@@ -41,6 +41,7 @@ export default function BarberClientsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [inShop, setInShop] = useState(false);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<BarberClient | null>(null);
 
@@ -52,6 +53,7 @@ export default function BarberClientsScreen() {
       return;
     }
     const memberships = await loadMyMemberships(user.id);
+    setInShop(memberships.length > 0);
     if (memberships.length === 0) {
       setBookings([]);
       setCustomers([]);
@@ -143,8 +145,22 @@ export default function BarberClientsScreen() {
     );
   }
 
+  if (!inShop) {
+    return (
+      <Screen scroll paddingHorizontal={14} paddingTop={spacing.sm}>
+        <View style={styles.pageHeader}>
+          <Text style={styles.pageTitle}>Clients</Text>
+        </View>
+        <EmptyState
+          title="Not assigned to a shop"
+          subtitle="You're not a member of any barbershop yet. Ask your shop owner to add you as staff."
+        />
+      </Screen>
+    );
+  }
+
   return (
-    <Screen style={styles.screenPadding}>
+    <Screen paddingHorizontal={14} style={styles.screenPadding}>
       <View style={styles.header}>
         <Text style={styles.title}>Clients</Text>
         <Text style={styles.subtitle}>
@@ -358,6 +374,15 @@ const styles = StyleSheet.create({
     paddingLeft: 14,
     paddingRight: 14,
     paddingBottom: 0,
+  },
+  pageHeader: {
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.text,
   },
   header: {
     gap: spacing.xs,
