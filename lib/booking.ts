@@ -56,6 +56,37 @@ export function toBookingCard(row: BookingRow): BookingCardRow {
   };
 }
 
+export type BookAgainRow = {
+  id: number;
+  starts_at: string;
+  service_name: string;
+  shop: { id: number; name: string; logo_url: string | null } | null;
+};
+
+/** The customer's most recent completed visits, for the "Book again" rail. */
+export async function loadBookAgain(
+  customerId: string,
+  count = 3
+): Promise<BookAgainRow[]> {
+  const rows = await runList<BookingRow>(
+    supabase
+      .from("bookings")
+      .select(BOOKING_SELECT)
+      .eq("customer_id", customerId)
+      .in("status", ["completed", "no_show"])
+      .order("starts_at", { ascending: false })
+      .limit(count)
+  );
+  return rows
+    .filter((row) => row.shop !== null)
+    .map((row) => ({
+      id: row.id,
+      starts_at: row.starts_at,
+      service_name: row.service_name,
+      shop: row.shop,
+    }));
+}
+
 /** Bookings that can still be cancelled by a customer (upcoming + not terminal). */
 export function isCancellable(row: BookingRow, now = new Date()): boolean {
   return (

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { ProfilePicture } from "@/components/ui/ProfilePicture";
 import { ProfileSummary } from "@/components/ui/ProfileSummary";
 import { Screen } from "@/components/ui/Screen";
+import { emailIsVerified } from "@/lib/auth";
 import type { Role } from "@/lib/roles";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -20,6 +21,7 @@ type AccountScreenProps = {
 
 type ProfileData = {
   username: string | null;
+  is_verified: boolean;
 };
 
 export function AccountScreen({ role, children }: AccountScreenProps) {
@@ -36,7 +38,7 @@ export function AccountScreen({ role, children }: AccountScreenProps) {
         }
         const { data, error } = await supabase
           .from("profiles")
-          .select("username")
+          .select("username, is_verified")
           .eq("id", user.id)
           .maybeSingle();
         if (!cancelled && !error && data) {
@@ -74,7 +76,15 @@ export function AccountScreen({ role, children }: AccountScreenProps) {
       <View style={styles.header}>
         <View style={styles.identityRow}>
           <ProfilePicture />
-          <ProfileSummary role={role} username={profile?.username} />
+          <ProfileSummary
+            role={role}
+            username={profile?.username}
+            verified={
+              role === "admin"
+                ? emailIsVerified(user)
+                : profile?.is_verified ?? false
+            }
+          />
         </View>
         <View style={styles.buttonRow}>
           <Button

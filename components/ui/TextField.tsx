@@ -17,6 +17,8 @@ type TextFieldProps = {
   /** Renders a taller, top-aligned multi-line input instead of a 50px pill. */
   multiline?: boolean;
   style?: StyleProp<ViewStyle>;
+  onSubmitEditing?: () => void;
+  returnKeyType?: "done" | "go" | "next" | "search" | "send" | "default";
 };
 
 export function TextField({

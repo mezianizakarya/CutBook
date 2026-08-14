@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { VerifiedIcon } from "@/components/ui/VerifiedIcon";
+import { avatarColor } from "@/lib/avatar";
 import { formatRating } from "@/lib/format";
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -28,27 +30,33 @@ export function ShopCard({ shop, onPress }: ShopCardProps) {
       onPress={() => onPress(shop)}
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
     >
-      <Image
-        source={
-          shop.logo_url
-            ? { uri: shop.logo_url }
-            : undefined
-        }
-        contentFit="cover"
-        style={styles.image}
-      />
+      <View style={styles.image}>
+        {shop.logo_url ? (
+          <Image
+            source={{ uri: shop.logo_url }}
+            contentFit="cover"
+            style={styles.imageFill}
+          />
+        ) : (
+          <View
+            style={[
+              styles.imageFill,
+              styles.imageFallback,
+              { backgroundColor: avatarColor(shop.name) },
+            ]}
+          >
+            <Text style={styles.imageLetter}>
+              {shop.name.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+        )}
+      </View>
       <View style={styles.info}>
         <View style={styles.nameRow}>
           <Text style={styles.name} numberOfLines={1}>
             {shop.name || "—"}
           </Text>
-          {shop.is_verified && (
-            <Ionicons
-              name="checkmark-circle"
-              size={13}
-              color={colors.primaryDark}
-            />
-          )}
+          {shop.is_verified && <VerifiedIcon size={16} />}
         </View>
         <Text style={styles.city} numberOfLines={1}>
           {shop.city ?? "—"}
@@ -80,6 +88,19 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 100,
     backgroundColor: colors.primarySoft,
+  },
+  imageFill: {
+    width: "100%",
+    height: "100%",
+  },
+  imageFallback: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imageLetter: {
+    fontSize: 40,
+    fontWeight: "700",
+    color: colors.primary,
   },
   info: {
     padding: spacing.sm,

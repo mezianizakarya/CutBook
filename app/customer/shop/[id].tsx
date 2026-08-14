@@ -3,7 +3,16 @@ import { useUser } from "@clerk/expo";
 import { Image } from "expo-image";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { BookingModal } from "@/components/ui/BookingModal";
@@ -15,12 +24,15 @@ import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ShopLoyaltyCard } from "@/components/ui/ShopLoyaltyCard";
 import { StarRating } from "@/components/ui/StarRating";
+import { VerifiedIcon } from "@/components/ui/VerifiedIcon";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import {
   dayName,
   formatCents,
+  formatDurationMinutes,
   formatOpenRange,
   formatRating,
+  shopStatusInfo,
 } from "@/lib/format";
 import {
   loadCompletedBookingId,
@@ -34,18 +46,9 @@ import {
   loadShopDetail,
   removeFavorite,
   type ShopDetail,
-  type ShopService,
 } from "@/lib/shop";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
-
-function serviceDurationLabel(service: ShopService): string {
-  return service.duration_minutes >= 60
-    ? `${Math.floor(service.duration_minutes / 60)}h ${
-        service.duration_minutes % 60 === 0 ? "" : `${service.duration_minutes % 60}m`
-      }`.trim()
-    : `${service.duration_minutes}m`;
-}
 
 export default function ShopDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -63,6 +66,9 @@ export default function ShopDetailScreen() {
   const [myReview, setMyReview] = useState<ReviewRow | null>(null);
   const [completedBookingId, setCompletedBookingId] = useState<number | null>(null);
   const [reviewVisible, setReviewVisible] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const { width: windowWidth } = useWindowDimensions();
   const { notice, showNotice } = useNotice();
 
   const load = useCallback(async () => {
@@ -181,6 +187,15 @@ export default function ShopDetailScreen() {
   const categories = [...new Set(shop.services.map((service) => service.category))].filter(
     (category): category is string => !!category
   );
+  const status = shopStatusInfo(shop.working_hours);
+  const contentWidth = Math.min(windowWidth, 480) - 28;
+  const galleryImages = shop.gallery.filter((uri) => !failedImages.has(uri));
+  const heroImages =
+    galleryImages.length > 0
+      ? galleryImages
+      : shop.logo_url && !failedImages.has(shop.logo_url)
+        ? [shop.logo_url]
+        : [];
 
   return (
     <Screen style={styles.screenPadding}>
@@ -200,11 +215,62 @@ export default function ShopDetailScreen() {
       </Pressable>
 
       <View style={styles.hero}>
-        <Image
-          source={shop.logo_url ? { uri: shop.logo_url } : undefined}
-          contentFit="cover"
-          style={styles.heroImage}
-        />
+        {heroImages.length === 0 ? (
+          <View style={[styles.heroImage, styles.heroFallback]}>
+            <Text style={styles.heroLetter}>
+              {(shop.name || "?").charAt(0).toUpperCase()}
+            </Text>
+          </View>
+        ) : (
+          <>
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              scrollEventThrottle={16}
+              onScroll={(event) =>
+                setActiveSlide(
+                  Math.round(
+                    event.nativeEvent.contentOffset.x / Math.max(contentWidth, 1)
+                  )
+                )
+              }
+              style={styles.heroCarousel}
+            >
+              {heroImages.map((uri) => (
+                <Image
+                  key={uri}
+                  source={{ uri }}
+                  contentFit="cover"
+                  style={[styles.heroImage, { width: contentWidth }]}
+                  onError={() =>
+                    setFailedImages((previous) => new Set(previous).add(uri))
+                  }
+                />
+              ))}
+            </ScrollView>
+            {heroImages.length > 1 && (
+              <>
+                <View style={styles.heroDots}>
+                  {heroImages.map((uri, index) => (
+                    <View
+                      key={uri}
+                      style={[
+                        styles.heroDot,
+                        index === activeSlide && styles.heroDotActive,
+                      ]}
+                    />
+                  ))}
+                </View>
+                <View style={styles.heroCount}>
+                  <Text style={styles.heroCountText}>
+                    {activeSlide + 1}/{heroImages.length}
+                  </Text>
+                </View>
+              </>
+            )}
+          </>
+        )}
       </View>
 
       <View style={styles.titleRow}>
@@ -213,9 +279,7 @@ export default function ShopDetailScreen() {
             <Text style={styles.name} numberOfLines={1}>
               {shop.name || "—"}
             </Text>
-            {shop.is_verified && (
-              <Ionicons name="checkmark-circle" size={18} color={colors.primaryDark} />
-            )}
+            {shop.is_verified && <VerifiedIcon size={18} />}
           </View>
           <View style={styles.metaRow}>
             <Ionicons name="star" size={13} color={colors.success} />
@@ -225,10 +289,32 @@ export default function ShopDetailScreen() {
             {!!shop.city && (
               <>
                 <Text style={styles.metaDot}>·</Text>
-                <Ionicons name="location" size={12} color={colors.muted} />
+                <Image
+                  source={require("@/assets/images/location.png")}
+                  style={styles.metaLocationIcon}
+                  contentFit="contain"
+                  tintColor={colors.muted}
+                />
                 <Text style={styles.metaText}>{shop.city}</Text>
               </>
             )}
+          </View>
+          <View style={styles.statusRow}>
+            <View
+              style={[
+                styles.statusDot,
+                { backgroundColor: status.open ? colors.success : colors.muted },
+              ]}
+            />
+            <Text
+              style={[
+                styles.statusText,
+                { color: status.open ? colors.success : colors.muted },
+              ]}
+              numberOfLines={1}
+            >
+              {status.label}
+            </Text>
           </View>
         </View>
         <Pressable
@@ -255,7 +341,12 @@ export default function ShopDetailScreen() {
       <View style={styles.detailsCard}>
         {!!shop.address_line1 && (
           <View style={styles.detailRow}>
-            <Ionicons name="location-outline" size={16} color={colors.muted} />
+            <Image
+              source={require("@/assets/images/location.png")}
+              style={styles.detailLocationIcon}
+              contentFit="contain"
+              tintColor={colors.muted}
+            />
             <Text style={styles.detailValue} numberOfLines={1}>
               {[shop.address_line1, shop.address_line2, shop.city, shop.state]
                 .filter(Boolean)
@@ -323,7 +414,7 @@ export default function ShopDetailScreen() {
                         {service.name}
                       </Text>
                       <Text style={styles.serviceMeta} numberOfLines={1}>
-                        {serviceDurationLabel(service)}
+                        {formatDurationMinutes(service.duration_minutes)}
                         {!!service.description ? ` · ${service.description}` : ""}
                       </Text>
                     </View>
@@ -343,24 +434,55 @@ export default function ShopDetailScreen() {
       ) : (
         <View style={styles.detailsCard}>
           {shop.members.map((member) => (
-            <View key={member.id} style={styles.barberRow}>
+            <Pressable
+              key={member.id}
+              onPress={() =>
+                router.push({
+                  pathname: "/customer/barber/[profileId]",
+                  params: {
+                    profileId: member.profile_id,
+                    shopId: String(shop.id),
+                    shopName: shop.name,
+                  },
+                })
+              }
+              style={({ pressed }) => [
+                styles.barberRow,
+                pressed && styles.barberRowPressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={`View ${member.display_name || "barber"} profile`}
+            >
               <Avatar
                 fullName={member.display_name}
                 imageUrl={member.avatar_url}
                 size={40}
               />
-              <Text style={styles.barberName} numberOfLines={1}>
-                {member.display_name || "—"}
-              </Text>
-              {member.joined_at ? (
-                <Text style={styles.barberSince}>
-                  {new Date(member.joined_at).toLocaleDateString(undefined, {
-                    month: "short",
-                    year: "numeric",
-                  })}
+              <View style={styles.barberInfo}>
+                <Text style={styles.barberName} numberOfLines={1}>
+                  {member.display_name || "—"}
                 </Text>
-              ) : null}
-            </View>
+                <Text style={styles.barberMeta} numberOfLines={1}>
+                  {[
+                    member.specialty,
+                    member.years_of_experience != null
+                      ? `${member.years_of_experience} ${
+                          member.years_of_experience === 1 ? "yr" : "yrs"
+                        }`
+                      : null,
+                    member.joined_at
+                      ? new Date(member.joined_at).toLocaleDateString(undefined, {
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+            </Pressable>
           ))}
         </View>
       )}
@@ -430,7 +552,7 @@ export default function ShopDetailScreen() {
       )}
 
       <Button
-        title="Book an appointment"
+        title="Book Now"
         onPress={() => setBookingVisible(true)}
         style={styles.bookButton}
       />
@@ -500,11 +622,72 @@ const styles = StyleSheet.create({
   hero: {
     marginBottom: spacing.md,
   },
+  heroCarousel: {
+    borderRadius: radius.md,
+  },
   heroImage: {
     width: "100%",
     height: 200,
     borderRadius: radius.md,
     backgroundColor: colors.primarySoft,
+  },
+  heroFallback: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroLetter: {
+    fontSize: 72,
+    fontWeight: "700",
+    color: colors.primary,
+  },
+  heroDots: {
+    position: "absolute",
+    bottom: spacing.sm,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: spacing.xs,
+  },
+  heroDot: {
+    width: 6,
+    height: 6,
+    borderRadius: radius.full,
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
+  },
+  heroDotActive: {
+    width: 16,
+    backgroundColor: colors.white,
+  },
+  heroCount: {
+    position: "absolute",
+    top: spacing.sm,
+    right: spacing.sm,
+    backgroundColor: "rgba(24, 24, 27, 0.55)",
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+  },
+  heroCountText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: colors.white,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    marginTop: 2,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: radius.full,
+  },
+  statusText: {
+    flexShrink: 1,
+    fontSize: 13,
+    fontWeight: "600",
   },
   titleRow: {
     flexDirection: "row",
@@ -541,6 +724,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.muted,
   },
+  metaLocationIcon: {
+    width: 12,
+    height: 12,
+  },
   favoriteButton: {
     width: 44,
     height: 44,
@@ -571,6 +758,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
+  },
+  detailLocationIcon: {
+    width: 16,
+    height: 16,
   },
   detailValue: {
     flex: 1,
@@ -631,13 +822,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
   },
+  barberRowPressed: {
+    opacity: 0.7,
+  },
   barberName: {
-    flex: 1,
+    flexShrink: 1,
     fontSize: 15,
     fontWeight: "600",
     color: colors.text,
   },
-  barberSince: {
+  barberInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  barberMeta: {
     fontSize: 12,
     color: colors.muted,
   },

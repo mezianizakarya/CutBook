@@ -70,6 +70,16 @@ export function dayName(dayOfWeek: number): string {
   return DAY_NAMES[dayOfWeek] ?? "—";
 }
 
+/** Formats a duration in minutes, e.g. "30m" or "1h 30m". */
+export function formatDurationMinutes(minutes: number): string {
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+    return remainder === 0 ? `${hours}h` : `${hours}h ${remainder}m`;
+  }
+  return `${minutes}m`;
+}
+
 export function formatRange(startIso: string, endIso: string | null | undefined): string {
   const start = formatTime(startIso);
   const end = formatTime(endIso);
@@ -139,6 +149,69 @@ export function formatOpenRange(
   return `${formatTimeOfDay(opensAt)} – ${formatTimeOfDay(closesAt)}`;
 }
 
+export type ShopHourRow = {
+  day_of_week: number;
+  opens_at: string | null;
+  closes_at: string | null;
+  is_closed: boolean;
+};
+
+export type ShopStatusInfo = {
+  open: boolean;
+  label: string;
+};
+
+/**
+ * Computes a shop's current open/closed status from its real weekly schedule.
+ * Returns a human label like "Open · Closes at 6:00 PM" or
+ * "Closed · Opens tomorrow at 9:00 AM", driven entirely by the database hours.
+ */
+export function shopStatusInfo(
+  hours: ShopHourRow[],
+  now = new Date()
+): ShopStatusInfo {
+  const todayIndex = now.getDay();
+  const today = hours.find((row) => row.day_of_week === todayIndex);
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const todayOpen =
+    today && !today.is_closed && today.opens_at
+      ? parseTimeToMinutes(today.opens_at)
+      : null;
+  const todayClose =
+    today && !today.is_closed && today.closes_at
+      ? parseTimeToMinutes(today.closes_at)
+      : null;
+
+  if (todayOpen != null && todayClose != null) {
+    if (nowMinutes < todayOpen) {
+      return {
+        open: false,
+        label: `Closed · Opens today at ${formatTimeOfDay(today?.opens_at)}`,
+      };
+    }
+    if (nowMinutes < todayClose) {
+      return {
+        open: true,
+        label: `Open · Closes at ${formatTimeOfDay(today?.closes_at)}`,
+      };
+    }
+  }
+
+  for (let offset = 1; offset <= 7; offset += 1) {
+    const index = (todayIndex + offset) % 7;
+    const row = hours.find((hour) => hour.day_of_week === index);
+    if (row && !row.is_closed && row.opens_at) {
+      const when = offset === 1 ? "tomorrow" : dayName(index);
+      return {
+        open: false,
+        label: `Closed · Opens ${when} at ${formatTimeOfDay(row.opens_at)}`,
+      };
+    }
+  }
+
+  return { open: false, label: "Closed" };
+}
+
 type FormatRatingOptions = {
   /** Whether to include the review count. Defaults to true. */
   showCount?: boolean;
@@ -168,4 +241,15 @@ export function formatRating(
     return `${avg} · ${suffix}`;
   }
   return `${avg} (${suffix})`;
+}
+
+/** Formats a distance in km, e.g. "340 m" under a kilometer, "2.3 km" above. */
+export function formatDistanceKm(km: number | null | undefined): string {
+  if (km == null || !Number.isFinite(km)) {
+    return "";
+  }
+  if (km < 1) {
+    return `${Math.max(1, Math.round(km * 1000))} m`;
+  }
+  return `${km.toFixed(1)} km`;
 }

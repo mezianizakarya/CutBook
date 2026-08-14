@@ -108,6 +108,7 @@ export function PhoneInput({
           keyboardType="phone-pad"
           autoCorrect={false}
           textContentType="telephoneNumber"
+          maxLength={country.maxDigits}
         />
       </View>
       {!!error && <Text style={styles.error}>{error}</Text>}

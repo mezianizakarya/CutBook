@@ -5,7 +5,7 @@ import { colors, radius, spacing } from "@/lib/theme";
 type ButtonProps = {
   title: string;
   onPress: () => void;
-  variant?: "primary" | "outline" | "ghost" | "danger" | "dangerOutline" | "successOutline" | "blue";
+  variant?: "primary" | "outline" | "ghost" | "danger" | "dangerOutline" | "successOutline" | "blue" | "blueOutline";
   loading?: boolean;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -26,16 +26,18 @@ export function Button({
       : variant === "danger"
         ? colors.danger
         : variant === "blue"
-          ? colors.primaryDark
+          ? colors.blue
           : "transparent";
 
   const labelColor =
     variant === "primary" || variant === "danger" || variant === "blue"
       ? colors.white
-      : variant === "dangerOutline" || variant === "successOutline"
+      : variant === "dangerOutline" || variant === "successOutline" || variant === "blueOutline"
         ? variant === "dangerOutline"
           ? colors.danger
-          : colors.success
+          : variant === "successOutline"
+            ? colors.success
+            : colors.blue
         : colors.primary;
 
   return (
@@ -49,6 +51,7 @@ export function Button({
         variant === "outline" && styles.outline,
         variant === "dangerOutline" && styles.dangerOutline,
         variant === "successOutline" && styles.successOutline,
+        variant === "blueOutline" && styles.blueOutline,
         style,
         pressed && styles.pressed,
         isDisabled && styles.disabled,
@@ -86,6 +89,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.success,
     backgroundColor: colors.surface,
+  },
+  blueOutline: {
+    borderWidth: 1,
+    borderColor: colors.blue,
+    backgroundColor: colors.white,
   },
   pressed: {
     opacity: 0.8,

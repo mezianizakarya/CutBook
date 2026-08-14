@@ -30,7 +30,7 @@ export function FilterChip({ label, selected, onPress, style }: FilterChipProps)
 
 const styles = StyleSheet.create({
   chip: {
-    paddingVertical: 6,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: radius.full,
     backgroundColor: colors.surface,
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 13,
     fontWeight: "600",
-    color: colors.text,
+    color: colors.muted,
   },
   chipTextSelected: {
     color: colors.white,

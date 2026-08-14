@@ -1,11 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   FlatList,
-  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -18,12 +16,11 @@ import {
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
+import { VerifiedIcon } from "@/components/ui/VerifiedIcon";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { formatDate, formatRating } from "@/lib/format";
+import { formatRating } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
-import { useSheetDrag } from "@/lib/useSheetDrag";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type ShopInfo = {
   id: number;
@@ -37,6 +34,7 @@ type ShopInfo = {
 
 type BarberRow = {
   id: number;
+  profile_id: string;
   display_name: string;
   avatar_url: string | null;
   joined_at: string | null;
@@ -48,9 +46,10 @@ type SortFilter = "top" | "newest";
 const PAGE_SIZE = 50;
 
 const BARBER_SELECT =
-  "id, display_name, avatar_url, joined_at, shops(id, name, city, rating_avg, rating_count, is_verified, logo_url)";
+  "id, profile_id, display_name, avatar_url, joined_at, shops(id, name, city, rating_avg, rating_count, is_verified, logo_url)";
 
 export default function DiscoverScreen() {
+  const router = useRouter();
   const [barbers, setBarbers] = useState<BarberRow[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -60,7 +59,6 @@ export default function DiscoverScreen() {
   const [sortFilter, setSortFilter] = useState<SortFilter>("top");
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [selected, setSelected] = useState<BarberRow | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -335,29 +333,35 @@ export default function DiscoverScreen() {
         onEndReachedThreshold={0.3}
         renderItem={({ item }) => (
           <Pressable
-            onPress={() => setSelected(item)}
+            onPress={() => {
+              if (!item.profile_id) {
+                return;
+              }
+              const params = new URLSearchParams();
+              if (item.shops) {
+                params.set("shopId", String(item.shops.id));
+                params.set("shopName", item.shops.name);
+              }
+              const query = params.toString();
+              router.push(
+                `/customer/barber/${item.profile_id}${query ? `?${query}` : ""}`
+              );
+            }}
             style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
           >
-            <Avatar
-              fullName={item.display_name}
-              imageUrl={item.avatar_url}
-              size={44}
-            />
+            <Avatar fullName={item.display_name} imageUrl={item.avatar_url} size={44} />
             <View style={styles.rowInfo}>
-              <Text style={styles.rowName} numberOfLines={1}>
-                {item.display_name || "—"}
-              </Text>
+              <View style={styles.rowNameLine}>
+                <Text style={styles.rowName} numberOfLines={1}>
+                  {item.display_name || "—"}
+                </Text>
+                {(item.shops?.is_verified ?? false) && <VerifiedIcon size={16} />}
+              </View>
               <Text style={styles.rowUsername} numberOfLines={1}>
                 {item.shops?.name ?? "No shop"}
               </Text>
             </View>
             <View style={styles.rowBadges}>
-              {item.shops?.is_verified && (
-                <View style={styles.verifiedBadge}>
-                  <Ionicons name="checkmark-circle" size={13} color={colors.primaryDark} />
-                  <Text style={styles.verifiedBadgeText}>Verified</Text>
-                </View>
-              )}
               <View style={styles.ratingBadge}>
                 <Ionicons name="star" size={12} color={colors.success} />
                 <Text style={styles.ratingBadgeText}>
@@ -368,112 +372,7 @@ export default function DiscoverScreen() {
           </Pressable>
         )}
       />
-
-      <Modal
-        visible={selected !== null}
-        transparent
-        animationType="slide"
-        statusBarTranslucent
-        navigationBarTranslucent
-        onRequestClose={() => setSelected(null)}
-      >
-        {!!selected && (
-          <BarberSheet
-            row={selected}
-            onClose={() => setSelected(null)}
-          />
-        )}
-      </Modal>
     </Screen>
-  );
-}
-
-type BarberSheetProps = {
-  row: BarberRow;
-  onClose: () => void;
-};
-
-function BarberSheet({ row, onClose }: BarberSheetProps) {
-  const insets = useSafeAreaInsets();
-  const { translateY, panResponder } = useSheetDrag(onClose);
-
-  return (
-    <Pressable style={styles.modalBackdrop} onPress={onClose}>
-      <Pressable onPress={() => undefined}>
-        <Animated.View
-          style={[
-            styles.modalCard,
-            {
-              transform: [{ translateY }],
-              paddingBottom: spacing.xl + insets.bottom,
-            },
-          ]}
-        >
-          <View style={styles.dragHandleArea} {...panResponder.panHandlers}>
-            <View style={styles.dragHandle} />
-          </View>
-          <View style={styles.modalHeader}>
-            <Avatar
-              fullName={row.display_name}
-              imageUrl={row.avatar_url}
-              size={48}
-            />
-            <View style={styles.modalHeaderInfo}>
-              <Text style={styles.modalName} numberOfLines={1}>
-                {row.display_name || "—"}
-              </Text>
-              <Text style={styles.modalUsername} numberOfLines={1}>
-                {row.shops?.name ?? "No shop"}
-              </Text>
-            </View>
-            {row.shops?.is_verified && (
-              <View style={styles.verifiedBadge}>
-                <Ionicons name="checkmark-circle" size={13} color={colors.primaryDark} />
-                <Text style={styles.verifiedBadgeText}>Verified</Text>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.detailsCard}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Shop</Text>
-              <Text style={styles.detailValue} numberOfLines={1}>
-                {row.shops?.name ?? "—"}
-              </Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>City</Text>
-              <Text style={styles.detailValue} numberOfLines={1}>
-                {row.shops?.city ?? "—"}
-              </Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Rating</Text>
-              <Text style={styles.detailValue}>
-                {formatRating(row.shops?.rating_avg ?? null, row.shops?.rating_count ?? null, {
-                  suffix: "reviews",
-                  style: "dot",
-                  fallback: "No reviews yet",
-                })}
-              </Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Barber since</Text>
-              <Text style={styles.detailValue}>
-                {formatDate(row.joined_at)}
-              </Text>
-            </View>
-          </View>
-
-          <Button
-            title="Close"
-            onPress={onClose}
-            variant="outline"
-            style={styles.cancelButton}
-          />
-        </Animated.View>
-      </Pressable>
-    </Pressable>
   );
 }
 
@@ -590,6 +489,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.text,
   },
+  rowNameLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
   rowUsername: {
     fontSize: 13,
     color: colors.muted,
@@ -597,20 +501,6 @@ const styles = StyleSheet.create({
   rowBadges: {
     alignItems: "flex-end",
     gap: spacing.xs,
-  },
-  verifiedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-    backgroundColor: colors.primarySoft,
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.full,
-  },
-  verifiedBadgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.primaryDark,
   },
   ratingBadge: {
     flexDirection: "row",
@@ -650,79 +540,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   loadMoreButton: {
-    backgroundColor: colors.surface,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "transparent",
-    justifyContent: "flex-end",
-  },
-  modalCard: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingLeft: 14,
-    paddingRight: 14,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
-    gap: spacing.md,
-  },
-  dragHandleArea: {
-    alignSelf: "center",
-    marginTop: -spacing.md,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.sm,
-  },
-  dragHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: radius.full,
-    backgroundColor: colors.border,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  modalHeaderInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  modalName: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: colors.text,
-  },
-  modalUsername: {
-    fontSize: 13,
-    color: colors.muted,
-  },
-  detailsCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  detailRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  detailLabel: {
-    width: 110,
-    fontSize: 13,
-    color: colors.muted,
-  },
-  detailValue: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.text,
-  },
-  cancelButton: {
     backgroundColor: colors.surface,
   },
 });

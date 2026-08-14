@@ -13,11 +13,12 @@ import {
   View,
 } from "react-native";
 
-import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { ShopAdminSheet } from "@/components/ui/ShopAdminSheet";
+import { Avatar } from "@/components/ui/Avatar";
+import { VerifiedIcon } from "@/components/ui/VerifiedIcon";
 import {
   loadAdminShops,
   type AdminShop,
@@ -211,9 +212,12 @@ export default function AdminShopsScreen() {
               >
                 <Avatar fullName={item.name} imageUrl={item.logo_url} size={44} />
                 <View style={styles.rowInfo}>
-                  <Text style={styles.rowName} numberOfLines={1}>
-                    {item.name}
-                  </Text>
+                  <View style={styles.rowNameLine}>
+                    <Text style={styles.rowName} numberOfLines={1}>
+                      {item.name}
+                    </Text>
+                    {item.is_verified && <VerifiedIcon size={16} />}
+                  </View>
                   <Text style={styles.rowSubtitle} numberOfLines={1}>
                     {item.city ?? "No city"} · {formatDate(item.created_at)}
                   </Text>
@@ -224,11 +228,6 @@ export default function AdminShopsScreen() {
                       {item.status === "approved" ? "Approved" : item.status === "suspended" ? "Suspended" : "Pending"}
                     </Text>
                   </View>
-                  {item.is_verified && (
-                    <View style={styles.badgeVerified}>
-                      <Text style={styles.badgeTextVerified}>Verified</Text>
-                    </View>
-                  )}
                 </View>
               </Pressable>
             );
@@ -366,6 +365,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.text,
   },
+  rowNameLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
   rowSubtitle: {
     fontSize: 13,
     color: colors.muted,
@@ -406,16 +410,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: "#b45309",
-  },
-  badgeVerified: {
-    backgroundColor: colors.primarySoft,
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.full,
-  },
-  badgeTextVerified: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.primaryDark,
   },
 });

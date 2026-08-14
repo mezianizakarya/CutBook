@@ -1,9 +1,11 @@
 import { useUser } from "@clerk/expo";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
+import { avatarColor } from "@/lib/avatar";
 import { loadOwnerShops, type OwnerShop } from "@/lib/owner";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useFocusLoad } from "@/lib/useFocusLoad";
@@ -54,6 +56,25 @@ export function OwnerProfileSection() {
       ) : (
         (shops ?? []).map((shop) => (
           <View key={shop.id} style={styles.shopRow}>
+            {shop.logo_url ? (
+              <Image
+                source={{ uri: shop.logo_url }}
+                style={styles.thumb}
+                contentFit="cover"
+              />
+            ) : (
+              <View
+                style={[
+                  styles.thumb,
+                  styles.thumbFallback,
+                  { backgroundColor: avatarColor(shop.name) },
+                ]}
+              >
+                <Text style={styles.thumbLetter}>
+                  {shop.name.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
             <View style={styles.shopInfo}>
               <Text style={styles.shopName} numberOfLines={1}>
                 {shop.name}
@@ -107,6 +128,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  thumb: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.full,
+  },
+  thumbFallback: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  thumbLetter: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.primary,
   },
   shopInfo: {
     flex: 1,

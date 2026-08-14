@@ -55,6 +55,13 @@ Helpers for screens:
 - `buildCustomerByIdMap(rows)` — map `customer_id` → `BookingCustomer`.
 - `patchBookingRow(current, updated)` — merge an updated row back into the local list state.
 
+## Owner shop screen structure (`app/owner/(tabs)/shop.tsx`)
+- **Services** and **Working hours** render as compact grouped cards (hairline dividers, `paddingVertical: sm+2`, `paddingHorizontal: md`). Services show `name` + `$price · duration min` (no category on the row) with a Switch (owner) or Active/Hidden pill (manager) on the right. The summary's "Edit" action pushes to a dedicated management screen.
+- **`app/owner/shop-services.tsx`** (pushed via `router.push("/owner/shop-services", { shopId })`) — full service management: add/edit via the `ServiceSheet` bottom sheet (name, price, duration, optional category/description), active toggle. Editing is owner-only in the UI (matches the summary's `canEdit`), managers see read-only Active/Hidden pills.
+- **Working hours** on the shop page is a read-only summary (day + `formatOpenRange` / "Closed", today highlighted). Editing lives in a dedicated screen:
+- **`app/owner/shop-hours.tsx`** (pushed via `router.push("/owner/shop-hours", { shopId })`) — per-day open/closed Switch + tappable time pills opening the native picker (`@react-native-community/datetimepicker`; iOS spinner bottom-sheet Modal, Android inline dialog); close > open validation; "Apply to multiple days" `BottomSheet` (FilterChip source single-select + target multi-select + preview); save runs a booking-conflict check via `loadUpcomingBookings` (14-day horizon, pending/confirmed) — conflicts surface in a danger card and require an explicit "Save anyway (n)" press.
+- Booking availability stays fully inline in `components/ui/BookingModal.tsx` (reads `working_hours`, generates 30-min slots). The editor never changes bookings — it only warns.
+
 ## Wiring conventions
 - Import order: react/external → `@/components` → `@/lib` (theme, hooks, domain).
 - `lib/format.ts` exports `greetingFor(date)` for time-of-day greetings ("Good morning/afternoon/evening"); call it with `new Date()` and append the user's name.

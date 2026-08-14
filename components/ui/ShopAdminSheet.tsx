@@ -7,8 +7,12 @@ import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { DetailRow, DetailsCard } from "@/components/ui/DetailsCard";
 import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
-import type { AdminShop, ShopStatus } from "@/lib/admin";
-import { updateShopFields } from "@/lib/admin";
+import { VerifiedIcon } from "@/components/ui/VerifiedIcon";
+import {
+  type AdminShop,
+  type ShopStatus,
+  updateShopFields,
+} from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDate, formatRating } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
@@ -129,20 +133,22 @@ export function ShopAdminSheet({
       <View style={styles.header}>
         <Avatar fullName={shop.name} imageUrl={shop.logo_url} size={48} />
         <View style={styles.headerInfo}>
-          <Text style={styles.name} numberOfLines={1}>
-            {shop.name}
-          </Text>
+          <View style={styles.nameLine}>
+            <Text style={styles.name} numberOfLines={1}>
+              {shop.name}
+            </Text>
+            {shop.is_verified && <VerifiedIcon size={16} />}
+            <View style={styles.badgeRow}>
+              <StatusBadge
+                label={STATUS_LABELS[shop.status]}
+                tone={STATUS_TONES[shop.status]}
+              />
+              {!shop.is_active && <StatusBadge label="Closed" tone="danger" />}
+            </View>
+          </View>
           <Text style={styles.slug} numberOfLines={1}>
             @{shop.slug}
           </Text>
-          <View style={styles.badgeRow}>
-            <StatusBadge
-              label={STATUS_LABELS[shop.status]}
-              tone={STATUS_TONES[shop.status]}
-            />
-            {shop.is_verified && <StatusBadge label="Verified" tone="role" />}
-            {!shop.is_active && <StatusBadge label="Closed" tone="danger" />}
-          </View>
         </View>
       </View>
 
@@ -179,7 +185,20 @@ export function ShopAdminSheet({
         <DetailRow label="Registered" value={formatDate(shop.created_at)} />
       </DetailsCard>
 
-      {shop.status === "pending" ? (
+      {shop.deleted_at ? (
+        <Button
+          title="Restore shop"
+          variant="primary"
+          loading={busy}
+          disabled={busy}
+          onPress={() =>
+            void performUpdate(
+              { status: "approved", is_active: true, deleted_at: null },
+              "Shop restored"
+            )
+          }
+        />
+      ) : shop.status === "pending" ? (
         <Button
           title="Approve shop"
           variant="primary"
@@ -201,13 +220,18 @@ export function ShopAdminSheet({
           variant="successOutline"
           loading={busy}
           disabled={busy}
-          onPress={() => void performUpdate({ status: "approved" }, "Shop reactivated")}
+          onPress={() =>
+            void performUpdate(
+              { status: "approved", deleted_at: null },
+              "Shop reactivated"
+            )
+          }
         />
       )}
 
       <Button
         title={shop.is_verified ? "Remove verified badge" : "Mark as verified"}
-        variant="outline"
+        variant={shop.is_verified ? "blueOutline" : "blue"}
         loading={busy}
         disabled={busy}
         onPress={() =>
@@ -250,6 +274,13 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
     color: colors.text,
+    flexShrink: 1,
+  },
+  nameLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: spacing.xs,
   },
   slug: {
     fontSize: 13,
@@ -259,7 +290,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    marginTop: spacing.xs,
   },
   copyPill: {
     fontSize: 12,

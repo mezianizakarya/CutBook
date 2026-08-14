@@ -210,6 +210,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md,
     gap: spacing.sm,
+    marginBottom: 98,
   },
   row: {
     flexDirection: "row",
@@ -228,6 +229,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md,
     gap: spacing.sm,
+    marginBottom: 98,
   },
   shopEmpty: {
     fontSize: 15,

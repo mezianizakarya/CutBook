@@ -66,10 +66,11 @@ The admin Users page (`app/admin/(tabs)/users.tsx`) is the reference implementat
 - `profiles` has partial unique index `profiles_email_active_unique` on email `WHERE deleted_at IS NULL` → one ACTIVE account per email; deleted rows keep history and don't block email reuse.
 - `account_status` generated column: only `'active' | 'deleted'` (deleted when `deleted_at` set). `is_disabled` intentionally NOT shown but column/RPC stays.
 - Account deletion = Clerk `user.deleted` → webhook soft-delete (sets `deleted_at`). Hard delete impossible (FKs `ON DELETE RESTRICT` on shops/shop_members/bookings/reviews).
+- Shop deletion = owner/admin `delete_shop(p_shop_id)` SECURITY DEFINER RPC (soft-delete: sets `deleted_at` + `is_active=false`, appends audit_log `shop_deleted`). No client DELETE policy exists. `loadOwnerShops` filters `.is("deleted_at", null)`. UI: `app/owner/(tabs)/shop.tsx` bottom danger zone with double-press confirm.
 - `onboarding_completed` = mirror of Clerk `profileCompleted` (onboarding progress marker, no security role).
 
 ## Migrations (applied remotely)
-- `20260806000000_initial_schema.sql`, `20260806100000_profiles_account_status.sql`, `20260806110000_email_active_unique.sql`.
+- `20260806000000_initial_schema.sql`, `20260806100000_profiles_account_status.sql`, `20260806110000_email_active_unique.sql`, `20260812100000_shop_delete.sql`.
 - Apply with `npx --yes supabase@latest db push --linked`.
 
 ## App wiring
@@ -174,3 +175,10 @@ Before schema changes, inspect existing records. Provide a safe migration/backfi
 
 ## 19. Frontend must match the database
 After implementing the database, update the frontend to use the real model. Do NOT create fake arrays/mock data in frontend code as the source of truth.
+
+# Sleek Mobile App Design (sleek.design)
+
+- Sleek is set up for designing mobile app screens via its REST API. Skill installed at `.agents/skills/sleek-design-mobile-apps` (load `sleek-design-mobile-apps` for the full workflow + API reference).
+- `SLEEK_API_KEY` lives in `.env` (gitignored) and was also persisted via `setx` (new shells may not inherit it until opencode restarts — reload from `.env` if a call returns 401).
+- Workflow: `POST /api/v1/projects` → `POST /api/v1/projects/:id/chat/messages` (always include `source: "opencode"`) → poll `GET .../chat/runs/:runId` → `POST /api/v1/screenshots`. Share `https://sleek.design/project/:projectId` with the user so they can watch live.
+- Source is `opencode` (not in Sleek's recognized list — fine, generic label). Key was created via device flow; scopes are defaults for the design workflow.

@@ -8,7 +8,10 @@ import {
   Alert,
   Animated,
   FlatList,
+  Keyboard,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -23,7 +26,13 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
-import { adminSetUserDeleted, adminSetUserRole } from "@/lib/admin";
+import { VerifiedIcon } from "@/components/ui/VerifiedIcon";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import {
+  adminRemoveVerification,
+  adminSetUserDeleted,
+  adminSetUserRole,
+} from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDate } from "@/lib/format";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/roles";
@@ -31,8 +40,13 @@ import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
 import { stripAtPrefix } from "@/lib/username";
 import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
+import { useKeyboardHeight } from "@/lib/useKeyboardHeight";
 import { useNotice } from "@/lib/useNotice";
 import { useSheetDrag } from "@/lib/useSheetDrag";
+import {
+  fetchLatestVerificationRequest,
+  type VerificationRequest,
+} from "@/lib/verification";
 
 type ProfileRow = {
   id: string;
@@ -44,6 +58,7 @@ type ProfileRow = {
   phone: string | null;
   role: Role | null;
   account_status: "active" | "deleted";
+  is_verified: boolean;
   created_at: string | null;
   last_active_at: string | null;
 };
@@ -57,7 +72,7 @@ type RoleFilter = "all" | Role;
 const PAGE_SIZE = 50;
 
 const PROFILE_SELECT =
-  "id, email, username, first_name, last_name, avatar_url, phone, role, account_status, created_at, last_active_at";
+  "id, email, username, first_name, last_name, avatar_url, phone, role, account_status, is_verified, created_at, last_active_at";
 
 function fullName(row: ProfileRow): string {
   const name = [row.first_name ?? "", row.last_name ?? ""]
@@ -320,6 +335,16 @@ export default function UsersScreen() {
     performSetDeleted(row, false);
   }
 
+  function handleRemoveVerification(row: ProfileRow) {
+    setSelected((previous) =>
+      previous && previous.id === row.id
+        ? { ...previous, is_verified: false }
+        : previous
+    );
+    void load();
+    showNotice(`Verified badge removed from ${fullName(row)}`, "role");
+  }
+
   if (loading && !profiles) {
     return (
       <Screen centered>
@@ -468,9 +493,12 @@ export default function UsersScreen() {
           >
             <Avatar fullName={fullName(item)} imageUrl={item.avatar_url} size={44} />
             <View style={styles.rowInfo}>
-              <Text style={styles.rowName} numberOfLines={1}>
-                {fullName(item)}
-              </Text>
+              <View style={styles.rowNameLine}>
+                <Text style={styles.rowName} numberOfLines={1}>
+                  {fullName(item)}
+                </Text>
+                {item.is_verified && <VerifiedIcon size={16} />}
+              </View>
               <Text style={styles.rowUsername} numberOfLines={1}>
                 {item.username ?? "No username"}
               </Text>
@@ -523,6 +551,7 @@ export default function UsersScreen() {
             onChangeRole={handleChangeRole}
             onDelete={handleDelete}
             onRestore={handleRestore}
+            onRemoveVerification={handleRemoveVerification}
           />
         )}
       </Modal>
@@ -539,6 +568,7 @@ type ActionModalProps = {
   onChangeRole: (row: ProfileRow, role: Role) => void;
   onDelete: (row: ProfileRow) => void;
   onRestore: (row: ProfileRow) => void;
+  onRemoveVerification: (row: ProfileRow) => void;
 };
 
 function ActionModal({
@@ -550,15 +580,36 @@ function ActionModal({
   onChangeRole,
   onDelete,
   onRestore,
+  onRemoveVerification,
 }: ActionModalProps) {
   const deleted = row.account_status === "deleted";
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
   const [showingRoles, setShowingRoles] = useState(false);
+  const [showingVerification, setShowingVerification] = useState(false);
+  const [removingVerification, setRemovingVerification] = useState(false);
   const [confirmingRole, setConfirmingRole] = useState<Role | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingRestore, setConfirmingRestore] = useState(false);
   const [copiedField, setCopiedField] = useState<"email" | "phone" | "username" | null>(null);
+  const [request, setRequest] = useState<VerificationRequest | null>(null);
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (row.role === "barber" || row.role === "owner") {
+      fetchLatestVerificationRequest(row.id).then((latest) => {
+        if (!cancelled) {
+          setRequest(latest);
+        }
+      });
+    } else {
+      setRequest(null);
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [row.id, row.role]);
 
   useEffect(() => {
     return () => {
@@ -579,7 +630,12 @@ function ActionModal({
     },
   });
 
-  const { translateY, panResponder } = useSheetDrag(onClose);
+  const { translateY, panResponder } = useSheetDrag(handleClose);
+
+  function handleClose() {
+    Keyboard.dismiss();
+    onClose();
+  }
 
   async function copyToClipboard(value: string, field: "email" | "phone" | "username") {
     if (!value) {
@@ -605,10 +661,45 @@ function ActionModal({
       );
       return;
     }
+    setShowingVerification(false);
     setShowingRoles(true);
     setConfirmingDelete(false);
     setConfirmingRestore(false);
     cancelCountdown();
+  }
+
+  function handleVerificationBadgePress() {
+    if (!row.is_verified) {
+      return;
+    }
+    if (showingVerification) {
+      setShowingVerification(false);
+      return;
+    }
+    setShowingRoles(false);
+    setShowingVerification(true);
+    setConfirmingDelete(false);
+    setConfirmingRestore(false);
+    cancelCountdown();
+  }
+
+  async function handleRemoveVerification() {
+    if (!row.is_verified) {
+      return;
+    }
+    setRemovingVerification(true);
+    try {
+      await adminRemoveVerification(row.id);
+      setShowingVerification(false);
+      onRemoveVerification(row);
+    } catch (e) {
+      Alert.alert(
+        "Couldn't remove verification",
+        errorMessageFromUnknown(e)
+      );
+    } finally {
+      setRemovingVerification(false);
+    }
   }
 
   function handleDeletePress() {
@@ -634,14 +725,21 @@ function ActionModal({
   }
 
   return (
-    <Pressable style={styles.modalBackdrop} onPress={onClose}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={styles.modalBackdrop}
+    >
+      <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
       <Pressable onPress={() => undefined}>
         <Animated.View
           style={[
             styles.modalCard,
             {
               transform: [{ translateY }],
-              paddingBottom: spacing.xl + insets.bottom,
+              paddingBottom:
+                spacing.xl +
+                insets.bottom +
+                (Platform.OS === "android" ? keyboardHeight : 0),
             },
           ]}
         >
@@ -655,6 +753,16 @@ function ActionModal({
                 <Text style={styles.modalName} numberOfLines={1}>
                   {fullName(row)}
                 </Text>
+                {row.is_verified && (
+                  <Pressable
+                    onPress={handleVerificationBadgePress}
+                    accessibilityRole="button"
+                    accessibilityLabel="Manage verification"
+                    hitSlop={8}
+                  >
+                    <VerifiedIcon size={17} />
+                  </Pressable>
+                )}
                 <Pressable
                   onPress={handleRoleBadgePress}
                   accessibilityRole="button"
@@ -682,6 +790,12 @@ function ActionModal({
                     {deleted ? "Deleted" : "Active"}
                   </Text>
                 </View>
+                {(row.role === "barber" || row.role === "owner") &&
+                  (request?.status === "pending" ? (
+                    <StatusBadge label="Pending review" tone="warning" />
+                  ) : request?.status === "rejected" ? (
+                    <StatusBadge label="Rejected" tone="danger" />
+                  ) : null)}
               </View>
               <Text style={styles.modalUsername} numberOfLines={1}>
                 {row.username ?? "No username"}
@@ -782,8 +896,33 @@ function ActionModal({
                     setConfirmingRole(null);
                     return;
                   }
-                  onClose();
+                  handleClose();
                 }}
+                variant="outline"
+                style={styles.cancelButton}
+              />
+            </>
+          ) : showingVerification ? (
+            <>
+              <Text style={styles.verificationRemoveTitle}>Remove verification</Text>
+              <View style={styles.verificationRemoveCard}>
+                <Text style={styles.verificationRemoveText}>
+                  {fullName(row)} is currently verified. Removing the badge
+                  clears their verified status and lets them request
+                  verification again.
+                </Text>
+              </View>
+              <Button
+                title="Remove verification"
+                onPress={handleRemoveVerification}
+                variant="dangerOutline"
+                loading={removingVerification}
+                disabled={removingVerification}
+                style={styles.modalActionSpacer}
+              />
+              <Button
+                title="Cancel"
+                onPress={() => setShowingVerification(false)}
                 variant="outline"
                 style={styles.cancelButton}
               />
@@ -893,7 +1032,7 @@ function ActionModal({
                 cancelCountdown();
                 return;
               }
-              onClose();
+              handleClose();
             }}
             variant="outline"
             style={styles.cancelButton}
@@ -902,7 +1041,7 @@ function ActionModal({
           )}
         </Animated.View>
       </Pressable>
-    </Pressable>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -1022,6 +1161,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.text,
   },
+  rowNameLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
   rowUsername: {
     fontSize: 13,
     color: colors.muted,
@@ -1043,6 +1187,23 @@ const styles = StyleSheet.create({
   },
   roleBadgePressed: {
     opacity: 0.7,
+  },
+  verificationRemoveTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  verificationRemoveCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  verificationRemoveText: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 20,
   },
   empty: {
     alignItems: "center",

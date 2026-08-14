@@ -16,6 +16,7 @@ import {
 
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Screen } from "@/components/ui/Screen";
+import { VerifiedIcon } from "@/components/ui/VerifiedIcon";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatRating } from "@/lib/format";
 import {
@@ -150,9 +151,7 @@ export default function FavoritesScreen() {
                 <Text style={styles.rowName} numberOfLines={1}>
                   {item.name || "—"}
                 </Text>
-                {item.is_verified && (
-                  <Ionicons name="checkmark-circle" size={13} color={colors.primaryDark} />
-                )}
+                {item.is_verified && <VerifiedIcon size={16} />}
               </View>
               <Text style={styles.rowSubtitle} numberOfLines={1}>
                 {item.city ?? "—"}

@@ -1,4 +1,5 @@
-import { useFocusEffect } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -11,47 +12,49 @@ import {
 } from "react-native";
 
 import { Avatar } from "@/components/ui/Avatar";
-import { Button } from "@/components/ui/Button";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { ShopAdminSheet } from "@/components/ui/ShopAdminSheet";
 import { StatCard } from "@/components/ui/StatCard";
+import { VerifiedIcon } from "@/components/ui/VerifiedIcon";
 import {
-  loadAdminShops,
   loadAdminStats,
   loadRecentUsers,
-  updateShopFields,
-  type AdminShop,
   type AdminStats,
   type RecentUser,
 } from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { formatCents, formatDate } from "@/lib/format";
+import { formatCents } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/roles";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
+import { countPendingShopVerificationRequests } from "@/lib/shop-verification";
+import { countPendingVerificationRequests } from "@/lib/verification";
 
 export default function AdminDashboardScreen() {
+  const router = useRouter();
   const [stats, setStats] = useState<AdminStats | null>(null);
-  const [pendingShops, setPendingShops] = useState<AdminShop[]>([]);
+  const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
+  const [pendingShopVerificationCount, setPendingShopVerificationCount] =
+    useState(0);
   const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<AdminShop | null>(null);
-  const [approvingId, setApprovingId] = useState<number | null>(null);
-  const { notice, showNotice } = useNotice();
+  const { notice } = useNotice();
 
   const load = useCallback(async () => {
     setError(null);
-    const [statsResult, pendingResult, recentResult] = await Promise.all([
-      loadAdminStats(),
-      loadAdminShops("pending"),
-      loadRecentUsers(6),
-    ]);
+    const [statsResult, verificationCount, shopVerificationCount, recentResult] =
+      await Promise.all([
+        loadAdminStats(),
+        countPendingVerificationRequests(),
+        countPendingShopVerificationRequests(),
+        loadRecentUsers(6),
+      ]);
     setStats(statsResult);
-    setPendingShops(pendingResult);
+    setPendingVerificationCount(verificationCount);
+    setPendingShopVerificationCount(shopVerificationCount);
     setRecentUsers(recentResult);
   }, []);
 
@@ -84,38 +87,6 @@ export default function AdminDashboardScreen() {
       setError(errorMessageFromUnknown(e));
     } finally {
       setRefreshing(false);
-    }
-  }
-
-  async function quickApprove(shop: AdminShop) {
-    setApprovingId(shop.id);
-    try {
-      await updateShopFields(shop.id, { status: "approved" });
-      const updated = { ...shop, status: "approved" as const };
-      setPendingShops((previous) => previous.filter((row) => row.id !== shop.id));
-      setSelected((previous) => (previous && previous.id === shop.id ? updated : previous));
-      setStats((previous) =>
-        previous
-          ? { ...previous, pendingShops: Math.max(0, previous.pendingShops - 1) }
-          : previous
-      );
-      showNotice(`${shop.name} approved`, "success");
-    } catch (e) {
-      showNotice(errorMessageFromUnknown(e), "danger");
-    } finally {
-      setApprovingId(null);
-    }
-  }
-
-  function handleUpdated(shop: AdminShop) {
-    setSelected(shop);
-    if (shop.status !== "pending") {
-      setPendingShops((previous) => previous.filter((row) => row.id !== shop.id));
-      setStats((previous) =>
-        previous
-          ? { ...previous, pendingShops: Math.max(0, previous.pendingShops - 1) }
-          : previous
-      );
     }
   }
 
@@ -175,48 +146,47 @@ export default function AdminDashboardScreen() {
           </>
         )}
 
-        <SectionHeader
-          title="Pending approvals"
-          actionLabel={
-            pendingShops.length > 0
-              ? `${pendingShops.length} waiting`
-              : undefined
-          }
-        />
-        {pendingShops.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>Nothing to review</Text>
-            <Text style={styles.emptySubtitle}>
-              No shops are waiting for approval right now.
-            </Text>
+        <Pressable
+          onPress={() => router.push("/admin/pending-shops")}
+          style={({ pressed }) => [styles.reviewCard, pressed && styles.reviewCardPressed]}
+        >
+          <View style={styles.reviewInfo}>
+            <Text style={styles.reviewTitle}>Pending approvals</Text>
+            <Text style={styles.reviewSubtitle}>Shops waiting for approval</Text>
           </View>
-        ) : (
-          pendingShops.map((shop) => (
-            <Pressable
-              key={shop.id}
-              onPress={() => setSelected(shop)}
-              style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-            >
-              <Avatar fullName={shop.name} imageUrl={shop.logo_url} size={44} />
-              <View style={styles.rowInfo}>
-                <Text style={styles.rowName} numberOfLines={1}>
-                  {shop.name}
-                </Text>
-                <Text style={styles.rowSubtitle} numberOfLines={1}>
-                  {shop.city ?? "No city"} · {formatDate(shop.created_at)}
-                </Text>
-              </View>
-              <Button
-                title="Approve"
-                variant="successOutline"
-                loading={approvingId === shop.id}
-                disabled={approvingId !== null}
-                onPress={() => void quickApprove(shop)}
-                style={styles.approveButton}
-              />
-            </Pressable>
-          ))
-        )}
+          <View style={styles.reviewCount}>
+            <Text style={styles.reviewCountText}>{stats?.pendingShops ?? 0}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/admin/pending-verifications")}
+          style={({ pressed }) => [styles.reviewCard, pressed && styles.reviewCardPressed]}
+        >
+          <View style={styles.reviewInfo}>
+            <Text style={styles.reviewTitle}>Barber verification</Text>
+            <Text style={styles.reviewSubtitle}>Barbers and owners to verify</Text>
+          </View>
+          <View style={styles.reviewCount}>
+            <Text style={styles.reviewCountText}>{pendingVerificationCount}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/admin/pending-shop-verifications")}
+          style={({ pressed }) => [styles.reviewCard, pressed && styles.reviewCardPressed]}
+        >
+          <View style={styles.reviewInfo}>
+            <Text style={styles.reviewTitle}>Shop verification</Text>
+            <Text style={styles.reviewSubtitle}>Shops waiting to be verified</Text>
+          </View>
+          <View style={styles.reviewCount}>
+            <Text style={styles.reviewCountText}>{pendingShopVerificationCount}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+        </Pressable>
 
         <SectionHeader title="Recent signups" />
         {recentUsers.length === 0 ? (
@@ -226,15 +196,14 @@ export default function AdminDashboardScreen() {
         ) : (
           recentUsers.map((user) => (
             <View key={user.id} style={styles.row}>
-              <Avatar
-                fullName={fullName(user)}
-                imageUrl={user.avatar_url}
-                size={44}
-              />
+              <Avatar fullName={fullName(user)} imageUrl={user.avatar_url} size={44} />
               <View style={styles.rowInfo}>
-                <Text style={styles.rowName} numberOfLines={1}>
-                  {fullName(user)}
-                </Text>
+                <View style={styles.rowNameLine}>
+                  <Text style={styles.rowName} numberOfLines={1}>
+                    {fullName(user)}
+                  </Text>
+                  {user.is_verified && <VerifiedIcon size={16} />}
+                </View>
                 <Text style={styles.rowSubtitle} numberOfLines={1}>
                   {user.email ?? "No email"}
                 </Text>
@@ -248,16 +217,6 @@ export default function AdminDashboardScreen() {
           ))
         )}
       </ScrollView>
-
-      {!!selected && (
-        <ShopAdminSheet
-          key={selected.id}
-          shop={selected}
-          onClose={() => setSelected(null)}
-          onUpdated={handleUpdated}
-          onNotice={showNotice}
-        />
-      )}
     </Screen>
   );
 }
@@ -303,6 +262,46 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.sm,
   },
+  reviewCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  reviewCardPressed: {
+    opacity: 0.8,
+  },
+  reviewInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  reviewTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  reviewSubtitle: {
+    fontSize: 13,
+    color: colors.muted,
+  },
+  reviewCount: {
+    minWidth: 28,
+    height: 28,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.full,
+    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reviewCountText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.primaryDark,
+  },
   emptyCard: {
     alignItems: "center",
     gap: spacing.xs,
@@ -317,11 +316,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.text,
   },
-  emptySubtitle: {
-    fontSize: 14,
-    color: colors.muted,
-    textAlign: "center",
-  },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -332,9 +326,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  rowPressed: {
-    opacity: 0.8,
-  },
   rowInfo: {
     flex: 1,
     gap: 2,
@@ -344,13 +335,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.text,
   },
+  rowNameLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
   rowSubtitle: {
     fontSize: 13,
     color: colors.muted,
-  },
-  approveButton: {
-    height: 36,
-    paddingHorizontal: spacing.md,
   },
   roleBadge: {
     backgroundColor: "#fef3c7",

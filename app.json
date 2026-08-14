@@ -1,22 +1,21 @@
 {
   "expo": {
-    "name": "CutBook",
+    "name": "Kutz",
     "slug": "CutBook",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/kutz-app-icons/ios/AppIcon.appiconset/Icon-1024.png",
     "scheme": "cutbook",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/kutz-app-icons/ios/AppIcon.appiconset/Icon-1024.png"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#FABA23",
+        "foregroundImage": "./assets/kutz-app-icons/ios/AppIcon.appiconset/Icon-1024.png"
       },
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
@@ -44,7 +43,13 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow CutBook to access your photos."
+          "photosPermission": "Allow Kutz to access your photos."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Kutz to use your location to find barbers nearby and set your shop's address."
         }
       ],
       [
@@ -52,7 +57,8 @@
         {
           "appleSignIn": false
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,6 +1,7 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useUser } from "@clerk/expo";
-import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -13,7 +14,6 @@ import {
   View,
 } from "react-native";
 
-import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterChip } from "@/components/ui/FilterChip";
@@ -21,42 +21,36 @@ import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { OwnerLoyaltySection } from "@/components/ui/OwnerLoyaltySection";
 import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { TextField } from "@/components/ui/TextField";
+import { ShopForm, type ShopFormValues } from "@/components/ui/ShopForm";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import {
   dayName,
   formatCents,
-  formatTimeOfDay,
-  parseTimeToMinutes,
+  formatOpenRange,
 } from "@/lib/format";
 import {
-  createService,
+  deleteShop,
   loadOwnerShops,
+  loadShopGallery,
   loadShopServices,
   loadWorkingHours,
-  saveWorkingHours,
+  saveShopLogo,
   setServiceActive,
-  updateService,
   updateShop,
+  uploadShopGallery,
   type OwnerService,
   type OwnerShop,
-  type ServiceInput,
   type WorkingHoursRow,
 } from "@/lib/owner";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useConfirmAction } from "@/lib/useConfirmAction";
 import { useNotice } from "@/lib/useNotice";
 
-const STEP_MINUTES = 15;
-
-function minutesToTime(totalMinutes: number): string {
-  const clamped = Math.max(0, Math.min(1439, totalMinutes));
-  const hours = Math.floor(clamped / 60);
-  const minutes = clamped % 60;
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`;
-}
+const todayDayOfWeek = new Date().getDay();
 
 export default function OwnerShopScreen() {
   const { user } = useUser();
+  const router = useRouter();
   const [shops, setShops] = useState<OwnerShop[]>([]);
   const [selectedShopId, setSelectedShopId] = useState<number | null>(null);
   const [services, setServices] = useState<OwnerService[]>([]);
@@ -65,25 +59,30 @@ export default function OwnerShopScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { notice, showNotice } = useNotice();
-  const [saving, setSaving] = useState(false);
-  const [serviceSheet, setServiceSheet] = useState<{
-    mode: "create" | "edit";
-    service?: OwnerService;
-  } | null>(null);
-  const [details, setDetails] = useState({
-    description: "",
-    address_line1: "",
-    city: "",
-    state: "",
-    postal_code: "",
-    phone: "",
-    email: "",
-    website: "",
-  });
+  const [deleting, setDeleting] = useState(false);
+  const [gallery, setGallery] = useState<string[]>([]);
 
   const selectedShop = useMemo(
     () => shops.find((shop) => shop.id === selectedShopId) ?? shops[0] ?? null,
     [shops, selectedShopId]
+  );
+
+  const detailsInitial = useMemo(
+    () => ({
+      name: selectedShop?.name ?? "",
+      description: selectedShop?.description ?? "",
+      city: selectedShop?.city ?? "",
+      state: selectedShop?.state ?? "",
+      country: selectedShop?.country ?? "",
+      postalCode: selectedShop?.postal_code ?? "",
+      address: selectedShop?.address_line1 ?? "",
+      phone: selectedShop?.phone ?? "",
+      latitude: selectedShop?.latitude ?? null,
+      longitude: selectedShop?.longitude ?? null,
+      logoUri: selectedShop?.logo_url ?? null,
+      galleryUris: gallery,
+    }),
+    [selectedShop, gallery]
   );
 
   const load = useCallback(async () => {
@@ -101,22 +100,14 @@ export default function OwnerShopScreen() {
       setSelectedShopId(null);
       setServices([]);
       setHours([]);
+      setGallery([]);
       return;
     }
     setSelectedShopId(target.id);
-    setDetails({
-      description: target.description ?? "",
-      address_line1: target.address_line1 ?? "",
-      city: target.city ?? "",
-      state: target.state ?? "",
-      postal_code: target.postal_code ?? "",
-      phone: target.phone ?? "",
-      email: target.email ?? "",
-      website: target.website ?? "",
-    });
-    const [rows, hrs] = await Promise.all([
+    const [rows, hrs, galleryRows] = await Promise.all([
       loadShopServices(target.id),
       loadWorkingHours(target.id),
+      loadShopGallery(target.id),
     ]);
     setServices(rows);
     setHours(
@@ -129,6 +120,7 @@ export default function OwnerShopScreen() {
             is_closed: false,
           }))
     );
+    setGallery(galleryRows);
   }, [user?.id, selectedShopId]);
 
   useFocusEffect(
@@ -171,111 +163,64 @@ export default function OwnerShopScreen() {
 
   const canEdit = selectedShop?.myRole === "owner";
 
-  async function handleSaveDetails() {
+  async function handleSaveDetails(values: ShopFormValues) {
     if (!selectedShop) {
       return;
     }
-    setSaving(true);
-    setError(null);
-    try {
-      await updateShop(selectedShop.id, {
-        description: details.description || null,
-        address_line1: details.address_line1 || null,
-        city: details.city || null,
-        state: details.state || null,
-        postal_code: details.postal_code || null,
-        phone: details.phone || null,
-        email: details.email || null,
-        website: details.website || null,
-      });
-      setShops((prev) =>
-        prev.map((shop) =>
-          shop.id === selectedShop.id ? { ...shop, ...details } : shop
-        )
-      );
-      showNotice("Shop details saved", "success");
-    } catch (e) {
-      Alert.alert("Could not save", errorMessageFromUnknown(e));
-    } finally {
-      setSaving(false);
+    const patch = {
+      name: values.name.trim(),
+      description: values.description.trim() || null,
+      address_line1: values.address.trim() || null,
+      city: values.city.trim() || null,
+      state: values.state.trim() || null,
+      country: values.country.trim() || null,
+      postal_code: values.postalCode.trim() || null,
+      phone: values.phone.trim() || null,
+      latitude: values.latitude,
+      longitude: values.longitude,
+    };
+    await updateShop(selectedShop.id, patch);
+    await saveShopLogo(selectedShop.id, values.logoUri);
+    const galleryChanged =
+      JSON.stringify(values.galleryUris) !== JSON.stringify(gallery);
+    if (galleryChanged) {
+      await uploadShopGallery(selectedShop.id, values.galleryUris);
+      setGallery(values.galleryUris);
     }
-  }
-
-  async function handleSaveHours() {
-    if (!selectedShop) {
-      return;
-    }
-    for (const day of hours) {
-      if (!day.is_closed) {
-        const open = parseTimeToMinutes(day.opens_at);
-        const close = parseTimeToMinutes(day.closes_at);
-        if (open == null || close == null) {
-          Alert.alert(
-            "Check your hours",
-            `${dayName(day.day_of_week)} needs an opening and closing time.`
-          );
-          return;
-        }
-        if (close <= open) {
-          Alert.alert(
-            "Check your hours",
-            `${dayName(day.day_of_week)} closes at or before it opens.`
-          );
-          return;
-        }
-      }
-    }
-    setSaving(true);
-    setError(null);
-    try {
-      await saveWorkingHours(selectedShop.id, hours);
-      showNotice("Working hours saved", "success");
-    } catch (e) {
-      Alert.alert("Could not save", errorMessageFromUnknown(e));
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  function updateDay(index: number, patch: Partial<WorkingHoursRow>) {
-    setHours((prev) =>
-      prev.map((day, i) => (i === index ? { ...day, ...patch } : day))
+    setShops((prev) =>
+      prev.map((shop) =>
+        shop.id === selectedShop.id
+          ? { ...shop, ...patch, logo_url: values.logoUri ?? null }
+          : shop
+      )
     );
+    showNotice("Shop details saved", "success");
   }
 
-  function adjustTime(dayIndex: number, field: "opens_at" | "closes_at", delta: number) {
-    setHours((prev) =>
-      prev.map((day, i) => {
-        if (i !== dayIndex) {
-          return day;
-        }
-        const current = parseTimeToMinutes(day[field]) ?? (field === "opens_at" ? 540 : 1080);
-        return { ...day, [field]: minutesToTime(current + delta) };
-      })
-    );
-  }
-
-  async function handleServiceSave(input: ServiceInput) {
-    if (!selectedShop) {
-      return;
-    }
-    try {
-      if (serviceSheet?.mode === "edit" && serviceSheet.service) {
-        const updated = await updateService(serviceSheet.service.id, input);
-        setServices((prev) =>
-          prev.map((service) => (service.id === updated.id ? updated : service))
-        );
-        showNotice("Service updated", "success");
-      } else {
-        const created = await createService(selectedShop.id, input);
-        setServices((prev) => [...prev, created]);
-        showNotice("Service added", "success");
+  const { confirming, count, press: confirmDelete, reset: resetDelete } =
+    useConfirmAction(async () => {
+      if (!selectedShop) {
+        return;
       }
-      setServiceSheet(null);
-    } catch (e) {
-      Alert.alert("Could not save service", errorMessageFromUnknown(e));
-    }
-  }
+      setDeleting(true);
+      setError(null);
+      try {
+        await deleteShop(selectedShop.id);
+        resetDelete();
+        const remaining = shops.filter((shop) => shop.id !== selectedShop.id);
+        setShops(remaining);
+        setSelectedShopId(remaining[0]?.id ?? null);
+        if (remaining.length === 0) {
+          setServices([]);
+          setHours([]);
+        }
+        showNotice("Shop deleted", "success");
+      } catch (e) {
+        Alert.alert("Could not delete shop", errorMessageFromUnknown(e));
+      } finally {
+        setDeleting(false);
+      }
+    });
 
   function toggleService(service: OwnerService) {
     setServices((prev) =>
@@ -335,7 +280,7 @@ export default function OwnerShopScreen() {
           <Text style={styles.title}>Shop</Text>
           <Text style={styles.subtitle}>
             {selectedShop.status === "pending"
-              ? "Pending approval by CutBook."
+              ? "Pending approval by Kutz."
               : "Details, services and working hours."}
           </Text>
         </View>
@@ -344,105 +289,56 @@ export default function OwnerShopScreen() {
 
         {!!error && <Text style={styles.errorText}>{error}</Text>}
 
-        {shops.length > 1 ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipRow}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.chipsScroll}
+          contentContainerStyle={styles.chipRow}
+        >
+          {shops.map((shop) => (
+            <FilterChip
+              key={shop.id}
+              label={shop.name}
+              selected={selectedShop.id === shop.id}
+              onPress={() => selectShop(shop.id)}
+            />
+          ))}
+          <Pressable
+            onPress={() => router.push("/onboarding/owner-shop")}
+            hitSlop={4}
+            accessibilityRole="button"
+            accessibilityLabel="Add shop"
+            style={({ pressed }) => [
+              styles.addShopChip,
+              pressed && styles.addShopChipPressed,
+            ]}
           >
-            {shops.map((shop) => (
-              <FilterChip
-                key={shop.id}
-                label={shop.name}
-                selected={selectedShop.id === shop.id}
-                onPress={() => selectShop(shop.id)}
-              />
-            ))}
-          </ScrollView>
-        ) : null}
+            <Ionicons name="add" size={18} color={colors.muted} />
+          </Pressable>
+        </ScrollView>
 
         {/* Details */}
         <SectionHeader title="Details" />
         {canEdit ? (
-          <>
-            <View style={styles.fieldGroup}>
-              <TextField
-                label="Description"
-                value={details.description}
-                onChangeText={(text) => setDetails((prev) => ({ ...prev, description: text }))}
-                placeholder="Tell customers what makes your shop special"
-                autoCapitalize="sentences"
-              />
-              <TextField
-                label="Address"
-                value={details.address_line1}
-                onChangeText={(text) => setDetails((prev) => ({ ...prev, address_line1: text }))}
-                placeholder="123 Main Street"
-              />
-              <View style={styles.rowFields}>
-                <View style={styles.rowField}>
-                  <TextField
-                    label="City"
-                    value={details.city}
-                    onChangeText={(text) => setDetails((prev) => ({ ...prev, city: text }))}
-                  />
-                </View>
-                <View style={styles.rowField}>
-                  <TextField
-                    label="State"
-                    value={details.state}
-                    onChangeText={(text) => setDetails((prev) => ({ ...prev, state: text }))}
-                  />
-                </View>
-              </View>
-              <TextField
-                label="Postal code"
-                value={details.postal_code}
-                onChangeText={(text) => setDetails((prev) => ({ ...prev, postal_code: text }))}
-                keyboardType="numeric"
-              />
-              <TextField
-                label="Phone"
-                value={details.phone}
-                onChangeText={(text) => setDetails((prev) => ({ ...prev, phone: text }))}
-                keyboardType="phone-pad"
-              />
-              <TextField
-                label="Email"
-                value={details.email}
-                onChangeText={(text) => setDetails((prev) => ({ ...prev, email: text }))}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              <TextField
-                label="Website"
-                value={details.website}
-                onChangeText={(text) => setDetails((prev) => ({ ...prev, website: text }))}
-                placeholder="https://"
-                autoCapitalize="none"
-              />
-            </View>
-            <Button
-              title="Save details"
-              onPress={() => void handleSaveDetails()}
-              loading={saving}
-              disabled={saving}
-            />
-          </>
+          <ShopForm
+            key={selectedShop.id}
+            initial={detailsInitial}
+            submitLabel="Save details"
+            onSubmit={handleSaveDetails}
+          />
         ) : (
           <View style={styles.card}>
+            <InfoRow label="Name" value={selectedShop.name} />
             <InfoRow label="Description" value={selectedShop.description} />
             <InfoRow label="Address" value={selectedShop.address_line1} />
             <InfoRow
               label="City"
-              value={[selectedShop.city, selectedShop.state]
+              value={[selectedShop.city, selectedShop.state, selectedShop.country]
                 .filter(Boolean)
                 .join(", ")}
             />
             <InfoRow label="Postal code" value={selectedShop.postal_code} />
             <InfoRow label="Phone" value={selectedShop.phone} />
-            <InfoRow label="Email" value={selectedShop.email} />
-            <InfoRow label="Website" value={selectedShop.website} />
             <Text style={styles.managerHint}>
               Only the shop owner can edit details.
             </Text>
@@ -452,10 +348,17 @@ export default function OwnerShopScreen() {
         {/* Services */}
         <SectionHeader
           title="Services"
-          actionLabel={canEdit ? "Add" : undefined}
+          actionLabel={canEdit ? "Edit" : undefined}
           onAction={
             canEdit
-              ? () => setServiceSheet({ mode: "create" })
+              ? () =>
+                  router.push({
+                    pathname: "/owner/shop-services",
+                    params: {
+                      shopId: String(selectedShop.id),
+                      name: selectedShop.name,
+                    },
+                  })
               : undefined
           }
         />
@@ -467,118 +370,152 @@ export default function OwnerShopScreen() {
             </Text>
           </View>
         ) : (
-          services.map((service) => (
-            <Pressable
-              key={service.id}
-              onPress={() => {
-                if (canEdit) {
-                  setServiceSheet({ mode: "edit", service });
-                }
-              }}
-              disabled={!canEdit}
-              style={({ pressed }) => [
-                styles.serviceRow,
-                pressed && styles.serviceRowPressed,
-              ]}
-            >
-              <View style={styles.serviceInfo}>
-                <Text style={styles.serviceName} numberOfLines={1}>
-                  {service.name}
-                </Text>
-                <Text style={styles.serviceMeta} numberOfLines={1}>
-                  {formatCents(service.price_cents)} · {service.duration_minutes} min
-                  {service.category ? ` · ${service.category}` : ""}
-                </Text>
+          <View style={styles.groupCard}>
+            {services.map((service, index) => (
+              <View
+                key={service.id}
+                style={[styles.serviceRow, index > 0 && styles.groupDivider]}
+              >
+                <View style={styles.serviceInfo}>
+                  <Text style={styles.serviceName} numberOfLines={1}>
+                    {service.name}
+                  </Text>
+                  <Text style={styles.serviceMeta} numberOfLines={1}>
+                    <Text style={styles.servicePrice}>
+                      {formatCents(service.price_cents)}
+                    </Text>
+                    {`  ·  ${service.duration_minutes} min`}
+                  </Text>
+                </View>
+                {canEdit ? (
+                  <Switch
+                    value={service.is_active}
+                    onValueChange={() => toggleService(service)}
+                    trackColor={{ true: colors.primary, false: colors.border }}
+                    thumbColor={colors.white}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      styles.statusPill,
+                      service.is_active
+                        ? styles.statusPillActive
+                        : styles.statusPillHidden,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statusPillText,
+                        service.is_active
+                          ? styles.statusPillTextActive
+                          : styles.statusPillTextHidden,
+                      ]}
+                    >
+                      {service.is_active ? "Active" : "Hidden"}
+                    </Text>
+                  </View>
+                )}
               </View>
-              {canEdit ? (
-                <Switch
-                  value={service.is_active}
-                  onValueChange={() => toggleService(service)}
-                  trackColor={{ true: colors.primary, false: colors.border }}
-                  thumbColor={colors.white}
-                />
-              ) : (
-                <Text style={[styles.badgeText, service.is_active ? styles.activeText : styles.inactiveText]}>
-                  {service.is_active ? "Active" : "Hidden"}
-                </Text>
-              )}
-            </Pressable>
-          ))
+            ))}
+          </View>
         )}
 
         {/* Working hours */}
-        <SectionHeader title="Working hours" />
-        {hours.map((day, index) => (
-          <View key={day.day_of_week} style={styles.hoursRow}>
-            <Text style={styles.hoursDay}>{dayName(day.day_of_week)}</Text>
-            <Switch
-              value={!day.is_closed}
-              onValueChange={(value) => updateDay(index, { is_closed: !value })}
-              trackColor={{ true: colors.primary, false: colors.border }}
-              thumbColor={colors.white}
-            />
-            {day.is_closed ? (
-              <Text style={styles.closedText}>Closed</Text>
-            ) : (
-              <TimeStepper
-                value={day.opens_at ?? "09:00:00"}
-                onDecrease={() => adjustTime(index, "opens_at", -STEP_MINUTES)}
-                onIncrease={() => adjustTime(index, "opens_at", STEP_MINUTES)}
-              />
-            )}
-            {!day.is_closed && (
-              <TimeStepper
-                value={day.closes_at ?? "18:00:00"}
-                onDecrease={() => adjustTime(index, "closes_at", -STEP_MINUTES)}
-                onIncrease={() => adjustTime(index, "closes_at", STEP_MINUTES)}
-              />
-            )}
-          </View>
-        ))}
-        <Button
-          title="Save hours"
-          variant="outline"
-          onPress={() => void handleSaveHours()}
-          loading={saving}
-          disabled={saving}
+        <SectionHeader
+          title="Working hours"
+          actionLabel="Edit"
+          onAction={() =>
+            router.push({
+              pathname: "/owner/shop-hours",
+              params: { shopId: String(selectedShop.id), name: selectedShop.name },
+            })
+          }
         />
+        <Text style={styles.hoursHint}>
+          Your shop&apos;s regular opening hours.
+        </Text>
+        <View style={styles.groupCard}>
+          {hours.map((day, index) => {
+            const isToday = day.day_of_week === todayDayOfWeek;
+            return (
+              <View
+                key={day.day_of_week}
+                style={[styles.hoursRow, index > 0 && styles.groupDivider]}
+              >
+                <Text
+                  style={[styles.hoursDay, isToday && styles.hoursDayToday]}
+                >
+                  {dayName(day.day_of_week)}
+                </Text>
+                <Text
+                  style={[
+                    styles.hoursValue,
+                    isToday && styles.hoursDayToday,
+                  ]}
+                >
+                  {day.is_closed
+                    ? "Closed"
+                    : formatOpenRange(day.opens_at, day.closes_at)}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
 
         {/* Loyalty program */}
         <OwnerLoyaltySection
           shopId={selectedShop.id}
           onNotice={showNotice}
         />
+
+        {/* Verification */}
+        <SectionHeader title="Verification" />
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: "/owner/shop-verification",
+              params: { shopId: String(selectedShop.id), name: selectedShop.name },
+            })
+          }
+          style={({ pressed }) => [
+            styles.groupCard,
+            styles.groupRow,
+            pressed && styles.groupRowPressed,
+          ]}
+        >
+          <View style={styles.serviceInfo}>
+            <Text style={styles.serviceName} numberOfLines={1}>
+              {selectedShop.is_verified
+                ? "Verified badge"
+                : "Request verification"}
+            </Text>
+            <Text style={styles.serviceMeta} numberOfLines={1}>
+              {selectedShop.is_verified
+                ? "Customers see a verified badge on your shop."
+                : "Show customers a verified badge on your shop."}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+        </Pressable>
+
+        {canEdit ? (
+          <View style={styles.dangerZone}>
+            <Text style={styles.dangerHint}>
+              Deleting your shop hides it from customers and stops new
+              bookings. Your shop data stays on file and this can{"'"}t be
+              undone from the app.
+            </Text>
+            <Button
+              title={confirming ? `Confirm delete (${count})` : "Delete shop"}
+              variant="danger"
+              loading={deleting}
+              disabled={deleting}
+              onPress={confirmDelete}
+            />
+          </View>
+        ) : null}
       </ScrollView>
-
-      <ServiceSheet
-        visible={serviceSheet !== null}
-        service={serviceSheet?.mode === "edit" ? serviceSheet.service : undefined}
-        onClose={() => setServiceSheet(null)}
-        onSave={(input) => void handleServiceSave(input)}
-      />
     </Screen>
-  );
-}
-
-function TimeStepper({
-  value,
-  onDecrease,
-  onIncrease,
-}: {
-  value: string;
-  onDecrease: () => void;
-  onIncrease: () => void;
-}) {
-  return (
-    <View style={styles.stepper}>
-      <Pressable onPress={onDecrease} hitSlop={6} style={styles.stepperButton}>
-        <Text style={styles.stepperButtonText}>−</Text>
-      </Pressable>
-      <Text style={styles.stepperValue}>{formatTimeOfDay(value)}</Text>
-      <Pressable onPress={onIncrease} hitSlop={6} style={styles.stepperButton}>
-        <Text style={styles.stepperButtonText}>+</Text>
-      </Pressable>
-    </View>
   );
 }
 
@@ -590,119 +527,6 @@ function InfoRow({ label, value }: { label: string; value: string | null }) {
         {value || "—"}
       </Text>
     </View>
-  );
-}
-
-function ServiceSheet({
-  visible,
-  service,
-  onClose,
-  onSave,
-}: {
-  visible: boolean;
-  service?: OwnerService;
-  onClose: () => void;
-  onSave: (input: ServiceInput) => void;
-}) {
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [duration, setDuration] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const isEditing = service !== undefined;
-
-  const reset = useCallback(
-    (target?: OwnerService) => {
-      setName(target?.name ?? "");
-      setPrice(target ? String(target.price_cents / 100) : "");
-      setDuration(target ? String(target.duration_minutes) : "");
-      setDescription(target?.description ?? "");
-      setCategory(target?.category ?? "");
-      setError(null);
-    },
-    []
-  );
-
-  useEffect(() => {
-    if (visible) {
-      reset(service);
-    }
-  }, [visible, service, reset]);
-
-  function handleSave() {
-    const trimmedName = name.trim();
-    const priceValue = Number(price);
-    const durationValue = Number(duration);
-    if (!trimmedName) {
-      setError("Please enter a service name.");
-      return;
-    }
-    if (!Number.isFinite(priceValue) || priceValue <= 0) {
-      setError("Please enter a valid price.");
-      return;
-    }
-    if (!Number.isInteger(durationValue) || durationValue <= 0) {
-      setError("Please enter a valid duration in minutes.");
-      return;
-    }
-    onSave({
-      name: trimmedName,
-      price_cents: Math.round(priceValue * 100),
-      duration_minutes: durationValue,
-      description: description.trim() || null,
-      category: category.trim() || null,
-    });
-  }
-
-  return (
-    <BottomSheet visible={visible} onClose={onClose}>
-      <Text style={styles.sheetTitle}>{isEditing ? "Edit service" : "Add service"}</Text>
-      {isEditing ? null : <Text style={styles.sheetText}>Customers can book this service at your shop.</Text>}
-      <TextField
-        label="Name"
-        value={name}
-        onChangeText={setName}
-        placeholder="Classic fade"
-        autoCapitalize="words"
-      />
-      <View style={styles.rowFields}>
-        <View style={styles.rowField}>
-          <TextField
-            label="Price ($)"
-            value={price}
-            onChangeText={setPrice}
-            placeholder="35"
-            keyboardType="numeric"
-          />
-        </View>
-        <View style={styles.rowField}>
-          <TextField
-            label="Duration (min)"
-            value={duration}
-            onChangeText={setDuration}
-            placeholder="30"
-            keyboardType="numeric"
-          />
-        </View>
-      </View>
-      <TextField
-        label="Category (optional)"
-        value={category}
-        onChangeText={setCategory}
-        placeholder="Haircut"
-        autoCapitalize="words"
-      />
-      <TextField
-        label="Description (optional)"
-        value={description}
-        onChangeText={setDescription}
-        placeholder="What's included?"
-        autoCapitalize="sentences"
-      />
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      <Button title={isEditing ? "Save changes" : "Add service"} onPress={handleSave} />
-    </BottomSheet>
   );
 }
 
@@ -744,15 +568,22 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingVertical: spacing.xs,
   },
-  fieldGroup: {
-    gap: spacing.md,
+  chipsScroll: {
+    flexGrow: 0,
+    marginRight: -14,
   },
-  rowFields: {
-    flexDirection: "row",
-    gap: spacing.md,
+  addShopChip: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  rowField: {
-    flex: 1,
+  addShopChipPressed: {
+    opacity: 0.8,
   },
   card: {
     backgroundColor: colors.surface,
@@ -781,6 +612,14 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginTop: spacing.xs,
   },
+  dangerZone: {
+    gap: spacing.sm,
+    paddingTop: spacing.xs,
+  },
+  dangerHint: {
+    fontSize: 12,
+    color: colors.muted,
+  },
   inlineEmpty: {
     alignItems: "center",
     gap: spacing.xs,
@@ -801,18 +640,31 @@ const styles = StyleSheet.create({
     color: colors.muted,
     textAlign: "center",
   },
-  serviceRow: {
-    flexDirection: "row",
-    alignItems: "center",
+  groupCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  groupRow: {
+    flexDirection: "row",
+    alignItems: "center",
     padding: spacing.md,
     gap: spacing.md,
   },
-  serviceRowPressed: {
+  serviceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
+    gap: spacing.md,
+  },
+  groupRowPressed: {
     opacity: 0.8,
+  },
+  groupDivider: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
   },
   serviceInfo: {
     flex: 1,
@@ -827,73 +679,53 @@ const styles = StyleSheet.create({
     color: colors.muted,
     marginTop: 2,
   },
-  badgeText: {
+  servicePrice: {
+    color: colors.primaryDark,
+    fontWeight: "700",
+  },
+  statusPill: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+  },
+  statusPillActive: {
+    backgroundColor: "#dcfce7",
+  },
+  statusPillHidden: {
+    backgroundColor: colors.border,
+  },
+  statusPillText: {
     fontSize: 12,
     fontWeight: "600",
   },
-  activeText: {
+  statusPillTextActive: {
     color: colors.success,
   },
-  inactiveText: {
+  statusPillTextHidden: {
     color: colors.muted,
   },
   hoursRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: spacing.sm,
+    justifyContent: "space-between",
+    paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
+    gap: spacing.md,
   },
   hoursDay: {
-    flex: 1,
     fontSize: 14,
     fontWeight: "600",
     color: colors.text,
   },
-  closedText: {
-    fontSize: 13,
+  hoursDayToday: {
+    color: colors.primaryDark,
+  },
+  hoursValue: {
+    fontSize: 14,
     color: colors.muted,
-    minWidth: 84,
-    textAlign: "right",
   },
-  stepper: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  stepperButton: {
-    width: 30,
-    height: 30,
-    borderRadius: radius.full,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepperButtonText: {
-    fontSize: 16,
-    color: colors.primary,
-    fontWeight: "700",
-  },
-  stepperValue: {
-    minWidth: 58,
-    textAlign: "center",
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  sheetTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.text,
-  },
-  sheetText: {
-    fontSize: 14,
+  hoursHint: {
+    fontSize: 13,
     color: colors.muted,
   },
 });

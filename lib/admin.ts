@@ -48,6 +48,7 @@ export type RecentUser = {
   avatar_url: string | null;
   role: "customer" | "barber" | "owner" | "admin" | null;
   account_status: "active" | "deleted";
+  is_verified: boolean;
   created_at: string | null;
 };
 
@@ -61,6 +62,9 @@ export async function loadAdminShops(
   let builder = supabase.from("shops").select(SHOP_SELECT);
   if (status !== "all") {
     builder = builder.eq("status", status);
+    if (status === "pending") {
+      builder = builder.is("deleted_at", null);
+    }
   }
   if (query.trim() !== "") {
     const q = query.trim().toLowerCase();
@@ -171,7 +175,7 @@ export async function loadRecentUsers(limit = 8): Promise<RecentUser[]> {
     supabase
       .from("profiles")
       .select(
-        "id, email, username, first_name, last_name, avatar_url, role, account_status, created_at"
+        "id, email, username, first_name, last_name, avatar_url, role, account_status, is_verified, created_at"
       )
       .order("created_at", { ascending: false })
       .limit(limit)
@@ -180,7 +184,9 @@ export async function loadRecentUsers(limit = 8): Promise<RecentUser[]> {
 
 export async function updateShopFields(
   id: number,
-  patch: Partial<Pick<AdminShop, "status" | "is_verified" | "is_active">>
+  patch: Partial<
+    Pick<AdminShop, "status" | "is_verified" | "is_active" | "deleted_at">
+  >
 ): Promise<void> {
   const { error } = await supabase.from("shops").update(patch).eq("id", id);
   if (error) {
@@ -208,6 +214,51 @@ export async function adminSetUserDeleted(
     p_user_id: userId,
     p_deleted: deleted,
   });
+  if (error) {
+    throw error;
+  }
+}
+
+/** Approve/reject a pending verification request (admin-only RPC). */
+export async function adminReviewVerificationRequest(
+  requestId: number,
+  approve: boolean,
+  reviewNote?: string
+): Promise<void> {
+  const { error } = await supabase.rpc("admin_review_verification_request", {
+    p_request_id: requestId,
+    p_approve: approve,
+    p_review_note: reviewNote?.trim() || null,
+  });
+  if (error) {
+    throw error;
+  }
+}
+
+/** Remove a user's verified badge (admin-only RPC). */
+export async function adminRemoveVerification(userId: string): Promise<void> {
+  const { error } = await supabase.rpc("admin_remove_verification", {
+    p_user_id: userId,
+  });
+  if (error) {
+    throw error;
+  }
+}
+
+/** Approve/reject a pending shop verification request (admin-only RPC). */
+export async function adminReviewShopVerificationRequest(
+  requestId: number,
+  approve: boolean,
+  reviewNote?: string
+): Promise<void> {
+  const { error } = await supabase.rpc(
+    "admin_review_shop_verification_request",
+    {
+      p_request_id: requestId,
+      p_approve: approve,
+      p_review_note: reviewNote?.trim() || null,
+    }
+  );
   if (error) {
     throw error;
   }

@@ -1,27 +1,22 @@
 import { useUser } from "@clerk/expo";
-import { Redirect, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
-import { TextField } from "@/components/ui/TextField";
+import { ShopForm, type ShopFormValues } from "@/components/ui/ShopForm";
 import { FullScreenLoader } from "@/lib/auth";
-import { errorMessageFromUnknown } from "@/lib/errors";
-import { createShop } from "@/lib/owner";
+import { createShop, uploadShopGallery, uploadShopLogo } from "@/lib/owner";
 import { colors, spacing } from "@/lib/theme";
 
 export default function OwnerShopScreen() {
   const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
+  const { from } = useLocalSearchParams<{ from?: string }>();
 
-  const [name, setName] = useState("");
-  const [city, setCity] = useState("");
-  const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
-  const [description, setDescription] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [createdShopId, setCreatedShopId] = useState<number | null>(null);
 
   if (!isLoaded) {
     return <FullScreenLoader />;
@@ -41,96 +36,89 @@ export default function OwnerShopScreen() {
 
   const currentUser = user;
 
-  async function handleCreate() {
-    setError(null);
-    if (!name.trim()) {
-      setError("Please enter your shop's name.");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await createShop(
+  async function handleCreate(values: ShopFormValues) {
+    let shopId = createdShopId;
+    if (shopId == null) {
+      shopId = await createShop(
         {
-          name,
-          city,
-          address_line1: address,
-          phone,
-          description,
+          name: values.name,
+          city: values.city,
+          state: values.state,
+          postal_code: values.postalCode,
+          country: values.country,
+          address_line1: values.address,
+          phone: values.phone,
+          description: values.description,
+          latitude: values.latitude ?? undefined,
+          longitude: values.longitude ?? undefined,
         },
         currentUser.id
       );
-      await currentUser.updateMetadata({
-        unsafeMetadata: { onboardingStep: "complete" },
-      });
-      router.replace("/loading");
-    } catch (e) {
-      setError(errorMessageFromUnknown(e));
-    } finally {
-      setSubmitting(false);
+      setCreatedShopId(shopId);
     }
+    if (values.logoUri) {
+      await uploadShopLogo(shopId, values.logoUri);
+    }
+    if (values.galleryUris.length > 0) {
+      await uploadShopGallery(shopId, values.galleryUris);
+    }
+    await currentUser.updateMetadata({
+      unsafeMetadata: { onboardingStep: "complete" },
+    });
+    router.replace("/loading");
   }
 
+  const isOnboarding = from === "signup";
+
   return (
-    <Screen scroll centered>
+    <Screen scroll paddingHorizontal={14}>
+      <Pressable
+        onPress={() => router.back()}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        style={styles.backRow}
+      >
+        <Ionicons name="chevron-back" size={22} color={colors.text} />
+        <Text style={styles.backLabel}>Back</Text>
+      </Pressable>
+
       <View style={styles.header}>
         <Text style={styles.title}>Create your shop</Text>
         <Text style={styles.subtitle}>
-          Your shop goes live on CutBook once it{"'"}s approved. You can add
+          Your shop goes live on Kutz once it{"'"}s approved. You can add
           services and working hours later.
         </Text>
       </View>
 
-      <View style={styles.form}>
-        <TextField
-          label="Shop name"
-          value={name}
-          onChangeText={setName}
-          placeholder="e.g. The Fade Room"
-          autoCapitalize="words"
-        />
-        <TextField
-          label="City"
-          value={city}
-          onChangeText={setCity}
-          placeholder="e.g. Austin"
-          autoCapitalize="words"
-        />
-        <TextField
-          label="Address"
-          value={address}
-          onChangeText={setAddress}
-          placeholder="Street address (optional)"
-          autoCapitalize="words"
-        />
-        <TextField
-          label="Phone"
-          value={phone}
-          onChangeText={setPhone}
-          placeholder="Optional"
-          keyboardType="phone-pad"
-        />
-        <TextField
-          label="Description"
-          value={description}
-          onChangeText={setDescription}
-          placeholder="What makes your shop special?"
-          autoCapitalize="sentences"
-        />
+      <ShopForm submitLabel="Create shop" onSubmit={handleCreate} />
 
-        {!!error && <Text style={styles.errorText}>{error}</Text>}
-
-        <Button title="Create shop" onPress={handleCreate} loading={submitting} />
-        <Button
-          title="Skip for now"
-          variant="ghost"
-          onPress={() => router.replace("/loading")}
-        />
-      </View>
+      {isOnboarding && (
+        <View style={styles.skipWrap}>
+          <Button
+            title="Skip for now"
+            variant="ghost"
+            onPress={() => router.replace("/loading")}
+          />
+        </View>
+      )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  backRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    alignSelf: "flex-start",
+    marginBottom: spacing.lg,
+  },
+  backLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.text,
+  },
   header: {
     gap: spacing.xs,
     marginBottom: spacing.xl,
@@ -144,11 +132,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.muted,
   },
-  form: {
-    gap: spacing.md,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 13,
+  skipWrap: {
+    marginTop: spacing.sm,
   },
 });

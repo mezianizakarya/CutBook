@@ -9,6 +9,7 @@ import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
 import { UsernameField } from "@/components/ui/UsernameField";
 import { FullScreenLoader } from "@/lib/auth";
+import { validatePhoneNumber } from "@/lib/countries";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { supabase } from "@/lib/supabase";
 import { colors, spacing } from "@/lib/theme";
@@ -28,6 +29,7 @@ export default function CompleteProfileScreen() {
   const [username, setUsername] = useState("");
   const [usernameEdited, setUsernameEdited] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const randomSuffix = useMemo(() => Math.floor(100 + Math.random() * 900), []);
@@ -55,12 +57,14 @@ export default function CompleteProfileScreen() {
   async function handleComplete() {
     setError(null);
     setUsernameError(null);
+    setPhoneError(null);
     if (!firstName.trim() || !lastName.trim()) {
       setError("Please enter your full name.");
       return;
     }
-    if (phone.replace(/\D/g, "").length < 5) {
-      setError("Please enter a valid phone number.");
+    const phoneValidation = validatePhoneNumber(phone);
+    if (phoneValidation) {
+      setPhoneError(phoneValidation);
       return;
     }
     const chosenUsername = username.trim();
@@ -113,7 +117,7 @@ export default function CompleteProfileScreen() {
         role === "barber"
           ? "/onboarding/barber-professional"
           : role === "owner"
-            ? "/onboarding/owner-shop"
+            ? { pathname: "/onboarding/owner-shop", params: { from: "signup" } }
             : "/loading"
       );
     } catch (e) {
@@ -168,7 +172,11 @@ export default function CompleteProfileScreen() {
         <PhoneInput
           label="Phone"
           value={phone}
-          onChangeValue={setPhone}
+          onChangeValue={(text) => {
+            setPhone(text);
+            setPhoneError(null);
+          }}
+          error={phoneError}
         />
 
         {error && <Text style={styles.errorText}>{error}</Text>}

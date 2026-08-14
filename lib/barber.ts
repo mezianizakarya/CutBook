@@ -19,6 +19,129 @@ export type BarberShop = {
   logo_url: string | null;
 };
 
+/** Whitelisted barber profile fields visible to customers (via SECURITY DEFINER RPC). */
+export type PublicBarberProfile = {
+  profile_id: string;
+  display_name: string;
+  avatar_url: string | null;
+  specialty: string | null;
+  years_of_experience: number | null;
+  bio: string | null;
+  city: string | null;
+  shop_names: string[];
+};
+
+/**
+ * Loads a barber's public profile for customers. Only returns data for barbers
+ * currently employed at an approved, active shop; returns null otherwise.
+ */
+export async function loadPublicBarberProfile(
+  profileId: string
+): Promise<PublicBarberProfile | null> {
+  const { data, error } = await supabase
+    .rpc("get_public_barber_profile", { p_profile_id: profileId })
+    .maybeSingle();
+  if (error) {
+    throw error;
+  }
+  return (data as PublicBarberProfile | null) ?? null;
+}
+
+export type PublicBarberService = {
+  id: number;
+  name: string;
+  description: string | null;
+  price_cents: number;
+  duration_minutes: number;
+  category: string | null;
+};
+
+/**
+ * The active services a barber provides, resolved through the shop's service
+ * catalog with any per-staff price/duration overrides. Uses only public RLS
+ * tables (shop_members public staff, staff_services public, services public).
+ * When `shopId` is given the services are restricted to that shop's membership.
+ */
+export async function loadPublicBarberServices(
+  profileId: string,
+  shopId?: number
+): Promise<PublicBarberService[]> {
+  let builder = supabase
+    .from("shop_members")
+    .select(
+      "staff_services(is_active, price_cents, duration_minutes, service:services(id, name, description, price_cents, duration_minutes, category, is_active))"
+    )
+    .eq("profile_id", profileId)
+    .eq("member_role", "barber")
+    .is("removed_at", null);
+  if (shopId != null) {
+    builder = builder.eq("shop_id", shopId);
+  }
+  const rows = await runList<{
+    staff_services: {
+      is_active: boolean;
+      price_cents: number | null;
+      duration_minutes: number | null;
+      service: PublicBarberService & { is_active: boolean } | null;
+    }[];
+  }>(builder);
+  const result: PublicBarberService[] = [];
+  for (const row of rows) {
+    for (const link of row.staff_services ?? []) {
+      const service = link.service;
+      if (!service || service.is_active === false || link.is_active === false) {
+        continue;
+      }
+      result.push({
+        id: service.id,
+        name: service.name,
+        description: service.description,
+        price_cents: link.price_cents ?? service.price_cents,
+        duration_minutes: link.duration_minutes ?? service.duration_minutes,
+        category: service.category,
+      });
+    }
+  }
+  return result.sort((a, b) =>
+    (a.category ?? "").localeCompare(b.category ?? "")
+  );
+}
+
+export type PublicPortfolioImage = {
+  id: number;
+  object_path: string;
+  caption: string | null;
+  is_cover: boolean;
+  sort_order: number;
+};
+
+/**
+ * A barber's public portfolio photos (public RLS). When `shopId` is given the
+ * images are restricted to that shop's membership.
+ */
+export async function loadPublicBarberPortfolio(
+  profileId: string,
+  shopId?: number
+): Promise<PublicPortfolioImage[]> {
+  let builder = supabase
+    .from("shop_members")
+    .select(
+      "portfolio_images(id, object_path, caption, is_cover, sort_order)"
+    )
+    .eq("profile_id", profileId)
+    .eq("member_role", "barber")
+    .is("removed_at", null);
+  if (shopId != null) {
+    builder = builder.eq("shop_id", shopId);
+  }
+  const rows = await runList<{
+    portfolio_images: PublicPortfolioImage[];
+  }>(builder);
+  return rows
+    .flatMap((row) => row.portfolio_images ?? [])
+    .sort((a, b) => a.sort_order - b.sort_order || a.id - b.id);
+}
+
 export type AvailabilityRow = {
   id: number;
   shop_member_id: number;

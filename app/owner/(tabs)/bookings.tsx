@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -13,7 +14,6 @@ import {
 
 import { BookingCard } from "@/components/ui/BookingCard";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FilterChip } from "@/components/ui/FilterChip";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { StaffBookingSheet } from "@/components/ui/StaffBookingSheet";
@@ -26,7 +26,7 @@ import {
 } from "@/lib/booking";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { loadOwnerShops, loadShopBookings, type OwnerShop } from "@/lib/owner";
-import { colors, spacing } from "@/lib/theme";
+import { colors, radius, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
 
 type StatusFilter = "all" | BookingStatus;
@@ -46,7 +46,6 @@ export default function OwnerBookingsScreen() {
   const [bookings, setBookings] = useState<BookingRow[] | null>(null);
   const [customers, setCustomers] = useState<BookingCustomer[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [shopFilter, setShopFilter] = useState<number | "all">("all");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -125,18 +124,24 @@ export default function OwnerBookingsScreen() {
     [customers]
   );
 
+  const counts = useMemo(() => {
+    const rows = bookings ?? [];
+    const byStatus = new Map<string, number>();
+    for (const row of rows) {
+      byStatus.set(row.status, (byStatus.get(row.status) ?? 0) + 1);
+    }
+    return byStatus;
+  }, [bookings]);
+
   const filtered = useMemo(() => {
     const rows = bookings ?? [];
     return rows.filter((row) => {
       if (statusFilter !== "all" && row.status !== statusFilter) {
         return false;
       }
-      if (shopFilter !== "all" && row.shop?.id !== shopFilter) {
-        return false;
-      }
       return true;
     });
-  }, [bookings, statusFilter, shopFilter]);
+  }, [bookings, statusFilter]);
 
   if (loading && !bookings) {
     return (
@@ -181,36 +186,27 @@ export default function OwnerBookingsScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipRow}
+        style={styles.chipsScroll}
+        contentContainerStyle={styles.chipsRow}
       >
-        <FilterChip
-          label={shops.length > 1 ? "All shops" : shops[0]?.name ?? "Shop"}
-          selected={shopFilter === "all"}
-          onPress={() => setShopFilter("all")}
-        />
-        {shops.map((shop) => (
-          <FilterChip
-            key={shop.id}
-            label={shop.name}
-            selected={shopFilter === shop.id}
-            onPress={() => setShopFilter(shop.id)}
-          />
-        ))}
-      </ScrollView>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipRow}
-      >
-        {STATUS_FILTERS.map((filter) => (
-          <FilterChip
-            key={filter.key}
-            label={filter.label}
-            selected={statusFilter === filter.key}
-            onPress={() => setStatusFilter(filter.key)}
-          />
-        ))}
+        {STATUS_FILTERS.map((filter) => {
+          const isActive = statusFilter === filter.key;
+          return (
+            <Pressable
+              key={filter.key}
+              onPress={() => setStatusFilter(filter.key)}
+              style={[styles.chip, isActive && styles.chipActive]}
+            >
+              <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+                {filter.label} (
+                {filter.key === "all"
+                  ? bookings?.length ?? 0
+                  : counts.get(filter.key) ?? 0}
+                )
+              </Text>
+            </Pressable>
+          );
+        })}
       </ScrollView>
 
       <FlatList
@@ -295,8 +291,37 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 14,
   },
-  chipRow: {
+  chipsScroll: {
+    flexGrow: 0,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+    marginLeft: 0,
+    marginRight: -14,
+  },
+  chipsRow: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
-    paddingVertical: spacing.xs,
+    paddingRight: 6,
+  },
+  chip: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  chipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  chipLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.muted,
+  },
+  chipLabelActive: {
+    color: colors.white,
   },
 });

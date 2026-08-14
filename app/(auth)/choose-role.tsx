@@ -43,7 +43,7 @@ export default function ChooseRoleScreen() {
   return (
     <Screen scroll centered>
       <View style={styles.header}>
-        <Text style={styles.title}>How will you use CutBook?</Text>
+        <Text style={styles.title}>How will you use Kutz?</Text>
         <Text style={styles.subtitle}>
           Pick the role that best fits you. You can only choose one.
         </Text>

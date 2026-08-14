@@ -20,6 +20,8 @@ export type OwnerShop = {
   phone: string | null;
   email: string | null;
   website: string | null;
+  latitude: number | null;
+  longitude: number | null;
   myRole: "owner" | "manager";
 };
 
@@ -55,7 +57,7 @@ export type WorkingHoursRow = {
 };
 
 const SHOP_MANAGE_SELECT =
-  "id, name, slug, status, is_verified, logo_url, description, address_line1, address_line2, city, state, country, postal_code, phone, email, website";
+  "id, name, slug, status, is_verified, logo_url, description, address_line1, address_line2, city, state, country, postal_code, phone, email, website, latitude, longitude";
 
 /**
  * Shops where the signed-in user is an owner or manager. RLS on `shops` only
@@ -86,7 +88,11 @@ export async function loadOwnerShops(profileId: string): Promise<OwnerShop[]> {
     return [];
   }
   const shops = await runList<Omit<OwnerShop, "myRole">>(
-    supabase.from("shops").select(SHOP_MANAGE_SELECT).in("id", shopIds)
+    supabase
+      .from("shops")
+      .select(SHOP_MANAGE_SELECT)
+      .in("id", shopIds)
+      .is("deleted_at", null)
   );
   return shops.map((shop) => ({
     ...shop,
@@ -243,6 +249,35 @@ export async function loadWorkingHours(shopId: number): Promise<WorkingHoursRow[
   );
 }
 
+export type UpcomingBooking = {
+  id: number;
+  starts_at: string;
+  ends_at: string;
+  service_name: string;
+};
+
+/**
+ * Active upcoming bookings for a shop over the booking horizon (14 days).
+ * Used to warn owners before saving working hours that would push an existing
+ * booking outside the new schedule.
+ */
+export async function loadUpcomingBookings(
+  shopId: number
+): Promise<UpcomingBooking[]> {
+  const from = new Date();
+  const to = new Date(from.getTime() + 14 * 24 * 60 * 60 * 1000);
+  return runList<UpcomingBooking>(
+    supabase
+      .from("bookings")
+      .select("id, starts_at, ends_at, service_name")
+      .eq("shop_id", shopId)
+      .in("status", ["pending", "confirmed"])
+      .gte("starts_at", from.toISOString())
+      .lt("starts_at", to.toISOString())
+      .order("starts_at", { ascending: true })
+  );
+}
+
 /** Replaces the whole weekly schedule (delete + insert in one call each). */
 export async function saveWorkingHours(
   shopId: number,
@@ -275,6 +310,7 @@ export type ShopPatch = Partial<
     OwnerShop,
     | "name"
     | "description"
+    | "logo_url"
     | "address_line1"
     | "address_line2"
     | "city"
@@ -284,12 +320,26 @@ export type ShopPatch = Partial<
     | "phone"
     | "email"
     | "website"
+    | "latitude"
+    | "longitude"
   >
 >;
 
 /** Editing shop details is owner-only under RLS (managers get read access). */
 export async function updateShop(shopId: number, patch: ShopPatch): Promise<void> {
   const { error } = await supabase.from("shops").update(patch).eq("id", shopId);
+  if (error) {
+    throw error;
+  }
+}
+
+/**
+ * Soft-deletes a shop via the `delete_shop` RPC (owner or admin only, SECURITY
+ * DEFINER). Sets `deleted_at` + `is_active = false` so it vanishes from all
+ * customer-facing queries; history and bookings are preserved.
+ */
+export async function deleteShop(shopId: number): Promise<void> {
+  const { error } = await supabase.rpc("delete_shop", { p_shop_id: shopId });
   if (error) {
     throw error;
   }
@@ -306,6 +356,8 @@ export type ShopDraft = {
   phone?: string;
   email?: string;
   website?: string;
+  latitude?: number;
+  longitude?: number;
 };
 
 function slugify(value: string): string {
@@ -316,6 +368,23 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 48);
   return base || "shop";
+}
+
+const SHOP_NAME_PATTERN = /^[\p{L}\p{N} '-]+$/u;
+
+export function sanitizeShopName(value: string): string {
+  return value.replace(/[^\p{L}\p{N} '-]+/gu, "");
+}
+
+export function shopNameError(value: string): string | null {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return "Please enter your shop's name.";
+  }
+  if (!SHOP_NAME_PATTERN.test(trimmed)) {
+    return "Shop name can only contain letters and numbers.";
+  }
+  return null;
 }
 
 /**
@@ -345,7 +414,114 @@ export async function createShop(draft: ShopDraft, ownerId: string): Promise<num
       p_phone: draft.phone?.trim() || null,
       p_email: draft.email?.trim() || null,
       p_website: draft.website?.trim() || null,
+      p_latitude: draft.latitude ?? null,
+      p_longitude: draft.longitude ?? null,
     })
   );
   return shop.id;
+}
+
+type MediaBucket = "shop-logos" | "shop-gallery";
+
+/**
+ * Uploads a `data:` URI to a shop media bucket under `<shop_id>/...`. Storage
+ * RLS only allows owner/manager uploads into their own shop's folder, so this
+ * must run AFTER the shop (and the owner's membership) exists.
+ */
+async function uploadShopMedia(
+  bucket: MediaBucket,
+  shopId: number,
+  dataUri: string
+): Promise<string> {
+  const metaMatch = dataUri.match(/^data:([^;]+);/);
+  const mime = metaMatch?.[1] ?? "image/jpeg";
+  const base64 = dataUri.split(",")[1];
+  if (!base64) {
+    throw new Error("Could not read the selected photo. Please try again.");
+  }
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  const extension = mime.split("/")[1]?.replace("jpeg", "jpg") ?? "jpg";
+  const path = `${shopId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extension}`;
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(path, bytes.buffer, { contentType: mime });
+  if (error) {
+    throw error;
+  }
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+/** Uploads the shop logo and points `shops.logo_url` at it. */
+export async function uploadShopLogo(shopId: number, logoUri: string): Promise<void> {
+  const publicUrl = await uploadShopMedia("shop-logos", shopId, logoUri);
+  await updateShop(shopId, { logo_url: publicUrl });
+}
+
+/**
+ * Saves the logo for an existing shop. A `data:` URI is uploaded and
+ * `shops.logo_url` is pointed at it; `null` clears the logo; an already-public
+ * URL (unchanged) is a no-op.
+ */
+export async function saveShopLogo(shopId: number, logoUri: string | null): Promise<void> {
+  if (logoUri == null) {
+    await updateShop(shopId, { logo_url: null });
+    return;
+  }
+  if (logoUri.startsWith("data:")) {
+    await uploadShopLogo(shopId, logoUri);
+  }
+}
+
+/** Public gallery photo URLs for a shop, ordered as displayed. */
+export { loadShopGallery } from "@/lib/shop";
+
+/**
+ * Replaces a shop's gallery photos (first photo becomes the cover). Existing
+ * rows are cleared first so a failed upload can be retried without duplicating
+ * rows; an empty list clears the gallery. Accepts `data:` URIs to upload and
+ * existing public URLs to reuse as-is.
+ */
+export async function uploadShopGallery(
+  shopId: number,
+  galleryUris: string[]
+): Promise<void> {
+  const { error: deleteError } = await supabase
+    .from("shop_gallery")
+    .delete()
+    .eq("shop_id", shopId);
+  if (deleteError) {
+    throw deleteError;
+  }
+  if (galleryUris.length === 0) {
+    return;
+  }
+  const rows: {
+    shop_id: number;
+    object_path: string;
+    caption: string | null;
+    is_cover: boolean;
+    sort_order: number;
+  }[] = [];
+  for (let i = 0; i < galleryUris.length; i++) {
+    const uri = galleryUris[i];
+    const objectPath = uri.startsWith("data:")
+      ? await uploadShopMedia("shop-gallery", shopId, uri)
+      : uri;
+    rows.push({
+      shop_id: shopId,
+      object_path: objectPath,
+      caption: null,
+      is_cover: i === 0,
+      sort_order: i + 1,
+    });
+  }
+  const { error: insertError } = await supabase.from("shop_gallery").insert(rows);
+  if (insertError) {
+    throw insertError;
+  }
 }

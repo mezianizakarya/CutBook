@@ -16,7 +16,7 @@ export const ACCOUNT_TYPE_LABELS: Record<Role, string> = {
   customer: "Customer",
   barber: "Barber",
   owner: "Shop Owner",
-  admin: "Administrator",
+  admin: "Admin",
 };
 
 export const ROLE_DESCRIPTIONS: Record<Role, string> = {

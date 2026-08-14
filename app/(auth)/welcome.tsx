@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/expo";
 import { Redirect, useRouter } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
@@ -24,9 +24,12 @@ export default function WelcomeScreen() {
       <View style={styles.container}>
         <View style={styles.hero}>
           <View style={styles.logoBadge}>
-            <Text style={styles.logoText}>CB</Text>
+            <Image
+              source={require("@/assets/kutz-app-icons/ios/AppIcon.appiconset/Icon-1024.png")}
+              style={styles.logoImage}
+            />
           </View>
-          <Text style={styles.title}>CutBook</Text>
+          <Text style={styles.title}>Kutz</Text>
           <Text style={styles.tagline}>
             Book your next haircut with the best barbers in town.
           </Text>
@@ -57,18 +60,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxl,
   },
   logoBadge: {
-    width: 72,
-    height: 72,
+    width: 104,
+    height: 104,
     borderRadius: radius.full,
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: spacing.md,
+    overflow: "hidden",
   },
-  logoText: {
-    color: colors.white,
-    fontSize: 28,
-    fontWeight: "800",
+  logoImage: {
+    width: "100%",
+    height: "100%",
   },
   title: {
     fontSize: 36,

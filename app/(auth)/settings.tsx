@@ -27,7 +27,7 @@ function SettingsRow({ label, onPress }: SettingsRowProps) {
 }
 
 export default function SettingsScreen() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
 
   if (!isLoaded) {
@@ -37,6 +37,8 @@ export default function SettingsScreen() {
   if (!isSignedIn) {
     return <Redirect href="/welcome" />;
   }
+
+  const isAdmin = user?.unsafeMetadata?.role === "admin";
 
   return (
     <Screen scroll paddingHorizontal={14}>
@@ -68,6 +70,15 @@ export default function SettingsScreen() {
           label="Account info"
           onPress={() => router.push("/account-info")}
         />
+        {!isAdmin && (
+          <>
+            <View style={styles.divider} />
+            <SettingsRow
+              label="Request verification"
+              onPress={() => router.push("/verification")}
+            />
+          </>
+        )}
       </View>
 
       <View style={styles.footer}>

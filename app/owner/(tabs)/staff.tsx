@@ -270,11 +270,13 @@ export default function OwnerStaffScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.chipRow}
             >
-              <FilterChip
-                label={shops.length > 1 ? "All shops" : shops[0]?.name ?? "Shop"}
-                selected={shopFilter === "all"}
-                onPress={() => setShopFilter("all")}
-              />
+              {shops.length > 1 && (
+                <FilterChip
+                  label="All shops"
+                  selected={shopFilter === "all"}
+                  onPress={() => setShopFilter("all")}
+                />
+              )}
               {shops.map((shop) => (
                 <FilterChip
                   key={shop.id}
@@ -464,7 +466,7 @@ export default function OwnerStaffScreen() {
               />
             ) : (
               <Text style={styles.sheetText}>
-                Owners and managers can only be removed by a CutBook admin.
+                Owners and managers can only be removed by a Kutz admin.
               </Text>
             )}
           </>

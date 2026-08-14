@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ReputationBadge } from "@/components/ui/ReputationBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { emailIsVerified } from "@/lib/auth";
+import { VerifiedIcon } from "@/components/ui/VerifiedIcon";
 import type { Role } from "@/lib/roles";
 import { ACCOUNT_TYPE_LABELS } from "@/lib/roles";
 import { colors, spacing } from "@/lib/theme";
@@ -13,12 +13,16 @@ import { formatUsername } from "@/lib/username";
 type ProfileSummaryProps = {
   role: Role;
   username?: string | null;
+  verified?: boolean;
 };
 
-export function ProfileSummary({ role, username }: ProfileSummaryProps) {
+export function ProfileSummary({
+  role,
+  username,
+  verified = false,
+}: ProfileSummaryProps) {
   const { user } = useUser();
   const name = user?.fullName ?? "Your name";
-  const verified = emailIsVerified(user);
   const isCustomer = role === "customer";
 
   async function handleCopyUsername() {
@@ -34,13 +38,10 @@ export function ProfileSummary({ role, username }: ProfileSummaryProps) {
         <Text style={styles.name} numberOfLines={1}>
           {name}
         </Text>
+        {verified && <VerifiedIcon size={17} />}
         <View style={styles.badgeRow}>
           <StatusBadge label={ACCOUNT_TYPE_LABELS[role]} tone="warning" />
-          {isCustomer ? (
-            <ReputationBadge />
-          ) : (
-            verified && <StatusBadge label="Verified" tone="role" />
-          )}
+          {isCustomer ? <ReputationBadge /> : null}
         </View>
       </View>
       {!!username && (
