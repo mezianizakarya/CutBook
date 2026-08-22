@@ -8,6 +8,7 @@ import { loadFavoriteShops } from "@/lib/shop";
 import { supabase } from "@/lib/supabase";
 import { colors, spacing } from "@/lib/theme";
 import { useFocusLoad } from "@/lib/useFocusLoad";
+import { useUserCountry } from "@/lib/user-country";
 
 type BookingCounts = {
   all: number;
@@ -22,6 +23,7 @@ type ActivityData = {
 export function CustomerProfileSection() {
   const { user } = useUser();
   const customerId = user?.id;
+  const userCountry = useUserCountry();
 
   const { data, loading, error } = useFocusLoad<ActivityData>(
     async () => {
@@ -33,7 +35,7 @@ export function CustomerProfileSection() {
           .from("bookings")
           .select("status, starts_at")
           .eq("customer_id", customerId),
-        loadFavoriteShops(customerId),
+        loadFavoriteShops(customerId, userCountry),
       ]);
       const rows = (bookingResult.data ?? []) as {
         status: string;

@@ -122,7 +122,9 @@ export default function OwnerStaffScreen() {
   const visibleInvitations = useMemo(
     () =>
       invitations.filter(
-        (invite) => shopFilter === "all" || invite.shop_id === shopFilter
+        (invite) =>
+          invitationStatus(invite) === "active" &&
+          (shopFilter === "all" || invite.shop_id === shopFilter)
       ),
     [invitations, shopFilter]
   );

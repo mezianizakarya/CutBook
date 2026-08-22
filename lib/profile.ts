@@ -20,6 +20,7 @@ export type OwnProfile = {
   avatar_url: string | null;
   bio: string | null;
   city: string | null;
+  country: string | null;
   specialty: string | null;
   years_of_experience: number | null;
   role: Role | null;
@@ -27,7 +28,7 @@ export type OwnProfile = {
 };
 
 const OWN_PROFILE_SELECT =
-  "id, email, first_name, last_name, phone, avatar_url, bio, city, specialty, years_of_experience, role, username";
+  "id, email, first_name, last_name, phone, avatar_url, bio, city, country, specialty, years_of_experience, role, username";
 
 export async function fetchOwnProfile(userId: string): Promise<OwnProfile | null> {
   return runMaybe<OwnProfile>(
@@ -73,6 +74,19 @@ export async function saveBarberProfessional(
         bio: input.bio?.trim() ? input.bio.trim() : null,
       }),
     })
+    .eq("id", userId);
+  if (error) {
+    throw error;
+  }
+}
+
+export async function saveProfileCountry(
+  userId: string,
+  country: string | null
+): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ country: country?.trim() || null })
     .eq("id", userId);
   if (error) {
     throw error;

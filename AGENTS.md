@@ -48,6 +48,20 @@ The admin Users page (`app/admin/(tabs)/users.tsx`) is the reference implementat
 ## Verification
 - After changes: `npx tsc --noEmit` and `npx eslint <file>`. Ignore pre-existing Deno errors only in `supabase/functions/clerk-webhook/index.ts` (no Deno types in this project).
 
+## App Wireframes (`docs/wireframes/`)
+Every page in the app has an ASCII wireframe in `docs/wireframes/`, organized by role. **When modifying any page, update its wireframe too.** The wireframes show exact layout, UI elements, navigation actions, and badge colors. Use them as the source of truth for page structure when building or refactoring screens.
+
+```
+wireframes/
+├── auth/                  # Auth & onboarding flows
+├── customer/              # Customer role (tabs + detail pages)
+├── barber/                # Barber role (tabs + work-session)
+├── owner/                 # Owner role (tabs + sub-pages)
+└── admin/                 # Admin role (tabs + pending pages)
+```
+
+Legend: `←` back button, `●` active dot, `○` inactive dot, `▸` chevron forward, `[…]` pressable, `═══` divider, `~~~` scrollable region.
+
 # Clerk ↔ Supabase Integration (hard-won facts — do not re-litigate)
 
 ## Credentials / config
@@ -110,6 +124,68 @@ The admin Users page (`app/admin/(tabs)/users.tsx`) is the reference implementat
 - `supabase/seed.sql` truncates loyalty tables and seeds shop 1: program enabled, milestones 3→10% off / 5→Free haircut / 10→20% off, plus 2 extra completed zkrmznbeta bookings (3 visits, 10% off unlocked). `zkrmznbeta@gmail.com` has multiple profile rows — resolve the active one via `deleted_at is null` (`user_3Hg4ilkuLJiIVhvoQOLpKBDYoCC`).
 - Regression suite: `C:\Users\zakar\AppData\Local\Temp\opencode\loyalty_tests.sql` (in-transaction, rolls back). CLI `db query` only prints the last result set.
 - Migration: `supabase/migrations/20260811140000_shop_loyalty.sql`, `20260811150000_booking_applied_reward.sql` (booking reward snapshot), `20260811160000_backfill_booking_applied_reward.sql` (applied remotely). Full ER: `docs/er-diagram.md`.
+
+# Region-Based Isolation (hard-won facts — do not re-litigate)
+
+## Model
+- Users can only discover, search, and book shops/barbers within their own region (country).
+- Admin sees ALL users and shops across all regions, with optional region filter chips.
+- Region is determined automatically from GPS on every app launch — users cannot change it manually.
+
+## Detection
+- `CountryProvider` (`lib/user-country.tsx`) wraps the root layout (`app/_layout.tsx`).
+- On every app launch: `expo-location` → `reverseGeocode()` → country code (e.g. `"MA"`) → saved to `profiles.country`.
+- Country is never null — falls back to `"US"` if GPS detection fails.
+- `useUserCountry()` hook provides the current user's country code to any component.
+
+## Database
+- `profiles.country TEXT` — set by `CountryProvider` on launch. Indexed (`profiles_country_idx`).
+- `shops.country TEXT` — set when shop is created by owner. Indexed (`shops_country_idx`).
+- `nearby_shops` RPC accepts `p_country` parameter — filters shops by country when provided.
+- `admin_search_profiles` RPC accepts optional `p_country` parameter — returns `country` column, supports server-side region filtering.
+- `SHOP_SUMMARY_SELECT` includes `country`. `SHOP_SELECT` (admin) includes `country`.
+
+## Customer/Barber/Owner (same-region only)
+- **Home** (`app/customer/(tabs)/home.tsx`): `loadNearbyShops()` passes `p_country` to RPC; `loadHomeShops()` and `loadShopsOpenToday()` filter with `.eq("country", userCountry)`.
+- **Discover** (`app/customer/(tabs)/discover.tsx`): Queries `shop_members` with `.eq("shops.country", userCountry)`.
+- **Favorites** (`app/customer/(tabs)/favorites.tsx`): `loadFavoriteShops()` filters by `shop.country`.
+- **Booking** (`components/ui/BookingModal.tsx`): Compares `shopCountry` vs `userCountry`. If different, shows amber warning and disables "Request Booking" button.
+- **Shop detail** (`app/customer/shop/[id].tsx`): Passes `shop.country` to `BookingModal`.
+- **Barber profile** (`app/customer/barber/[profileId].tsx`): Fetches shop detail → passes `country` to `BookingModal`.
+
+## Admin (see all + region filter)
+- **Users** (`app/admin/(tabs)/users.tsx`): Loads ALL profiles. Region chips computed from loaded data. Client-side filtering by `regionFilter` state. Detail modal shows Region row with flag + country name.
+- **Shops** (`app/admin/(tabs)/shops.tsx`): Loads ALL shops. Same region chip pattern. Row subtitle shows `city, country`.
+- `ProfileRow` type includes `country`. `AdminShop` type includes `country`. `RecentUser` type includes `country`.
+
+## Loader functions (all in `lib/shop.ts`)
+- `loadHomeShops({ country? })` — filters by `shops.country`.
+- `loadNearbyShops(lat, lng, { country? })` — passes `p_country` to RPC.
+- `loadShopsOpenToday(country?)` — filters `shop.country` on the nested relation.
+- `loadFavoriteShops(customerId, country?)` — filters `shop.country` on the nested relation.
+- `loadShopDetail(shopId)` — returns `country` (used by BookingModal).
+- All functions: `lib/admin.ts` — `loadAdminShops(status, query, country?)` filters by `shops.country`.
+
+## Enforcement
+| Layer | What |
+|-------|------|
+| DB RPC | `nearby_shops` filters by `p_country` when provided |
+| DB RPC | `admin_search_profiles` accepts optional `p_country` |
+| Frontend queries | `.eq("country", userCountry)` / `.eq("shops.country", userCountry)` |
+| Frontend booking | `BookingModal` disables submit if `shopCountry !== userCountry` |
+| Admin | No enforcement — sees all, filters optionally via chips |
+
+## Relevant files
+- `lib/user-country.tsx` — `CountryProvider`, `useUserCountry()`
+- `lib/shop.ts` — all loader functions with country params
+- `lib/admin.ts` — `loadAdminShops`, `AdminShop` type, `RecentUser` type
+- `lib/countries.ts` — `COUNTRIES` array with country codes
+- `app/customer/(tabs)/home.tsx`, `discover.tsx`, `favorites.tsx`
+- `app/admin/(tabs)/users.tsx`, `shops.tsx`
+- `components/ui/BookingModal.tsx`
+- `components/ui/CustomerProfileSection.tsx`
+- `supabase/migrations/20260818110000_region_isolation.sql` — indexes + RPC updates
+- `supabase/migrations/20260818100000_profile_country.sql` — profiles.country column
 
 # DATABASE-FIRST DEVELOPMENT RULES
 
@@ -176,9 +252,4 @@ Before schema changes, inspect existing records. Provide a safe migration/backfi
 ## 19. Frontend must match the database
 After implementing the database, update the frontend to use the real model. Do NOT create fake arrays/mock data in frontend code as the source of truth.
 
-# Sleek Mobile App Design (sleek.design)
 
-- Sleek is set up for designing mobile app screens via its REST API. Skill installed at `.agents/skills/sleek-design-mobile-apps` (load `sleek-design-mobile-apps` for the full workflow + API reference).
-- `SLEEK_API_KEY` lives in `.env` (gitignored) and was also persisted via `setx` (new shells may not inherit it until opencode restarts — reload from `.env` if a call returns 401).
-- Workflow: `POST /api/v1/projects` → `POST /api/v1/projects/:id/chat/messages` (always include `source: "opencode"`) → poll `GET .../chat/runs/:runId` → `POST /api/v1/screenshots`. Share `https://sleek.design/project/:projectId` with the user so they can watch live.
-- Source is `opencode` (not in Sleek's recognized list — fine, generic label). Key was created via device flow; scopes are defaults for the design workflow.

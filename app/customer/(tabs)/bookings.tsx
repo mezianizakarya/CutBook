@@ -32,7 +32,7 @@ import {
   type BookingRow,
 } from "@/lib/booking";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { formatCents, formatDateTime } from "@/lib/format";
+import { formatDateTime, useFormatCents } from "@/lib/format";
 import { loadMyShopReview, type ReviewRow } from "@/lib/reviews";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -351,6 +351,7 @@ function BookingDetailSheet({
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const { notice, showNotice } = useNotice();
+  const formattedPrice = useFormatCents(row.service_price_cents);
   const {
     count: confirmCount,
     start: startCountdown,
@@ -534,7 +535,7 @@ function BookingDetailSheet({
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Price</Text>
               <Text style={styles.detailValue}>
-                {formatCents(row.service_price_cents)}
+                {formattedPrice}
               </Text>
             </View>
             {!!row.note && (

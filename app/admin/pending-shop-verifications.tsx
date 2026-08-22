@@ -107,23 +107,20 @@ export default function PendingShopVerificationsScreen() {
           />
         }
       >
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          style={styles.backRow}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-          <Text style={styles.backLabel}>Back</Text>
-        </Pressable>
-
         <View style={styles.header}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={8}
+            style={styles.backButton}
+            accessibilityRole="button"
+          >
+            <Ionicons name="chevron-back" size={26} color={colors.text} />
+          </Pressable>
           <Text style={styles.title}>Shop verification</Text>
-          <Text style={styles.subtitle}>
-            Shop owners who asked to verify their business.
-          </Text>
         </View>
+        <Text style={styles.subtitle}>
+          Shop owners who asked to verify their business.
+        </Text>
 
         {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
         {!!error && <Text style={styles.error}>{error}</Text>}
@@ -202,20 +199,21 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingBottom: 32,
   },
-  backRow: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: spacing.md,
     marginBottom: spacing.lg,
   },
-  backLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  header: {
-    gap: spacing.xs,
-    marginBottom: spacing.sm,
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   title: {
     fontSize: 24,
@@ -225,6 +223,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 13,
     color: colors.muted,
+    marginBottom: spacing.sm,
   },
   notice: {
     marginBottom: spacing.sm,

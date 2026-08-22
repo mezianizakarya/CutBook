@@ -1,3 +1,31 @@
+import { useContext } from "react";
+import { CountryContext } from "@/lib/user-country";
+import { getCurrencyForCountry } from "@/lib/currency";
+
+export function formatCents(
+  cents: number | null | undefined,
+  countryCode?: string | null
+): string {
+  if (cents == null) {
+    return "—";
+  }
+  const currency = getCurrencyForCountry(countryCode);
+  const value = cents / 100;
+  const formatted = value.toFixed(currency.decimalDigits);
+  return `${formatted} ${currency.symbol}`;
+}
+
+export function useFormatCents(
+  cents: number | null | undefined,
+  countryCode?: string | null
+): string {
+  const ctxCountry = useContext(CountryContext);
+  const effectiveCountry = countryCode ?? ctxCountry;
+  return formatCents(cents, effectiveCountry);
+}
+
+export { formatCents as formatPrice };
+
 export function greetingFor(now: Date): string {
   const hour = now.getHours();
   if (hour < 12) {
@@ -7,15 +35,6 @@ export function greetingFor(now: Date): string {
     return "Good afternoon";
   }
   return "Good evening";
-}
-
-export function formatCents(cents: number | null | undefined): string {
-  if (cents == null) {
-    return "—";
-  }
-  const value = cents / 100;
-  const digits = cents % 100 === 0 ? 0 : 2;
-  return `$${value.toFixed(digits)}`;
 }
 
 export function formatTime(iso: string | null | undefined): string {

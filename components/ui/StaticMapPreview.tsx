@@ -1,9 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { WebView } from "react-native-webview";
+import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 
-import { buildMapHtml } from "@/lib/map-html";
+import { NativeMap } from "@/components/ui/NativeMap";
 import { colors, radius, spacing } from "@/lib/theme";
 
 type StaticMapPreviewProps = {
@@ -11,6 +9,7 @@ type StaticMapPreviewProps = {
   longitude: number;
   height?: number;
   onPress?: () => void;
+  style?: ViewStyle;
 };
 
 export function StaticMapPreview({
@@ -18,30 +17,21 @@ export function StaticMapPreview({
   longitude,
   height = 140,
   onPress,
+  style,
 }: StaticMapPreviewProps) {
-  const html = useMemo(
-    () =>
-      buildMapHtml({
-        latitude,
-        longitude,
-        zoom: 15,
-        interactive: false,
-        marker: true,
-      }),
-    [latitude, longitude]
-  );
-
   const map = (
     <View
-      style={[styles.wrap, { height }]}
+      style={[styles.wrap, { height }, style]}
       accessibilityLabel="Map preview"
     >
-      <WebView
-        source={{ html }}
-        style={StyleSheet.absoluteFill}
-        scrollEnabled={false}
-        pointerEvents="none"
-        javaScriptEnabled
+      <NativeMap
+        latitude={latitude}
+        longitude={longitude}
+        zoom={15}
+        markers={[
+          { id: "pin", latitude, longitude },
+        ]}
+        style={StyleSheet.absoluteFillObject}
       />
       {onPress ? (
         <View style={styles.expandBadge}>

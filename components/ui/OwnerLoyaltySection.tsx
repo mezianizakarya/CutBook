@@ -9,6 +9,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { TextField } from "@/components/ui/TextField";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents } from "@/lib/format";
+import { useUserCountry } from "@/lib/user-country";
 import {
   deleteLoyaltyMilestone,
   loadShopLoyalty,
@@ -29,12 +30,12 @@ const REWARD_TYPE_LABELS: Record<LoyaltyRewardType, string> = {
   custom: "Custom",
 };
 
-function rewardMeta(milestone: LoyaltyMilestone): string {
+function rewardMeta(milestone: LoyaltyMilestone, countryCode?: string | null): string {
   if (milestone.reward_type === "percentage_discount") {
     return `${milestone.reward_value}% off`;
   }
   if (milestone.reward_type === "fixed_discount") {
-    return `${formatCents(Math.round((milestone.reward_value ?? 0) * 100))} off`;
+    return `${formatCents(Math.round((milestone.reward_value ?? 0) * 100), countryCode)} off`;
   }
   if (milestone.reward_type === "free_service") {
     return "Free service";
@@ -267,6 +268,7 @@ function MilestoneRow({
   onDelete: () => void;
 }) {
   const { confirming, count, press } = useConfirmAction(onDelete);
+  const userCountry = useUserCountry();
 
   return (
     <View style={styles.milestoneRow}>
@@ -284,7 +286,7 @@ function MilestoneRow({
           <Text style={styles.milestoneMeta} numberOfLines={1}>
             {milestone.reward_type === "custom"
               ? milestone.reward_description || "Custom reward"
-              : rewardMeta(milestone)}
+              : rewardMeta(milestone, userCountry)}
           </Text>
         </View>
         <Text

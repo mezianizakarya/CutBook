@@ -141,24 +141,21 @@ export default function BarberProfessionalScreen() {
 
   return (
     <Screen scroll paddingHorizontal={14}>
-      <Pressable
-        onPress={() => router.back()}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityLabel="Go back"
-        style={styles.backRow}
-      >
-        <Ionicons name="chevron-back" size={22} color={colors.text} />
-        <Text style={styles.backLabel}>Back</Text>
-      </Pressable>
-
       <View style={styles.header}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={8}
+          style={styles.backButton}
+          accessibilityRole="button"
+        >
+          <Ionicons name="chevron-back" size={26} color={colors.text} />
+        </Pressable>
         <Text style={styles.title}>Tell customers about your work</Text>
-        <Text style={styles.subtitle}>
-          Pick a specialty and add your experience so clients know what to book
-          you for. You can change this later.
-        </Text>
       </View>
+      <Text style={styles.subtitle}>
+        Pick a specialty and add your experience so clients know what to book
+        you for. You can change this later.
+      </Text>
 
       <View style={styles.form}>
         <TextField
@@ -221,30 +218,31 @@ export default function BarberProfessionalScreen() {
 }
 
 const styles = StyleSheet.create({
-  backRow: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
-    alignSelf: "flex-start",
+    gap: spacing.md,
     marginBottom: spacing.lg,
   },
-  backLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  header: {
-    gap: spacing.xs,
-    marginBottom: spacing.xl,
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "800",
+    fontSize: 24,
+    fontWeight: "700",
     color: colors.text,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 13,
     color: colors.muted,
+    marginBottom: spacing.sm,
   },
   form: {
     gap: spacing.md,

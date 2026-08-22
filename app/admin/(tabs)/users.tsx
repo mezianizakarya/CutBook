@@ -35,6 +35,7 @@ import {
 } from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDate } from "@/lib/format";
+import { COUNTRIES } from "@/lib/countries";
 import { ROLES, ROLE_LABELS, type Role } from "@/lib/roles";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -61,6 +62,7 @@ type ProfileRow = {
   is_verified: boolean;
   created_at: string | null;
   last_active_at: string | null;
+  country: string | null;
 };
 
 type StatusFilter = "all" | "active" | "deleted";
@@ -72,7 +74,7 @@ type RoleFilter = "all" | Role;
 const PAGE_SIZE = 50;
 
 const PROFILE_SELECT =
-  "id, email, username, first_name, last_name, avatar_url, phone, role, account_status, is_verified, created_at, last_active_at";
+  "id, email, username, first_name, last_name, avatar_url, phone, role, account_status, is_verified, created_at, last_active_at, country";
 
 function fullName(row: ProfileRow): string {
   const name = [row.first_name ?? "", row.last_name ?? ""]
@@ -93,6 +95,7 @@ export default function UsersScreen() {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [regionFilter, setRegionFilter] = useState<string>("all");
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [selected, setSelected] = useState<ProfileRow | null>(null);
@@ -215,6 +218,17 @@ export default function UsersScreen() {
     return counts;
   }, [profiles]);
 
+  const regionCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const row of profiles ?? []) {
+      const region = row.country;
+      if (region) {
+        counts.set(region, (counts.get(region) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, [profiles]);
+
   const filtered = useMemo(() => {
     const rows = profiles ?? [];
     const q = stripAtPrefix(query).toLowerCase();
@@ -223,6 +237,9 @@ export default function UsersScreen() {
         return false;
       }
       if (roleFilter !== "all" && row.role !== roleFilter) {
+        return false;
+      }
+      if (regionFilter !== "all" && row.country !== regionFilter) {
         return false;
       }
       if (!q) {
@@ -235,14 +252,15 @@ export default function UsersScreen() {
       );
     });
     return matched;
-  }, [profiles, query, statusFilter, roleFilter]);
+  }, [profiles, query, statusFilter, roleFilter, regionFilter]);
 
   const hasActiveFilters =
-    query.trim() !== "" || statusFilter !== "all" || roleFilter !== "all";
+    query.trim() !== "" || statusFilter !== "all" || roleFilter !== "all" || regionFilter !== "all";
 
   function resetFilters() {
     setStatusFilter("all");
     setRoleFilter("all");
+    setRegionFilter("all");
   }
 
   function isLastActiveAdmin(row: ProfileRow): boolean {
@@ -435,6 +453,38 @@ export default function UsersScreen() {
           );
         })}
       </ScrollView>
+
+      {regionCounts.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={[styles.chipsScroll, styles.chipsScrollLast]}
+          contentContainerStyle={styles.chipsRow}
+        >
+          <Pressable
+            onPress={() => setRegionFilter("all")}
+            style={[styles.chip, regionFilter === "all" && styles.chipActive]}
+          >
+            <Text style={[styles.chipLabel, regionFilter === "all" && styles.chipLabelActive]}>
+              All regions ({profiles?.length ?? 0})
+            </Text>
+          </Pressable>
+          {regionCounts.map(([region, count]) => {
+            const isActive = regionFilter === region;
+            return (
+              <Pressable
+                key={region}
+                onPress={() => setRegionFilter(isActive ? "all" : region)}
+                style={[styles.chip, isActive && styles.chipActive]}
+              >
+                <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+                  {region} ({count})
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
 
       {!!error && <Text style={styles.error}>{error}</Text>}
 
@@ -994,6 +1044,15 @@ function ActionModal({
                 {formatDate(row.last_active_at)}
               </Text>
             </View>
+            {row.country && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Region</Text>
+                <Text style={styles.detailValue}>
+                  {COUNTRIES.find((c) => c.code === row.country)?.flag}{" "}
+                  {COUNTRIES.find((c) => c.code === row.country)?.name ?? row.country}
+                </Text>
+              </View>
+            )}
           </View>
 
           {deleted ? (

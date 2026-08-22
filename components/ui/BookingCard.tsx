@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Avatar } from "@/components/ui/Avatar";
 import { BookingStatusBadge } from "@/components/ui/BookingStatusBadge";
 import type { BookingCardRow } from "@/lib/booking";
-import { formatCents, formatDateTime } from "@/lib/format";
+import { formatDateTime, useFormatCents } from "@/lib/format";
 import { colors, radius, spacing } from "@/lib/theme";
 
 type BookingCardProps = {
@@ -12,6 +12,7 @@ type BookingCardProps = {
 };
 
 export function BookingCard({ booking, onPress }: BookingCardProps) {
+  const formattedPrice = useFormatCents(booking.service_price_cents);
   const staffName = booking.staff?.display_name ?? "—";
   const shopName = booking.shop?.name ?? "—";
   const subtitle =
@@ -49,7 +50,7 @@ export function BookingCard({ booking, onPress }: BookingCardProps) {
       </View>
       <View style={styles.trailing}>
         <BookingStatusBadge status={booking.status} />
-        <Text style={styles.price}>{formatCents(booking.service_price_cents)}</Text>
+        <Text style={styles.price}>{formattedPrice}</Text>
       </View>
     </Pressable>
   );

@@ -21,11 +21,13 @@ import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatRating } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useUserCountry } from "@/lib/user-country";
 
 type ShopInfo = {
   id: number;
   name: string;
   city: string | null;
+  country: string | null;
   rating_avg: number | null;
   rating_count: number | null;
   is_verified: boolean;
@@ -46,10 +48,11 @@ type SortFilter = "top" | "newest";
 const PAGE_SIZE = 50;
 
 const BARBER_SELECT =
-  "id, profile_id, display_name, avatar_url, joined_at, shops(id, name, city, rating_avg, rating_count, is_verified, logo_url)";
+  "id, profile_id, display_name, avatar_url, joined_at, shops!inner(id, name, city, country, rating_avg, rating_count, is_verified, logo_url)";
 
 export default function DiscoverScreen() {
   const router = useRouter();
+  const userCountry = useUserCountry();
   const [barbers, setBarbers] = useState<BarberRow[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -66,8 +69,10 @@ export default function DiscoverScreen() {
       .from("shop_members")
       .select(BARBER_SELECT)
       .eq("member_role", "barber")
-      .is("removed_at", null)
-      .not("shops.id", "is", null);
+      .is("removed_at", null);
+    if (userCountry) {
+      builder = builder.eq("shops.country", userCountry);
+    }
     if (sortFilter === "newest") {
       builder = builder.order("joined_at", { ascending: false });
     } else {
@@ -85,7 +90,7 @@ export default function DiscoverScreen() {
     const rows = (data ?? []) as unknown as BarberRow[];
     setBarbers(rows);
     setHasMore(rows.length === PAGE_SIZE);
-  }, [sortFilter]);
+  }, [sortFilter, userCountry]);
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) {
@@ -97,8 +102,10 @@ export default function DiscoverScreen() {
       .from("shop_members")
       .select(BARBER_SELECT)
       .eq("member_role", "barber")
-      .is("removed_at", null)
-      .not("shops.id", "is", null);
+      .is("removed_at", null);
+    if (userCountry) {
+      builder = builder.eq("shops.country", userCountry);
+    }
     if (sortFilter === "newest") {
       builder = builder.order("joined_at", { ascending: false });
     } else {
@@ -122,7 +129,7 @@ export default function DiscoverScreen() {
       setHasMore(rows.length === PAGE_SIZE);
     }
     setLoadingMore(false);
-  }, [loadingMore, hasMore, barbers?.length, sortFilter]);
+  }, [loadingMore, hasMore, barbers?.length, sortFilter, userCountry]);
 
   useFocusEffect(
     useCallback(() => {

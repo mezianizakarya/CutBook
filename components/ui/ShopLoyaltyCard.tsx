@@ -7,6 +7,7 @@ import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents, formatDateTime } from "@/lib/format";
+import { useUserCountry } from "@/lib/user-country";
 import {
   loadCustomerLoyalty,
   redeemReward,
@@ -28,12 +29,12 @@ type ShopLoyaltyCardProps = {
   customerId: string;
 };
 
-function rewardLabel(milestone: LoyaltyMilestone): string {
+function rewardLabel(milestone: LoyaltyMilestone, countryCode?: string | null): string {
   if (milestone.reward_type === "percentage_discount") {
     return `${milestone.reward_value}% off`;
   }
   if (milestone.reward_type === "fixed_discount") {
-    return `${formatCents(Math.round((milestone.reward_value ?? 0) * 100))} off`;
+    return `${formatCents(Math.round((milestone.reward_value ?? 0) * 100), countryCode)} off`;
   }
   if (milestone.reward_type === "free_service") {
     return "Free service";
@@ -57,6 +58,7 @@ function milestoneStatus(
  * program is enabled; visit counts and unlocks are computed server-side.
  */
 export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
+  const userCountry = useUserCountry();
   const [view, setView] = useState<CustomerLoyaltyView | null>(null);
   const [upcoming, setUpcoming] = useState<RedeemBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -180,7 +182,7 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
             </View>
             <Text style={styles.progressText}>
               {total} of {nextMilestone.visit_count} visits ·{" "}
-              {rewardLabel(nextMilestone)}
+              {rewardLabel(nextMilestone, userCountry)}
             </Text>
           </View>
         ) : activeMilestones.length > 0 ? (
@@ -214,7 +216,7 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
                       {milestone.reward_title}
                     </Text>
                     <Text style={styles.milestoneMeta} numberOfLines={1}>
-                      {rewardLabel(milestone)}
+                      {rewardLabel(milestone, userCountry)}
                       {milestone.reward_description
                         ? ` · ${milestone.reward_description}`
                         : ""}

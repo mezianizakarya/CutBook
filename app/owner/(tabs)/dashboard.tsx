@@ -26,7 +26,7 @@ import {
   type BookingRow,
 } from "@/lib/booking";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { formatCents, greetingFor, startOfDay } from "@/lib/format";
+import { greetingFor, startOfDay, useFormatCents } from "@/lib/format";
 import { loadOwnerShops, loadShopBookings, type OwnerShop } from "@/lib/owner";
 import { colors, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
@@ -120,6 +120,8 @@ export default function OwnerDashboardScreen() {
     () => computeDashboardStats(bookings ?? []),
     [bookings]
   );
+
+  const formattedRevenue = useFormatCents(stats.monthRevenueCents);
 
   const todayBookings = useMemo(() => {
     const rows = bookings ?? [];
@@ -218,7 +220,7 @@ export default function OwnerDashboardScreen() {
           <StatCard label="Today" value={String(stats.todayCount)} />
           <StatCard label="Pending" value={String(stats.pendingCount)} />
           <StatCard label="Completed" value={String(stats.completedCount)} />
-          <StatCard label="Revenue" value={formatCents(stats.monthRevenueCents)} />
+          <StatCard label="Revenue" value={formattedRevenue} />
         </View>
 
         <SectionHeader title="Today's schedule" />

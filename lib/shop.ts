@@ -6,6 +6,7 @@ export type ShopSummary = {
   id: number;
   name: string;
   city: string | null;
+  country: string | null;
   rating_avg: number | null;
   rating_count: number | null;
   is_verified: boolean;
@@ -51,6 +52,8 @@ export type ShopDetail = ShopSummary & {
   phone: string | null;
   email: string | null;
   website: string | null;
+  latitude: number | null;
+  longitude: number | null;
   services: ShopService[];
   members: ShopMember[];
   working_hours: WorkingHoursRow[];
@@ -58,7 +61,7 @@ export type ShopDetail = ShopSummary & {
 };
 
 export const SHOP_SUMMARY_SELECT =
-  "id, name, slug, city, rating_avg, rating_count, is_verified, logo_url";
+  "id, name, slug, city, country, rating_avg, rating_count, is_verified, logo_url";
 
 export type ShopSummaryOrder = "top" | "newest";
 
@@ -93,10 +96,14 @@ export async function loadHomeShops(options: {
   order: ShopSummaryOrder;
   start: number;
   count: number;
+  country?: string | null;
 }): Promise<HomeShop[]> {
   let builder = supabase
     .from("shops")
     .select(`${SHOP_SUMMARY_SELECT}, services(name, price_cents, category, is_active)`);
+  if (options.country) {
+    builder = builder.eq("country", options.country);
+  }
   if (options.order === "top") {
     builder = builder.order("rating_avg", { ascending: false, nullsFirst: false });
   } else {
@@ -114,6 +121,8 @@ export async function loadHomeShops(options: {
 }
 
 export type NearbyShop = HomeShop & {
+  latitude?: number | null;
+  longitude?: number | null;
   distance_km?: number;
 };
 
@@ -121,14 +130,15 @@ export type NearbyShop = HomeShop & {
 export async function loadNearbyShops(
   latitude: number,
   longitude: number,
-  options: { maxKm?: number; limit?: number } = {}
+  options: { maxKm?: number; limit?: number; country?: string | null } = {}
 ): Promise<NearbyShop[]> {
-  const { maxKm = 50, limit = 20 } = options;
+  const { maxKm = 50, limit = 20, country } = options;
   const { data, error } = await supabase.rpc("nearby_shops", {
     p_latitude: latitude,
     p_longitude: longitude,
     p_max_km: maxKm,
     p_limit: limit,
+    p_country: country ?? null,
   });
   if (error) {
     throw new Error(error.message);
@@ -196,9 +206,9 @@ function nextSlotsToday(
 }
 
 /** Approved shops that are open today, with a few upcoming start times. */
-export async function loadShopsOpenToday(): Promise<ShopOpenToday[]> {
+export async function loadShopsOpenToday(country?: string | null): Promise<ShopOpenToday[]> {
   const weekday = new Date().getDay();
-  const { data } = await supabase
+  let builder = supabase
     .from("working_hours")
     .select(`shop_id, opens_at, closes_at, shop:shops(${SHOP_SUMMARY_SELECT})`)
     .eq("day_of_week", weekday)
@@ -206,6 +216,10 @@ export async function loadShopsOpenToday(): Promise<ShopOpenToday[]> {
     .not("opens_at", "is", null)
     .not("closes_at", "is", null)
     .order("opens_at", { ascending: true });
+  if (country) {
+    builder = builder.eq("shop.country", country);
+  }
+  const { data } = await builder;
   const rows = (data ?? []) as unknown as {
     shop_id: number;
     opens_at: string | null;
@@ -230,14 +244,19 @@ export async function loadShopsOpenToday(): Promise<ShopOpenToday[]> {
 }
 
 /** The shops a customer has favorited, most recent first. */
-export async function loadFavoriteShops(customerId: string): Promise<ShopSummary[]> {
-  const rows = await runList<{ shop: ShopSummary | null }>(
-    supabase
-      .from("favorites")
-      .select(`shop:shops(${SHOP_SUMMARY_SELECT})`)
-      .eq("customer_id", customerId)
-      .order("created_at", { ascending: false })
-  );
+export async function loadFavoriteShops(
+  customerId: string,
+  country?: string | null
+): Promise<ShopSummary[]> {
+  let builder = supabase
+    .from("favorites")
+    .select(`shop:shops(${SHOP_SUMMARY_SELECT})`)
+    .eq("customer_id", customerId)
+    .order("created_at", { ascending: false });
+  if (country) {
+    builder = builder.eq("shop.country", country);
+  }
+  const rows = await runList<{ shop: ShopSummary | null }>(builder);
   return rows
     .map((row) => row.shop)
     .filter((shop): shop is ShopSummary => shop !== null);
@@ -254,7 +273,7 @@ export async function loadShopDetail(shopId: number): Promise<ShopDetail | null>
       supabase
         .from("shops")
         .select(
-          `${SHOP_SUMMARY_SELECT}, description, address_line1, address_line2, state, country, postal_code, phone, email, website, services:services(id, name, description, price_cents, duration_minutes, category, is_active), members:shop_members(id, profile_id, display_name, avatar_url, member_role, joined_at), working_hours(id, day_of_week, opens_at, closes_at, is_closed)`
+          `${SHOP_SUMMARY_SELECT}, description, address_line1, address_line2, state, country, postal_code, phone, email, website, latitude, longitude, services:services(id, name, description, price_cents, duration_minutes, category, is_active), members:shop_members(id, profile_id, display_name, avatar_url, member_role, joined_at), working_hours(id, day_of_week, opens_at, closes_at, is_closed)`
         )
         .eq("id", shopId)
         .maybeSingle()

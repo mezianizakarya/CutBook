@@ -17,6 +17,7 @@ import {
 import { Avatar } from "@/components/ui/Avatar";
 import { BookingModal } from "@/components/ui/BookingModal";
 import { Button } from "@/components/ui/Button";
+import { NativeMap } from "@/components/ui/NativeMap";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { ReviewCard } from "@/components/ui/ReviewCard";
 import { ReviewSheet } from "@/components/ui/ReviewSheet";
@@ -34,6 +35,7 @@ import {
   formatRating,
   shopStatusInfo,
 } from "@/lib/format";
+import { useUserCountry } from "@/lib/user-country";
 import {
   loadCompletedBookingId,
   loadMyShopReview,
@@ -47,6 +49,7 @@ import {
   removeFavorite,
   type ShopDetail,
 } from "@/lib/shop";
+import { ShopCountryProvider } from "@/lib/shop-country";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
 
@@ -70,6 +73,7 @@ export default function ShopDetailScreen() {
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const { width: windowWidth } = useWindowDimensions();
   const { notice, showNotice } = useNotice();
+  const userCountry = useUserCountry();
 
   const load = useCallback(async () => {
     if (!Number.isFinite(shopId)) {
@@ -198,21 +202,23 @@ export default function ShopDetailScreen() {
         : [];
 
   return (
+    <ShopCountryProvider value={shop.country}>
     <Screen style={styles.screenPadding}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-      <Pressable
-        onPress={() => router.back()}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityLabel="Go back"
-        style={styles.backRow}
-      >
-        <Ionicons name="chevron-back" size={22} color={colors.text} />
-        <Text style={styles.backLabel}>Back</Text>
-      </Pressable>
+      <View style={styles.header}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={8}
+          style={styles.backButton}
+          accessibilityRole="button"
+        >
+          <Ionicons name="chevron-back" size={26} color={colors.text} />
+        </Pressable>
+        <Text style={styles.title}>Shop</Text>
+      </View>
 
       <View style={styles.hero}>
         {heroImages.length === 0 ? (
@@ -380,6 +386,25 @@ export default function ShopDetailScreen() {
         )}
       </View>
 
+      {shop.latitude != null && shop.longitude != null && (
+        <View style={styles.mapContainer}>
+          <NativeMap
+            latitude={shop.latitude}
+            longitude={shop.longitude}
+            zoom={15}
+            markers={[
+              {
+                id: "shop",
+                latitude: shop.latitude,
+                longitude: shop.longitude,
+                title: shop.name,
+              },
+            ]}
+            style={styles.map}
+          />
+        </View>
+      )}
+
       <SectionHeader title="Hours" />
       <View style={styles.detailsCard}>
         {sortedHours.map((hours) => {
@@ -419,7 +444,7 @@ export default function ShopDetailScreen() {
                       </Text>
                     </View>
                     <Text style={styles.servicePrice}>
-                      {formatCents(service.price_cents)}
+                      {formatCents(service.price_cents, userCountry)}
                     </Text>
                   </View>
                 ))}
@@ -561,6 +586,7 @@ export default function ShopDetailScreen() {
         visible={bookingVisible}
         shopId={shop.id}
         shopName={shop.name}
+        shopCountry={shop.country}
         services={shop.services}
         members={shop.members}
         onClose={() => setBookingVisible(false)}
@@ -580,6 +606,7 @@ export default function ShopDetailScreen() {
       />
       </ScrollView>
     </Screen>
+    </ShopCountryProvider>
   );
 }
 
@@ -604,19 +631,25 @@ const styles = StyleSheet.create({
     color: colors.muted,
     textAlign: "center",
   },
-  backButton: {
-    marginTop: spacing.sm,
-    backgroundColor: colors.surface,
-  },
-  backRow: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-start",
-    marginBottom: spacing.sm,
+    gap: spacing.md,
+    marginBottom: spacing.lg,
   },
-  backLabel: {
-    fontSize: 16,
-    fontWeight: "600",
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
     color: colors.text,
   },
   hero: {
@@ -753,6 +786,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md,
     gap: spacing.sm,
+  },
+  mapContainer: {
+    height: 180,
+    borderRadius: radius.md,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.md,
+  },
+  map: {
+    flex: 1,
   },
   detailRow: {
     flexDirection: "row",

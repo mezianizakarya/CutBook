@@ -28,6 +28,7 @@ import {
 } from "@/lib/barber";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents, formatDurationMinutes } from "@/lib/format";
+import { useUserCountry } from "@/lib/user-country";
 import { loadShopDetail, type ShopMember, type ShopService } from "@/lib/shop";
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -51,11 +52,13 @@ export default function BarberProfileScreen() {
   const [portfolio, setPortfolio] = useState<PublicPortfolioImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const userCountry = useUserCountry();
   const [bookingVisible, setBookingVisible] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingShop, setBookingShop] = useState<{
     services: ShopService[];
     members: ShopMember[];
+    country?: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -110,7 +113,7 @@ export default function BarberProfileScreen() {
         Alert.alert("Couldn't book", "This shop is not available right now.");
         return;
       }
-      setBookingShop({ services: detail.services, members: detail.members });
+      setBookingShop({ services: detail.services, members: detail.members, country: detail.country });
       setBookingVisible(true);
     } catch (e) {
       Alert.alert("Couldn't book", errorMessageFromUnknown(e));
@@ -130,16 +133,17 @@ export default function BarberProfileScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          style={styles.backRow}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-          <Text style={styles.backLabel}>Back</Text>
-        </Pressable>
+        <View style={styles.header}>
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={8}
+            style={styles.backButton}
+            accessibilityRole="button"
+          >
+            <Ionicons name="chevron-back" size={26} color={colors.text} />
+          </Pressable>
+          <Text style={styles.title}>Barber</Text>
+        </View>
 
         {loading ? (
           <View style={styles.loading}>
@@ -236,7 +240,7 @@ export default function BarberProfileScreen() {
                                   </Text>
                                 </View>
                                 <Text style={styles.servicePrice}>
-                                  {formatCents(service.price_cents)}
+                                  {formatCents(service.price_cents, userCountry)}
                                 </Text>
                               </View>
                             ))}
@@ -257,7 +261,7 @@ export default function BarberProfileScreen() {
                             </Text>
                           </View>
                           <Text style={styles.servicePrice}>
-                            {formatCents(service.price_cents)}
+                            {formatCents(service.price_cents, userCountry)}
                           </Text>
                         </View>
                       ))}
@@ -299,6 +303,7 @@ export default function BarberProfileScreen() {
               visible={bookingVisible}
               shopId={Number(shopId)}
               shopName={shopName ?? profile.shop_names[0] ?? ""}
+              shopCountry={bookingShop?.country}
               services={bookingShop?.services ?? []}
               members={bookingShop?.members ?? []}
               onClose={() => setBookingVisible(false)}
@@ -322,15 +327,25 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingBottom: spacing.xl,
   },
-  backRow: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-start",
-    marginBottom: spacing.sm,
+    gap: spacing.md,
+    marginBottom: spacing.lg,
   },
-  backLabel: {
-    fontSize: 16,
-    fontWeight: "600",
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
     color: colors.text,
   },
   loading: {
@@ -351,14 +366,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.muted,
     textAlign: "center",
-  },
-  backButton: {
-    marginTop: spacing.sm,
-    backgroundColor: colors.surface,
-  },
-  header: {
-    alignItems: "center",
-    gap: spacing.sm,
   },
   name: {
     fontSize: 24,

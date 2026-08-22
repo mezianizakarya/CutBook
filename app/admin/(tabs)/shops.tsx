@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -58,6 +58,7 @@ export default function AdminShopsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [regionFilter, setRegionFilter] = useState<string>("all");
   const [selected, setSelected] = useState<AdminShop | null>(null);
   const { notice, showNotice } = useNotice();
 
@@ -105,12 +106,33 @@ export default function AdminShopsScreen() {
     );
   }
 
-  const hasActiveFilters = query.trim() !== "" || statusFilter !== "all";
+  const hasActiveFilters = query.trim() !== "" || statusFilter !== "all" || regionFilter !== "all";
 
   function resetFilters() {
     setQuery("");
     setStatusFilter("all");
+    setRegionFilter("all");
   }
+
+  const regionCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const row of shops ?? []) {
+      const region = row.country;
+      if (region) {
+        counts.set(region, (counts.get(region) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, [shops]);
+
+  const filteredShops = useMemo(() => {
+    return (shops ?? []).filter((row) => {
+      if (regionFilter !== "all" && row.country !== regionFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [shops, regionFilter]);
 
   return (
     <Screen style={styles.screenPadding}>
@@ -170,6 +192,38 @@ export default function AdminShopsScreen() {
         })}
       </ScrollView>
 
+      {regionCounts.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={[styles.chipsScroll, { marginBottom: spacing.md }]}
+          contentContainerStyle={styles.chipsRow}
+        >
+          <Pressable
+            onPress={() => setRegionFilter("all")}
+            style={[styles.chip, regionFilter === "all" && styles.chipActive]}
+          >
+            <Text style={[styles.chipLabel, regionFilter === "all" && styles.chipLabelActive]}>
+              All regions ({shops?.length ?? 0})
+            </Text>
+          </Pressable>
+          {regionCounts.map(([region, count]) => {
+            const isActive = regionFilter === region;
+            return (
+              <Pressable
+                key={region}
+                onPress={() => setRegionFilter(isActive ? "all" : region)}
+                style={[styles.chip, isActive && styles.chipActive]}
+              >
+                <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+                  {region} ({count})
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
+
       {!!error && <Text style={styles.error}>{error}</Text>}
 
       {loading && !shops ? (
@@ -179,7 +233,7 @@ export default function AdminShopsScreen() {
       ) : (
         <FlatList
           style={styles.list}
-          data={shops ?? []}
+          data={filteredShops}
           keyExtractor={(row) => String(row.id)}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -219,7 +273,7 @@ export default function AdminShopsScreen() {
                     {item.is_verified && <VerifiedIcon size={16} />}
                   </View>
                   <Text style={styles.rowSubtitle} numberOfLines={1}>
-                    {item.city ?? "No city"} · {formatDate(item.created_at)}
+                    {item.city ?? "No city"}{item.country ? `, ${item.country}` : ""} · {formatDate(item.created_at)}
                   </Text>
                 </View>
                 <View style={styles.rowBadges}>

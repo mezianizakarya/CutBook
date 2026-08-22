@@ -16,6 +16,7 @@ export type AdminShop = {
   address_line1: string | null;
   city: string | null;
   state: string | null;
+  country: string | null;
   phone: string | null;
   email: string | null;
   website: string | null;
@@ -50,14 +51,16 @@ export type RecentUser = {
   account_status: "active" | "deleted";
   is_verified: boolean;
   created_at: string | null;
+  country: string | null;
 };
 
 export const SHOP_SELECT =
-  "id, name, slug, description, logo_url, address_line1, city, state, phone, email, website, status, is_verified, is_active, rating_avg, rating_count, deleted_at, created_by, created_at";
+  "id, name, slug, description, logo_url, address_line1, city, state, country, phone, email, website, status, is_verified, is_active, rating_avg, rating_count, deleted_at, created_by, created_at";
 
 export async function loadAdminShops(
   status: ShopStatus | "all" = "all",
-  query = ""
+  query = "",
+  country?: string | null
 ): Promise<AdminShop[]> {
   let builder = supabase.from("shops").select(SHOP_SELECT);
   if (status !== "all") {
@@ -65,6 +68,9 @@ export async function loadAdminShops(
     if (status === "pending") {
       builder = builder.is("deleted_at", null);
     }
+  }
+  if (country) {
+    builder = builder.eq("country", country);
   }
   if (query.trim() !== "") {
     const q = query.trim().toLowerCase();
@@ -175,7 +181,7 @@ export async function loadRecentUsers(limit = 8): Promise<RecentUser[]> {
     supabase
       .from("profiles")
       .select(
-        "id, email, username, first_name, last_name, avatar_url, role, account_status, is_verified, created_at"
+        "id, email, username, first_name, last_name, avatar_url, role, account_status, is_verified, created_at, country"
       )
       .order("created_at", { ascending: false })
       .limit(limit)

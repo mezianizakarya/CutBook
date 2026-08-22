@@ -41,6 +41,7 @@ export default function LoadingScreen() {
       router.replace("/complete-profile");
       return;
     }
+
     router.replace(ROLE_ROUTES[role]);
   }, [isLoaded, isSignedIn, userLoaded, user, router, role, roleLoading]);
 

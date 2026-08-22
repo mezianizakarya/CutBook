@@ -65,6 +65,16 @@ export type CustomerLoyaltyView = {
   rewards: CustomerReward[];
 };
 
+export type CustomerLoyaltySummary = {
+  shop_id: number;
+  shop_name: string;
+  shop_logo_url: string | null;
+  total_completed_visits: number;
+  current_streak: number;
+  next_milestone: LoyaltyMilestone | null;
+  next_milestone_progress: number;
+};
+
 const LOYALTY_PROGRAM_SELECT =
   "id, shop_id, enabled, created_at, updated_at";
 const LOYALTY_MILESTONE_SELECT =
@@ -186,4 +196,47 @@ export async function redeemReward(
       .rpc("redeem_reward", { p_reward_id: rewardId, p_booking_id: bookingId })
       .maybeSingle()
   );
+}
+
+/** Loads loyalty summary for all shops the customer has a loyalty card at. */
+export async function loadCustomerLoyaltySummary(
+  customerId: string
+): Promise<CustomerLoyaltySummary[]> {
+  const cards = await runList<CustomerLoyalty & { shop: { id: number; name: string; logo_url: string | null } | null }>(
+    supabase
+      .from("customer_loyalty")
+      .select(`${CUSTOMER_LOYALTY_SELECT}, shop:shops(id, name, logo_url)`)
+      .eq("customer_id", customerId)
+      .order("last_qualifying_visit_at", { ascending: false, nullsFirst: false })
+  );
+
+  const summaries: CustomerLoyaltySummary[] = [];
+  for (const card of cards) {
+    if (!card.shop) continue;
+    const { program, milestones } = await loadShopLoyalty(card.shop_id);
+    if (!program || !program.enabled) continue;
+    const activeMilestones = milestones
+      .filter((m) => m.active)
+      .sort((a, b) => a.visit_count - b.visit_count);
+    const nextMilestone = activeMilestones.find(
+      (m) => m.visit_count > card.total_completed_visits
+    );
+    const prevVisitCount = nextMilestone
+      ? activeMilestones
+          .filter((m) => m.visit_count < nextMilestone.visit_count)
+          .pop()?.visit_count ?? 0
+      : activeMilestones[activeMilestones.length - 1]?.visit_count ?? 0;
+    const progressRange = (nextMilestone?.visit_count ?? prevVisitCount) - prevVisitCount;
+    const progressInStep = card.total_completed_visits - prevVisitCount;
+    summaries.push({
+      shop_id: card.shop_id,
+      shop_name: card.shop.name,
+      shop_logo_url: card.shop.logo_url,
+      total_completed_visits: card.total_completed_visits,
+      current_streak: card.current_streak,
+      next_milestone: nextMilestone ?? null,
+      next_milestone_progress: progressRange > 0 ? Math.min(progressInStep / progressRange, 1) : 1,
+    });
+  }
+  return summaries;
 }

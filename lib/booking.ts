@@ -63,6 +63,24 @@ export type BookAgainRow = {
   shop: { id: number; name: string; logo_url: string | null } | null;
 };
 
+/** The customer's next upcoming booking (pending or confirmed, future only). */
+export async function loadUpcomingBooking(
+  customerId: string
+): Promise<BookingCardRow | null> {
+  const rows = await runList<BookingRow>(
+    supabase
+      .from("bookings")
+      .select(BOOKING_SELECT)
+      .eq("customer_id", customerId)
+      .in("status", ["pending", "confirmed"])
+      .gte("starts_at", new Date().toISOString())
+      .order("starts_at", { ascending: true })
+      .limit(1)
+  );
+  const row = rows[0];
+  return row ? toBookingCard(row) : null;
+}
+
 /** The customer's most recent completed visits, for the "Book again" rail. */
 export async function loadBookAgain(
   customerId: string,

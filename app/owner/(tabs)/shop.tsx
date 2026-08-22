@@ -28,6 +28,7 @@ import {
   formatCents,
   formatOpenRange,
 } from "@/lib/format";
+import { useUserCountry } from "@/lib/user-country";
 import {
   deleteShop,
   loadOwnerShops,
@@ -42,6 +43,7 @@ import {
   type OwnerShop,
   type WorkingHoursRow,
 } from "@/lib/owner";
+import { ShopCountryProvider } from "@/lib/shop-country";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useConfirmAction } from "@/lib/useConfirmAction";
 import { useNotice } from "@/lib/useNotice";
@@ -55,6 +57,7 @@ export default function OwnerShopScreen() {
   const [selectedShopId, setSelectedShopId] = useState<number | null>(null);
   const [services, setServices] = useState<OwnerService[]>([]);
   const [hours, setHours] = useState<WorkingHoursRow[]>([]);
+  const userCountry = useUserCountry();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -264,6 +267,7 @@ export default function OwnerShopScreen() {
   }
 
   return (
+    <ShopCountryProvider value={selectedShop.country}>
     <Screen style={styles.screenPadding}>
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -382,7 +386,7 @@ export default function OwnerShopScreen() {
                   </Text>
                   <Text style={styles.serviceMeta} numberOfLines={1}>
                     <Text style={styles.servicePrice}>
-                      {formatCents(service.price_cents)}
+                      {formatCents(service.price_cents, userCountry)}
                     </Text>
                     {`  ·  ${service.duration_minutes} min`}
                   </Text>
@@ -516,6 +520,7 @@ export default function OwnerShopScreen() {
         ) : null}
       </ScrollView>
     </Screen>
+    </ShopCountryProvider>
   );
 }
 

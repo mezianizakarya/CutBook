@@ -46,7 +46,7 @@ import {
 } from "@/lib/barber";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import {
-  formatCents,
+  useFormatCents,
   formatOpenRange,
   formatTime,
   greetingFor,
@@ -189,6 +189,8 @@ export default function BarberDashboardScreen() {
     () => computeDashboardStats(bookings ?? []),
     [bookings]
   );
+
+  const formattedRevenue = useFormatCents(stats.monthRevenueCents);
 
   const todayBookings = useMemo(() => {
     const rows = bookings ?? [];
@@ -410,7 +412,7 @@ export default function BarberDashboardScreen() {
           <StatCard label="Today" value={String(stats.todayCount)} />
           <StatCard label="Pending" value={String(stats.pendingCount)} />
           <StatCard label="Completed" value={String(stats.completedCount)} />
-          <StatCard label="Revenue" value={formatCents(stats.monthRevenueCents)} />
+          <StatCard label="Revenue" value={formattedRevenue} />
         </View>
 
         <SectionHeader title="Today's schedule" />

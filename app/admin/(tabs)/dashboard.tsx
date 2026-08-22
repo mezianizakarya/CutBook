@@ -24,7 +24,7 @@ import {
   type RecentUser,
 } from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { formatCents } from "@/lib/format";
+import { useFormatCents } from "@/lib/format";
 import { ROLE_LABELS } from "@/lib/roles";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
@@ -42,6 +42,7 @@ export default function AdminDashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { notice } = useNotice();
+  const formattedRevenue = useFormatCents(stats?.monthRevenueCents ?? null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -141,7 +142,7 @@ export default function AdminDashboardScreen() {
             <View style={styles.statsRow}>
               <StatCard label="Pending" value={String(stats.pendingShops)} />
               <StatCard label="Today" value={String(stats.todayBookings)} />
-              <StatCard label="Revenue" value={formatCents(stats.monthRevenueCents)} />
+              <StatCard label="Revenue" value={formattedRevenue} />
             </View>
           </>
         )}

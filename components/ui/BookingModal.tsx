@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents, parseTimeToMinutes, toDateKey } from "@/lib/format";
+import { useUserCountry } from "@/lib/user-country";
 import type { ShopMember, ShopService } from "@/lib/shop";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -20,6 +21,7 @@ type BookingModalProps = {
   visible: boolean;
   shopId: number;
   shopName: string;
+  shopCountry?: string | null;
   services: ShopService[];
   members: ShopMember[];
   onClose: () => void;
@@ -51,13 +53,17 @@ export function BookingModal({
   visible,
   shopId,
   shopName,
+  shopCountry,
   services,
   members,
   onClose,
   onBooked,
 }: BookingModalProps) {
   const { user } = useUser();
+  const userCountry = useUserCountry();
   const days = useMemo(buildDayList, []);
+
+  const regionMismatch = !!shopCountry && !!userCountry && shopCountry !== userCountry;
 
   const [serviceId, setServiceId] = useState<number | null>(null);
   const [memberId, setMemberId] = useState<number | null>(null);
@@ -137,7 +143,7 @@ export function BookingModal({
 
   const selectedService = services.find((service) => service.id === serviceId) ?? null;
   const selectedMember = members.find((member) => member.id === memberId) ?? null;
-  const canSubmit = !!selectedService && !!selectedMember && !!selectedSlot && !submitting;
+  const canSubmit = !!selectedService && !!selectedMember && !!selectedSlot && !submitting && !regionMismatch;
 
   async function handleBook() {
     if (!user?.id || !selectedService || !selectedMember || !selectedSlot) {
@@ -213,6 +219,15 @@ export function BookingModal({
         Pick a service, barber and time. The shop confirms your booking.
       </Text>
 
+      {regionMismatch && (
+        <View style={styles.regionWarning}>
+          <Ionicons name="warning" size={16} color="#b45309" />
+          <Text style={styles.regionWarningText}>
+            This shop is in a different region. You can only book shops in your own region ({userCountry}).
+          </Text>
+        </View>
+      )}
+
       <Text style={styles.stepTitle}>Service</Text>
       <ScrollView
         horizontal
@@ -231,7 +246,7 @@ export function BookingModal({
               style={[styles.chip, isActive && styles.chipActive]}
             >
               <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
-                {service.name} · {formatCents(service.price_cents)}
+                {service.name} · {formatCents(service.price_cents, userCountry)}
               </Text>
             </Pressable>
           );
@@ -474,6 +489,20 @@ const styles = StyleSheet.create({
   hint: {
     fontSize: 13,
     color: colors.muted,
+  },
+  regionWarning: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: "#fef3c7",
+  },
+  regionWarningText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#b45309",
+    lineHeight: 18,
   },
   error: {
     fontSize: 13,

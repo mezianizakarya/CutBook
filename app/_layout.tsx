@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { CLERK_PUBLISHABLE_KEY, tokenCache } from "@/lib/clerk";
 import { useSupabaseSession } from "@/lib/supabase-auth";
 import { colors } from "@/lib/theme";
+import { CountryProvider } from "@/lib/user-country";
 
 if (!CLERK_PUBLISHABLE_KEY) {
   throw new Error("Add EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY to your .env file");
@@ -20,12 +21,14 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <SupabaseSessionBridge />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-        }}
-      />
+      <CountryProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        />
+      </CountryProvider>
     </ClerkProvider>
   );
 }

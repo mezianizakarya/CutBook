@@ -17,7 +17,7 @@ import {
   type BookingRow,
 } from "@/lib/booking";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { formatCents, formatDateTime } from "@/lib/format";
+import { formatDateTime, useFormatCents } from "@/lib/format";
 import { colors, spacing } from "@/lib/theme";
 import { useConfirmAction } from "@/lib/useConfirmAction";
 import type { NoticeTone } from "@/lib/useNotice";
@@ -50,6 +50,7 @@ export function StaffBookingSheet({
   const [current, setCurrent] = useState(row);
   const [busy, setBusy] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const formattedPrice = useFormatCents(current.service_price_cents);
   const {
     confirming: confirmingCancel,
     count: confirmCount,
@@ -129,7 +130,7 @@ export function StaffBookingSheet({
           labelWidth={62}
         />
         <DetailRow label="Shop" value={current.shop?.name ?? "—"} labelWidth={62} />
-        <DetailRow label="Price" value={formatCents(current.service_price_cents)} labelWidth={62} />
+        <DetailRow label="Price" value={formattedPrice} labelWidth={62} />
         {!!customer?.phone && (
           <DetailRow label="Phone" value={customer.phone} labelWidth={62} />
         )}

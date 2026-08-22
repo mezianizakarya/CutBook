@@ -25,11 +25,13 @@ import {
   type ShopSummary,
 } from "@/lib/shop";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useUserCountry } from "@/lib/user-country";
 
 export default function FavoritesScreen() {
   const { user } = useUser();
   const customerId = user?.id;
   const router = useRouter();
+  const userCountry = useUserCountry();
 
   const [shops, setShops] = useState<ShopSummary[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,12 +45,12 @@ export default function FavoritesScreen() {
     }
     setError(null);
     try {
-      setShops(await loadFavoriteShops(customerId));
+      setShops(await loadFavoriteShops(customerId, userCountry));
     } catch (e) {
       setError(errorMessageFromUnknown(e));
       setShops((previous) => previous ?? []);
     }
-  }, [customerId]);
+  }, [customerId, userCountry]);
 
   useFocusEffect(
     useCallback(() => {

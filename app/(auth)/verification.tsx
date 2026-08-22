@@ -136,24 +136,21 @@ export default function VerificationScreen() {
 
   return (
     <Screen scroll paddingHorizontal={14}>
-      <Pressable
-        onPress={() => router.back()}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityLabel="Go back"
-        style={styles.backRow}
-      >
-        <Ionicons name="chevron-back" size={22} color={colors.text} />
-        <Text style={styles.backLabel}>Back</Text>
-      </Pressable>
-
       <View style={styles.header}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={8}
+          style={styles.backButton}
+          accessibilityRole="button"
+        >
+          <Ionicons name="chevron-back" size={26} color={colors.text} />
+        </Pressable>
         <Text style={styles.title}>Request verification</Text>
-        <Text style={styles.subtitle}>
-          Get a verified badge on your account so clients know they can trust
-          you.
-        </Text>
       </View>
+      <Text style={styles.subtitle}>
+        Get a verified badge on your account so clients know they can trust
+        you.
+      </Text>
 
       {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
       {!!error && <Text style={styles.error}>{error}</Text>}
@@ -259,29 +256,31 @@ export default function VerificationScreen() {
 }
 
 const styles = StyleSheet.create({
-  backRow: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: spacing.md,
     marginBottom: spacing.lg,
   },
-  backLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  header: {
-    gap: spacing.xs,
-    marginBottom: spacing.xl,
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "800",
+    fontSize: 24,
+    fontWeight: "700",
     color: colors.text,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 13,
     color: colors.muted,
+    marginBottom: spacing.sm,
   },
   notice: {
     marginBottom: spacing.md,

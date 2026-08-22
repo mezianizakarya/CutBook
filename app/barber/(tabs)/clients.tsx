@@ -32,6 +32,7 @@ import {
 } from "@/lib/barber";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents, formatDate, formatDateTime } from "@/lib/format";
+import { useUserCountry } from "@/lib/user-country";
 import { colors, radius, spacing } from "@/lib/theme";
 
 export default function BarberClientsScreen() {
@@ -294,6 +295,7 @@ type ClientDetailSheetProps = {
 
 function ClientDetailSheet({ client, history, onClose }: ClientDetailSheetProps) {
   const fullName = [client.first_name, client.last_name].filter(Boolean).join(" ") || "Customer";
+  const userCountry = useUserCountry();
 
   return (
     <BottomSheet visible onClose={onClose}>
@@ -350,7 +352,7 @@ function ClientDetailSheet({ client, history, onClose }: ClientDetailSheetProps)
                 {row.service_name || "—"}
               </Text>
               <Text style={styles.historyMeta} numberOfLines={1}>
-                {formatDateTime(row.starts_at)} · {formatCents(row.service_price_cents)}
+                {formatDateTime(row.starts_at)} · {formatCents(row.service_price_cents, userCountry)}
               </Text>
             </View>
             <BookingStatusBadge status={row.status as BookingStatus} />

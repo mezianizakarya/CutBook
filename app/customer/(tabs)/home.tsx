@@ -1,8 +1,9 @@
+import { BottomTabBarHeightContext } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { useUser } from "@clerk/expo";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState, type ComponentProps } from "react";
+import { useCallback, useContext, useEffect, useRef, useState, type ComponentProps } from "react";
 import {
   Animated,
   Pressable,
@@ -22,9 +23,24 @@ import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { VerifiedIcon } from "@/components/ui/VerifiedIcon";
 import { avatarColor } from "@/lib/avatar";
-import { loadBookAgain, type BookAgainRow } from "@/lib/booking";
+import {
+  loadBookAgain,
+  loadUpcomingBooking,
+  type BookAgainRow,
+  type BookingCardRow,
+} from "@/lib/booking";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { formatCents, formatDistanceKm, formatRating, greetingFor } from "@/lib/format";
+import {
+  formatDateTime,
+  formatDistanceKm,
+  formatRating,
+  greetingFor,
+  useFormatCents,
+} from "@/lib/format";
+import {
+  loadCustomerLoyaltySummary,
+  type CustomerLoyaltySummary,
+} from "@/lib/loyalty";
 import {
   formatGeocodeLabel,
   formatLocationSummary,
@@ -42,6 +58,7 @@ import {
   type ShopOpenToday,
 } from "@/lib/shop";
 import { colors, radius, spacing } from "@/lib/theme";
+import { useUserCountry } from "@/lib/user-country";
 
 type ActiveLocation = {
   latitude: number;
@@ -72,10 +89,14 @@ export default function HomeScreen() {
   const { user } = useUser();
   const router = useRouter();
   const firstName = user?.firstName;
+  const tabBarHeight = useContext(BottomTabBarHeightContext) ?? 0;
+  const userCountry = useUserCountry();
 
   const [nearby, setNearby] = useState<NearbyShop[] | null>(null);
   const [openToday, setOpenToday] = useState<ShopOpenToday[] | null>(null);
   const [bookAgain, setBookAgain] = useState<BookAgainRow[] | null>(null);
+  const [upcomingBooking, setUpcomingBooking] = useState<BookingCardRow | null>(null);
+  const [loyaltySummary, setLoyaltySummary] = useState<CustomerLoyaltySummary[] | null>(null);
   const [locationLabel, setLocationLabel] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState<ActiveLocation | null>(null);
   const [manualLocation, setManualLocation] = useState<ActiveLocation | null>(null);
@@ -126,25 +147,31 @@ export default function HomeScreen() {
       }
     }
     try {
-      const [shopRows, openTodayRows, history, profile] = await Promise.all([
+      const [shopRows, openTodayRows, history, profile, upcoming, loyalty] = await Promise.all([
         coords
-          ? loadNearbyShops(coords.latitude, coords.longitude)
-          : loadHomeShops({ order: "top", start: 0, count: SECTION_COUNT }),
-        loadShopsOpenToday(),
+          ? loadNearbyShops(coords.latitude, coords.longitude, { country: userCountry })
+          : loadHomeShops({ order: "top", start: 0, count: SECTION_COUNT, country: userCountry }),
+        loadShopsOpenToday(userCountry),
         user?.id ? loadBookAgain(user.id) : Promise.resolve([]),
         user?.id ? fetchOwnProfile(user.id) : Promise.resolve(null),
+        user?.id ? loadUpcomingBooking(user.id) : Promise.resolve(null),
+        user?.id ? loadCustomerLoyaltySummary(user.id) : Promise.resolve([]),
       ]);
       setNearby(shopRows);
       setOpenToday(openTodayRows);
       setBookAgain(history);
+      setUpcomingBooking(upcoming);
+      setLoyaltySummary(loyalty);
       setLocationLabel(label ?? profile?.city ?? null);
     } catch (e) {
       setError(errorMessageFromUnknown(e));
       setNearby((previous) => previous ?? []);
       setOpenToday((previous) => previous ?? []);
       setBookAgain((previous) => previous ?? []);
+      setUpcomingBooking((previous) => previous);
+      setLoyaltySummary((previous) => previous ?? []);
     }
-  }, [user?.id, manualLocation]);
+  }, [user?.id, manualLocation, userCountry]);
 
   useFocusEffect(
     useCallback(() => {
@@ -248,8 +275,15 @@ export default function HomeScreen() {
             tintColor={colors.primary}
           />
         }
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight || 98 }]}
       >
+        {!!upcomingBooking && (
+          <UpcomingBookingCard
+            booking={upcomingBooking}
+            onPress={() => router.push("/customer/bookings")}
+          />
+        )}
+
         <Text style={styles.sectionHeading}>Browse by service</Text>
         <ScrollView
           horizontal
@@ -271,6 +305,35 @@ export default function HomeScreen() {
             </Pressable>
           ))}
         </ScrollView>
+
+        {loyaltySummary !== null && loyaltySummary.length > 0 && (
+          <>
+            <SectionHeader
+              title="Your loyalty cards"
+              actionLabel="See all"
+              onAction={() => router.push("/customer/bookings")}
+            />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.railScroll}
+              contentContainerStyle={styles.rail}
+            >
+              {loyaltySummary.map((card) => (
+                <LoyaltyCard
+                  key={card.shop_id}
+                  card={card}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/customer/shop/[id]",
+                      params: { id: card.shop_id },
+                    })
+                  }
+                />
+              ))}
+            </ScrollView>
+          </>
+        )}
 
         <SectionHeader
           title="Nearby barbers"
@@ -433,14 +496,105 @@ function EmptyNearby({ onExplore }: { onExplore: () => void }) {
   );
 }
 
+function UpcomingBookingCard({
+  booking,
+  onPress,
+}: {
+  booking: BookingCardRow;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.upcomingCard, pressed && styles.pressed]}
+    >
+      <View style={styles.upcomingHeader}>
+        <View style={styles.upcomingIcon}>
+          <Ionicons name="calendar" size={20} color={colors.primaryDark} />
+        </View>
+        <Text style={styles.upcomingLabel}>Upcoming Appointment</Text>
+      </View>
+      <View style={styles.upcomingContent}>
+        <Avatar
+          fullName={booking.shop?.name}
+          imageUrl={booking.shop?.logo_url}
+          size={44}
+        />
+        <View style={styles.upcomingInfo}>
+          <Text style={styles.upcomingShop} numberOfLines={1}>
+            {booking.service_name} at {booking.shop?.name ?? "—"}
+          </Text>
+          <Text style={styles.upcomingTime} numberOfLines={1}>
+            {formatDateTime(booking.starts_at)}
+          </Text>
+          {!!booking.staff && (
+            <Text style={styles.upcomingStaff} numberOfLines={1}>
+              with {booking.staff.display_name}
+            </Text>
+          )}
+        </View>
+      </View>
+      <View style={styles.upcomingBadge}>
+        <Text style={styles.upcomingBadgeText}>
+          {booking.status === "confirmed" ? "Confirmed" : "Pending"}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
+function LoyaltyCard({
+  card,
+  onPress,
+}: {
+  card: CustomerLoyaltySummary;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.loyaltyCard, pressed && styles.pressed]}
+    >
+      <View style={styles.loyaltyHeader}>
+        <Avatar fullName={card.shop_name} imageUrl={card.shop_logo_url} size={36} />
+        <View style={styles.loyaltyShopInfo}>
+          <Text style={styles.loyaltyShopName} numberOfLines={1}>
+            {card.shop_name}
+          </Text>
+          <Text style={styles.loyaltyVisits}>
+            {card.total_completed_visits} visit{card.total_completed_visits !== 1 ? "s" : ""}
+          </Text>
+        </View>
+      </View>
+      {!!card.next_milestone && (
+        <View style={styles.loyaltyProgress}>
+          <View style={styles.loyaltyProgressBar}>
+            <View
+              style={[
+                styles.loyaltyProgressFill,
+                { width: `${card.next_milestone_progress * 100}%` },
+              ]}
+            />
+          </View>
+          <Text style={styles.loyaltyProgressText}>
+            {card.total_completed_visits}/{card.next_milestone.visit_count} to{" "}
+            {card.next_milestone.reward_title}
+          </Text>
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
 function NearbyCard({ shop, onPress }: { shop: NearbyShop; onPress: () => void }) {
+  const minPrice = shop.services[0]?.price_cents;
+  const formattedMinPrice = useFormatCents(minPrice ?? null);
   const categories = [
     ...new Set(
       shop.services.map((service) => service.category).filter((category): category is string => !!category)
     ),
   ];
   const servicesLabel = categories.slice(0, 2).join(" · ");
-  const minPrice = shop.services[0]?.price_cents;
   const distanceLabel = formatDistanceKm(shop.distance_km);
 
   return (
@@ -520,7 +674,7 @@ function NearbyCard({ shop, onPress }: { shop: NearbyShop; onPress: () => void }
               </>
             )}
             {minPrice != null && (
-              <Text style={styles.nearbyPrice}>{`From ${formatCents(minPrice)}`}</Text>
+              <Text style={styles.nearbyPrice}>{`From ${formattedMinPrice}`}</Text>
             )}
           </View>
         )}
@@ -900,5 +1054,110 @@ const styles = StyleSheet.create({
   emptyButton: {
     marginTop: spacing.sm,
     backgroundColor: colors.surface,
+  },
+  upcomingCard: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.primarySoft,
+    backgroundColor: colors.background,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  upcomingHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  upcomingIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.full,
+    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  upcomingLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.primaryDark,
+  },
+  upcomingContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  upcomingInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  upcomingShop: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  upcomingTime: {
+    fontSize: 13,
+    color: colors.muted,
+  },
+  upcomingStaff: {
+    fontSize: 12,
+    color: colors.muted,
+  },
+  upcomingBadge: {
+    alignSelf: "flex-start",
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.full,
+    backgroundColor: colors.primarySoft,
+  },
+  upcomingBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: colors.primaryDark,
+  },
+  loyaltyCard: {
+    width: 200,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  loyaltyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  loyaltyShopInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  loyaltyShopName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text,
+  },
+  loyaltyVisits: {
+    fontSize: 12,
+    color: colors.muted,
+  },
+  loyaltyProgress: {
+    gap: spacing.xs,
+  },
+  loyaltyProgressBar: {
+    height: 6,
+    borderRadius: radius.full,
+    backgroundColor: colors.border,
+    overflow: "hidden",
+  },
+  loyaltyProgressFill: {
+    height: "100%",
+    borderRadius: radius.full,
+    backgroundColor: colors.primaryDark,
+  },
+  loyaltyProgressText: {
+    fontSize: 11,
+    color: colors.muted,
   },
 });

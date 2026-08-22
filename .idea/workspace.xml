@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="03737efa-2b47-400d-8945-9f52664d63e5" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/account-info.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/account-info.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/choose-role.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/choose-role.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/complete-profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/complete-profile.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/edit-profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/edit-profile.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/forgot-password.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/forgot-password.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/onboarding/barber-professional.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/onboarding/barber-professional.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/onboarding/owner-shop.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/onboarding/owner-shop.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/reset-password.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/reset-password.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/settings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/settings.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/sign-in.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/sign-in.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/sign-up.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/sign-up.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/unauthorized.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/unauthorized.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/verification.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/verification.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/verify-email.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/verify-email.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/welcome.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/welcome.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/admin/(tabs)/dashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/admin/(tabs)/dashboard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/admin/(tabs)/shops.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/admin/(tabs)/shops.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/admin/(tabs)/users.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/admin/(tabs)/users.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/admin/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/admin/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/admin/pending-shop-verifications.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/admin/pending-shop-verifications.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/admin/pending-shops.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/admin/pending-shops.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/admin/pending-verifications.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/admin/pending-verifications.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/barber/(tabs)/clients.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/barber/(tabs)/clients.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/barber/(tabs)/dashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/barber/(tabs)/dashboard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/barber/(tabs)/schedule.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/barber/(tabs)/schedule.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/barber/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/barber/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/barber/work-session.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/barber/work-session.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/customer/(tabs)/bookings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/customer/(tabs)/bookings.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/customer/(tabs)/discover.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/customer/(tabs)/discover.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/customer/(tabs)/favorites.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/customer/(tabs)/favorites.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/customer/(tabs)/home.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/customer/(tabs)/home.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/customer/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/customer/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/customer/barber/[profileId].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/customer/barber/[profileId].tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/customer/shop/[id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/customer/shop/[id].tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/owner/(tabs)/bookings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/owner/(tabs)/bookings.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/owner/(tabs)/dashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/owner/(tabs)/dashboard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/owner/(tabs)/shop.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/owner/(tabs)/shop.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/owner/(tabs)/staff.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/owner/(tabs)/staff.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/owner/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/owner/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/owner/shop-hours.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/owner/shop-hours.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/owner/shop-services.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/owner/shop-services.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/owner/shop-verification.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/owner/shop-verification.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/tab-bar/FloatingTabBarItem.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/tab-bar/FloatingTabBarItem.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/tab-bar/ProfileTabAvatar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/tab-bar/ProfileTabAvatar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/AccountScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/AccountScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/Avatar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/Avatar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/BarberProfileSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/BarberProfileSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/BookingCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/BookingCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/BookingModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/BookingModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/BottomSheet.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/BottomSheet.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/Button.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/Button.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/CompleteProfileFirstSheet.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/CompleteProfileFirstSheet.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/CustomerProfileSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/CustomerProfileSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/CustomerReputationSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/CustomerReputationSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/DeleteAccountButton.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/DeleteAccountButton.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/DetailsCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/DetailsCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/EmptyState.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/EmptyState.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/FilterChip.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/FilterChip.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/JoinShopForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/JoinShopForm.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/LocationPickerModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/LocationPickerModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/LocationSheet.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/LocationSheet.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/NoticeBanner.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/NoticeBanner.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/OwnerLoyaltySection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/OwnerLoyaltySection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/OwnerProfileSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/OwnerProfileSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/PhoneInput.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/PhoneInput.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/PlaceholderScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/PlaceholderScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/ProfilePicture.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/ProfilePicture.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/ProfileSummary.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/ProfileSummary.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/ReviewCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/ReviewCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/ReviewSheet.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/ReviewSheet.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/Screen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/Screen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/SectionHeader.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/SectionHeader.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/ShopAdminSheet.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/ShopAdminSheet.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/ShopCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/ShopCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/ShopForm.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/ShopForm.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/ShopLoyaltyCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/ShopLoyaltyCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/SignOutButton.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/SignOutButton.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/StaffBookingSheet.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/StaffBookingSheet.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/StarRating.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/StarRating.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/StatCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/StatCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/StaticMapPreview.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/StaticMapPreview.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/StatusBadge.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/StatusBadge.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/TextField.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/TextField.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/UsernameField.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/UsernameField.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui/VerifiedIcon.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/VerifiedIcon.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/auth.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/lib/auth.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/theme.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3HwtDmAijasHgWADmI7DLqJaeKV" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/zakar/Desktop/CutBook&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;AndroidSdkUpdater&quot;,
+    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
+  }
+}</component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="03737efa-2b47-400d-8945-9f52664d63e5" name="Changes" comment="" />
+      <created>1786790865843</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1786790865843</updated>
+    </task>
+    <servers />
+  </component>
+</project>
