@@ -129,7 +129,7 @@ async function nominatimSearch(query: string): Promise<NominatimHit | null> {
   const response = await fetch(url, {
     headers: {
       Accept: "application/json",
-      "User-Agent": "KutzMobileApp/1.0 (shop location picker)",
+      "User-Agent": "KUTZMobileApp/1.0 (shop location picker)",
     },
   });
   if (!response.ok) {

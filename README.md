@@ -1,4 +1,4 @@
-# Kutz
+# KUTZ
 
 Barber booking app — customers find barbershops nearby, book cuts, earn loyalty rewards; barbers manage their schedule and work sessions; owners run their shops; admins oversee the platform.
 

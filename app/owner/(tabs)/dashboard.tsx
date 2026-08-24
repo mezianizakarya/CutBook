@@ -163,7 +163,7 @@ export default function OwnerDashboardScreen() {
       <Screen scroll paddingHorizontal={14} style={styles.screenPadding}>
         <EmptyState
           title="You don't manage a shop yet"
-          subtitle="Create your first shop to start taking bookings. It appears on Kutz once approved."
+          subtitle="Create your first shop to start taking bookings. It appears on KUTZ once approved."
           actionLabel="Create your first shop"
           onAction={() => router.push("/onboarding/owner-shop")}
         />
@@ -204,8 +204,8 @@ export default function OwnerDashboardScreen() {
             notice={{
               message:
                 pendingShops.length === 1
-                  ? "Your shop is pending approval by Kutz."
-                  : "Some of your shops are pending approval by Kutz.",
+                  ? "Your shop is pending approval by KUTZ."
+                  : "Some of your shops are pending approval by KUTZ.",
               tone: "role",
             }}
             variant="soft"

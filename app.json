@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Kutz",
-    "slug": "CutBook",
+    "name": "KUTZ",
+    "slug": "kutz",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/kutz-app-icons/ios/AppIcon.appiconset/Icon-1024.png",
-    "scheme": "cutbook",
+    "scheme": "kutz",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -43,13 +43,13 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Kutz to access your photos."
+          "photosPermission": "Allow KUTZ to access your photos."
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow Kutz to use your location to find barbers nearby and set your shop's address."
+          "locationWhenInUsePermission": "Allow KUTZ to use your location to find barbers nearby and set your shop's address."
         }
       ],
       [

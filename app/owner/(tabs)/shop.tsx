@@ -284,7 +284,7 @@ export default function OwnerShopScreen() {
           <Text style={styles.title}>Shop</Text>
           <Text style={styles.subtitle}>
             {selectedShop.status === "pending"
-              ? "Pending approval by Kutz."
+              ? "Pending approval by KUTZ."
               : "Details, services and working hours."}
           </Text>
         </View>

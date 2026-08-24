@@ -188,7 +188,7 @@ export default function SignInScreen() {
     <Screen scroll centered>
       <View style={styles.header}>
         <Text style={styles.title}>Welcome back</Text>
-        <Text style={styles.subtitle}>Sign in to your Kutz account</Text>
+        <Text style={styles.subtitle}>Sign in to your KUTZ account</Text>
       </View>
 
       <View style={styles.form}>

@@ -58,8 +58,8 @@ export const RESERVED_USERNAMES: readonly string[] = [
   "guest",
   "official",
   "verified",
-  "cutbook",
-  "cutbookapp",
+  "kutz",
+  "kutzapp",
 ];
 
 export const RESERVED_USERNAME_SET: ReadonlySet<string> = new Set(

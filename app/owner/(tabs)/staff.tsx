@@ -468,7 +468,7 @@ export default function OwnerStaffScreen() {
               />
             ) : (
               <Text style={styles.sheetText}>
-                Owners and managers can only be removed by a Kutz admin.
+                Owners and managers can only be removed by a KUTZ admin.
               </Text>
             )}
           </>

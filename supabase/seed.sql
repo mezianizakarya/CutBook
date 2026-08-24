@@ -1,5 +1,5 @@
 -- ============================================================================
--- CutBook — DEV / TEST seed data (repeatable)
+-- KUTZ — DEV / TEST seed data (repeatable)
 --
 -- WARNING: This file DELETES all rows from the transactional test tables
 -- (bookings, reviews, favorites, services, working_hours, availability,

@@ -1,4 +1,4 @@
--- CutBook: Supabase schema for Clerk (third-party auth) + RLS.
+-- KUTZ: Supabase schema for Clerk (third-party auth) + RLS.
 --
 -- The migrations directory (supabase/migrations/) is the SINGLE SOURCE OF
 -- TRUTH for the production schema. Every numbered migration file is required,

@@ -29,7 +29,7 @@ export default function WelcomeScreen() {
               style={styles.logoImage}
             />
           </View>
-          <Text style={styles.title}>Kutz</Text>
+          <Text style={styles.title}>KUTZ</Text>
           <Text style={styles.tagline}>
             Book your next haircut with the best barbers in town.
           </Text>

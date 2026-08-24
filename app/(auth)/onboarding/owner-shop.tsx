@@ -84,7 +84,7 @@ export default function OwnerShopScreen() {
         <Text style={styles.title}>Create your shop</Text>
       </View>
       <Text style={styles.subtitle}>
-        Your shop goes live on Kutz once it{"'"}s approved. You can add
+        Your shop goes live on KUTZ once it{"'"}s approved. You can add
         services and working hours later.
       </Text>
 
