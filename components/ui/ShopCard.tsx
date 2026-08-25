@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { VerifiedIcon } from "@/components/ui/VerifiedIcon";
 import { avatarColor } from "@/lib/avatar";
@@ -45,27 +47,27 @@ export function ShopCard({ shop, onPress }: ShopCardProps) {
               { backgroundColor: avatarColor(shop.name) },
             ]}
           >
-            <Text style={styles.imageLetter}>
+            <AppText style={styles.imageLetter}>
               {shop.name.charAt(0).toUpperCase()}
-            </Text>
+            </AppText>
           </View>
         )}
       </View>
       <View style={styles.info}>
         <View style={styles.nameRow}>
-          <Text style={styles.name} numberOfLines={1}>
+          <AppText style={styles.name} numberOfLines={1}>
             {shop.name || "—"}
-          </Text>
+          </AppText>
           {shop.is_verified && <VerifiedIcon size={16} />}
         </View>
-        <Text style={styles.city} numberOfLines={1}>
+        <AppText style={styles.city} numberOfLines={1}>
           {shop.city ?? "—"}
-        </Text>
+        </AppText>
         <View style={styles.ratingRow}>
           <Ionicons name="star" size={12} color={colors.success} />
-          <Text style={styles.rating}>
+          <AppText style={styles.rating}>
             {formatRating(shop.rating_avg, shop.rating_count)}
-          </Text>
+          </AppText>
         </View>
       </View>
     </Pressable>

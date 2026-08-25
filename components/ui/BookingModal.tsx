@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useUser } from "@clerk/expo";
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import { BottomSheet } from "@/components/ui/BottomSheet";
@@ -193,10 +195,10 @@ export function BookingModal({
           <View style={styles.successBadge}>
             <Ionicons name="checkmark" size={28} color={colors.white} />
           </View>
-          <Text style={styles.successTitle}>{t("shop.booking_requested_title")}</Text>
-          <Text style={styles.successSubtitle}>
+          <AppText style={styles.successTitle}>{t("shop.booking_requested_title")}</AppText>
+          <AppText style={styles.successSubtitle}>
             {t("shop.booking_requested_message", { shopName })}
-          </Text>
+          </AppText>
           <Button
             title={t("shop.view_my_bookings")}
             onPress={() => {
@@ -213,21 +215,21 @@ export function BookingModal({
 
   return (
     <BottomSheet visible={visible} onClose={onClose}>
-      <Text style={styles.title}>{t("shop.book_at_shop", { shopName })}</Text>
-      <Text style={styles.subtitle}>
+      <AppText style={styles.title}>{t("shop.book_at_shop", { shopName })}</AppText>
+      <AppText style={styles.subtitle}>
         {t("shop.pick_service_barber")}
-      </Text>
+      </AppText>
 
       {regionMismatch && (
         <View style={styles.regionWarning}>
           <Ionicons name="warning" size={16} color="#b45309" />
-          <Text style={styles.regionWarningText}>
+          <AppText style={styles.regionWarningText}>
             {t("shop.different_region", { userCountry })}
-          </Text>
+          </AppText>
         </View>
       )}
 
-      <Text style={styles.stepTitle}>{t("shop.service")}</Text>
+      <AppText style={styles.stepTitle}>{t("shop.service")}</AppText>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -244,15 +246,15 @@ export function BookingModal({
               }}
               style={[styles.chip, isActive && styles.chipActive]}
             >
-              <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+              <AppText style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
                 {service.name} · {formatCents(service.price_cents, userCountry)}
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
       </ScrollView>
 
-      <Text style={styles.stepTitle}>{t("shop.barber")}</Text>
+      <AppText style={styles.stepTitle}>{t("shop.barber")}</AppText>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -274,17 +276,17 @@ export function BookingModal({
                 imageUrl={member.avatar_url}
                 size={28}
               />
-              <Text
+              <AppText
                 style={[styles.memberChipLabel, isActive && styles.memberChipLabelActive]}
               >
                 {member.display_name || "—"}
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
       </ScrollView>
 
-      <Text style={styles.stepTitle}>{t("shop.date")}</Text>
+      <AppText style={styles.stepTitle}>{t("shop.date")}</AppText>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -302,9 +304,9 @@ export function BookingModal({
               }}
               style={[styles.chip, isActive && styles.chipActive]}
             >
-              <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+              <AppText style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
                 {formatDayLabel(day)}
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
@@ -312,13 +314,13 @@ export function BookingModal({
 
       {dateKey !== null && (
         <>
-          <Text style={styles.stepTitle}>{t("shop.time")}</Text>
+          <AppText style={styles.stepTitle}>{t("shop.time")}</AppText>
           {loadingSlots ? (
-            <Text style={styles.hint}>{t("shop.checking_availability")}</Text>
+            <AppText style={styles.hint}>{t("shop.checking_availability")}</AppText>
           ) : slots === null ? (
-            <Text style={styles.hint}>{t("shop.pick_first")}</Text>
+            <AppText style={styles.hint}>{t("shop.pick_first")}</AppText>
           ) : slots.length === 0 ? (
-            <Text style={styles.hint}>{t("shop.no_available_slots")}</Text>
+            <AppText style={styles.hint}>{t("shop.no_available_slots")}</AppText>
           ) : (
             <View style={styles.slotGrid}>
               {slots.map((slot) => {
@@ -329,9 +331,9 @@ export function BookingModal({
                     onPress={() => setSelectedSlot(slot)}
                     style={[styles.slot, isActive && styles.slotActive]}
                   >
-                    <Text style={[styles.slotLabel, isActive && styles.slotLabelActive]}>
+                    <AppText style={[styles.slotLabel, isActive && styles.slotLabelActive]}>
                       {slot.label}
-                    </Text>
+                    </AppText>
                   </Pressable>
                 );
               })}
@@ -340,7 +342,7 @@ export function BookingModal({
         </>
       )}
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       <TextField
         label={t("shop.note_for_barber")}

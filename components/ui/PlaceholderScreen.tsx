@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { t } from "@/lib/i18n";
@@ -16,9 +18,9 @@ export function PlaceholderScreen({ title, subtitle, footer }: PlaceholderScreen
     <SafeAreaView style={styles.safe}>
       <View style={[styles.container, { paddingBottom: spacing.lg }]}>
         <View style={styles.body}>
-          <Text style={styles.title}>{title}</Text>
-          {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-          <Text style={styles.hint}>{t("placeholder.ready_to_build")}</Text>
+          <AppText style={styles.title}>{title}</AppText>
+          {!!subtitle && <AppText style={styles.subtitle}>{subtitle}</AppText>}
+          <AppText style={styles.hint}>{t("placeholder.ready_to_build")}</AppText>
         </View>
         {!!footer && <View style={styles.footer}>{footer}</View>}
       </View>

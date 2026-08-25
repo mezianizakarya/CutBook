@@ -2,7 +2,9 @@ import { useUser } from "@clerk/expo";
 import { RTLIcon } from "@/components/ui/RTLIcon";
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Screen } from "@/components/ui/Screen";
 import { FullScreenLoader } from "@/lib/auth";
@@ -21,10 +23,10 @@ type InfoRowProps = {
 function InfoRow({ label, value }: InfoRowProps) {
   return (
     <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={styles.rowValue} numberOfLines={2}>
+      <AppText style={styles.rowLabel}>{label}</AppText>
+      <AppText style={styles.rowValue} numberOfLines={2}>
         {value ?? "—"}
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -97,13 +99,13 @@ export default function AccountInfoScreen() {
         >
           <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>{t("account.info_title")}</Text>
+        <AppText style={styles.title}>{t("account.info_title")}</AppText>
       </View>
-      <Text style={styles.subtitle}>
+      <AppText style={styles.subtitle}>
         {t("account.info_subtitle")}
-      </Text>
+      </AppText>
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       {loaded ? (
         <View style={styles.card}>

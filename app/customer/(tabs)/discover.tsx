@@ -1,17 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+import { AppTextInput } from "@/components/AppTextInput";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -203,14 +196,14 @@ export default function DiscoverScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("discover.title")}</Text>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.title}>{t("discover.title")}</AppText>
+        <AppText style={styles.subtitle}>
           {t("discover.stats", { barbers: barbers?.length ?? 0, cities: cityCounts.length })}
-        </Text>
+        </AppText>
       </View>
 
       <View style={styles.searchContainer}>
-        <TextInput
+        <AppTextInput
           style={styles.search}
           value={query}
           onChangeText={setQuery}
@@ -242,14 +235,14 @@ export default function DiscoverScreen() {
           onPress={() => setCityFilter("all")}
           style={[styles.chip, cityFilter === "all" && styles.chipActive]}
         >
-          <Text
+          <AppText
             style={[
               styles.chipLabel,
               cityFilter === "all" && styles.chipLabelActive,
             ]}
           >
             {t("discover.all_cities", { count: barbers?.length ?? 0 })}
-          </Text>
+          </AppText>
         </Pressable>
         {cityCounts.map(([city, count]) => {
           const isActive = cityFilter === city;
@@ -259,9 +252,9 @@ export default function DiscoverScreen() {
               onPress={() => setCityFilter(isActive ? "all" : city)}
               style={[styles.chip, isActive && styles.chipActive]}
             >
-              <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+              <AppText style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
                 {city} ({count})
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
@@ -281,15 +274,15 @@ export default function DiscoverScreen() {
               onPress={() => setSortFilter(sort)}
               style={[styles.chip, isActive && styles.chipActive]}
             >
-              <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+              <AppText style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
                 {sort === "top" ? t("discover.top_rated") : t("discover.newest")}
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
       </ScrollView>
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       <FlatList
         style={styles.list}
@@ -307,10 +300,10 @@ export default function DiscoverScreen() {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>{t("discover.no_barbers_found")}</Text>
-            <Text style={styles.emptySubtitle}>
+            <AppText style={styles.emptyTitle}>{t("discover.no_barbers_found")}</AppText>
+            <AppText style={styles.emptySubtitle}>
               {t("discover.try_filter")}
-            </Text>
+            </AppText>
             {hasActiveFilters && (
               <Button
                 title={t("discover.reset_filters")}
@@ -360,21 +353,21 @@ export default function DiscoverScreen() {
             <Avatar fullName={item.display_name} imageUrl={item.avatar_url} size={44} />
             <View style={styles.rowInfo}>
               <View style={styles.rowNameLine}>
-                <Text style={styles.rowName} numberOfLines={1}>
+                <AppText style={styles.rowName} numberOfLines={1}>
                   {item.display_name || "—"}
-                </Text>
+                </AppText>
                 {(item.shops?.is_verified ?? false) && <VerifiedIcon size={16} />}
               </View>
-              <Text style={styles.rowUsername} numberOfLines={1}>
+              <AppText style={styles.rowUsername} numberOfLines={1}>
                 {item.shops?.name ?? t("discover.no_shop")}
-              </Text>
+              </AppText>
             </View>
             <View style={styles.rowBadges}>
               <View style={styles.ratingBadge}>
                 <Ionicons name="star" size={12} color={colors.success} />
-                <Text style={styles.ratingBadgeText}>
+                <AppText style={styles.ratingBadgeText}>
                   {formatRating(item.shops?.rating_avg ?? null, item.shops?.rating_count ?? null, { showCount: false })}
-                </Text>
+                </AppText>
               </View>
             </View>
           </Pressable>

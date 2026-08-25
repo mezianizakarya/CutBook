@@ -1,15 +1,9 @@
 import { useUser } from "@clerk/expo";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Modal,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Modal, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { BookingCard } from "@/components/ui/BookingCard";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -153,7 +147,7 @@ export default function OwnerDashboardScreen() {
     return (
       <Screen centered>
         <View style={styles.centerWrap}>
-          <Text style={styles.errorText}>{error}</Text>
+          <AppText style={styles.errorText}>{error}</AppText>
         </View>
       </Screen>
     );
@@ -193,11 +187,11 @@ export default function OwnerDashboardScreen() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>
+          <AppText style={styles.title}>
             {greetingFor(new Date())}, {user?.firstName ?? t("common.there")}
-          </Text>
-          <Text style={styles.subtitle}>{dateLabel}</Text>
-          <Text style={styles.shopName}>{shopName}</Text>
+          </AppText>
+          <AppText style={styles.subtitle}>{dateLabel}</AppText>
+          <AppText style={styles.shopName}>{shopName}</AppText>
         </View>
 
         {pendingShops.length > 0 ? (
@@ -215,7 +209,7 @@ export default function OwnerDashboardScreen() {
 
         {notice ? <NoticeBanner notice={notice} variant="soft" /> : null}
 
-        {!!error && <Text style={styles.errorText}>{error}</Text>}
+        {!!error && <AppText style={styles.errorText}>{error}</AppText>}
 
         <View style={styles.statsRow}>
           <StatCard label={t("staff.today")} value={String(stats.todayCount)} />
@@ -227,10 +221,10 @@ export default function OwnerDashboardScreen() {
         <SectionHeader title={t("dashboard.today_schedule")} />
         {todayBookings.length === 0 ? (
           <View style={styles.emptyDay}>
-            <Text style={styles.emptyDayTitle}>{t("barber.nothing_scheduled_today")}</Text>
-            <Text style={styles.emptyDaySubtitle}>
+            <AppText style={styles.emptyDayTitle}>{t("barber.nothing_scheduled_today")}</AppText>
+            <AppText style={styles.emptyDaySubtitle}>
               {t("dashboard.bookings_will_show")}
-            </Text>
+            </AppText>
           </View>
         ) : (
           todayBookings.map((row) => (

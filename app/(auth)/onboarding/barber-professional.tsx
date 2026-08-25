@@ -2,7 +2,9 @@ import { useUser } from "@clerk/expo";
 import { RTLIcon } from "@/components/ui/RTLIcon";
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
@@ -151,18 +153,18 @@ export default function BarberProfessionalScreen() {
         >
           <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>{t("barber.tell_customers")}</Text>
+        <AppText style={styles.title}>{t("barber.tell_customers")}</AppText>
       </View>
-      <Text style={styles.subtitle}>
+      <AppText style={styles.subtitle}>
         {t("barber.specialty_experience_info")}
-      </Text>
+      </AppText>
 
       <View style={styles.form}>
         <TextField
           label={t("barber.specialty")}
           value={specialty}
           onChangeText={setSpecialty}
-          placeholder="e.g. Fades, beard work"
+          placeholder={t("barber.specialty_placeholder")}
           autoCapitalize="sentences"
         />
 
@@ -181,9 +183,9 @@ export default function BarberProfessionalScreen() {
                 onPress={() => setSpecialty(active ? "" : suggestion)}
                 style={[styles.chip, active && styles.chipActive]}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                <AppText style={[styles.chipText, active && styles.chipTextActive]}>
                   {suggestion}
-                </Text>
+                </AppText>
               </Pressable>
             );
           })}
@@ -193,7 +195,7 @@ export default function BarberProfessionalScreen() {
           label={t("profile.years_experience")}
           value={years}
           onChangeText={setYears}
-          placeholder="e.g. 5"
+          placeholder={t("profile.years_placeholder")}
           keyboardType="numeric"
         />
 
@@ -201,12 +203,12 @@ export default function BarberProfessionalScreen() {
           label={t("barber.bio")}
           value={bio}
           onChangeText={setBio}
-          placeholder="Tell clients about your craft, style and what to expect."
+          placeholder={t("barber.bio_placeholder")}
           autoCapitalize="sentences"
           multiline
         />
 
-        {!!error && <Text style={styles.errorText}>{error}</Text>}
+        {!!error && <AppText style={styles.errorText}>{error}</AppText>}
 
         <Button title={t("common.save")} onPress={handleSave} loading={submitting} />
         {isOnboarding && (

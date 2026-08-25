@@ -2,7 +2,9 @@ import { useUser } from "@clerk/expo";
 import { RTLIcon } from "@/components/ui/RTLIcon";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
@@ -82,11 +84,11 @@ export default function OwnerShopScreen() {
         >
           <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>{t("shop.create_your_shop")}</Text>
+        <AppText style={styles.title}>{t("shop.create_your_shop")}</AppText>
       </View>
-      <Text style={styles.subtitle}>
+      <AppText style={styles.subtitle}>
         {t("shop.shop_live_info")}
-      </Text>
+      </AppText>
 
       <ShopForm submitLabel={t("shop.create_shop_button")} onSubmit={handleCreate} />
 

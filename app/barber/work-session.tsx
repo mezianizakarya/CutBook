@@ -2,16 +2,9 @@ import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useUser } from "@clerk/expo";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-    ActivityIndicator,
-    AppState,
-    Pressable,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from "react-native";
+import { ActivityIndicator, AppState, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+
+import { AppText } from "@/components/AppText";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -258,52 +251,52 @@ export default function BarberWorkSessionScreen() {
                 >
                     <RTLIcon name="chevron-back" size={26} color={colors.text} />
                 </Pressable>
-                <Text style={styles.title}>{t("barber.todays_work")}</Text>
-                <Text style={styles.counter}>{completedCount} / {totalCount}</Text>
+                <AppText style={styles.title}>{t("barber.todays_work")}</AppText>
+                <AppText style={styles.counter}>{completedCount} / {totalCount}</AppText>
             </View>
 
             {notice ? (
                 <View style={styles.noticePill}>
-                    <Text style={styles.noticeText}>{notice.message}</Text>
+                    <AppText style={styles.noticeText}>{notice.message}</AppText>
                 </View>
             ) : null}
-            {!!error && <Text style={styles.error}>{error}</Text>}
+            {!!error && <AppText style={styles.error}>{error}</AppText>}
 
             {active ? (
                 <View style={styles.card}>
                     <View style={styles.nowServingPill}>
                         <View style={styles.nowDot} />
-                        <Text style={styles.nowServingText}>{t("barber.now_serving")}</Text>
+                        <AppText style={styles.nowServingText}>{t("barber.now_serving")}</AppText>
                     </View>
 
-                    <Text style={styles.customerName}>
+                    <AppText style={styles.customerName}>
                         {customerDisplayName(activeCustomer)}
-                    </Text>
+                    </AppText>
                     <View style={styles.serviceRow}>
-                        <Text style={styles.serviceText}>
+                        <AppText style={styles.serviceText}>
                             {active.row.service_name} · {active.row.service_duration_minutes} {t("common.min")}
-                        </Text>
+                        </AppText>
                     </View>
 
                     <View style={styles.timerContainer}>
                         <View style={styles.timerRing}>
-                            <Text style={styles.timerTime}>
+                            <AppText style={styles.timerTime}>
                                 {activePaused
                                     ? formatCountdown(activeRemaining)
                                     : isOvertime
                                         ? `+${formatCountdown(-activeRemaining)}`
                                         : formatCountdown(activeRemaining)}
-                            </Text>
-                            <Text style={[styles.timerLabel, isOvertime && { color: colors.danger }]}>
+                            </AppText>
+                            <AppText style={[styles.timerLabel, isOvertime && { color: colors.danger }]}>
                                 {activePaused ? t("barber.paused") : isOvertime ? t("barber.overtime") : t("barber.remaining")}
-                            </Text>
+                            </AppText>
                         </View>
                     </View>
 
                     {!!active.row.note && (
                         <View style={styles.noteBox}>
-                            <Text style={styles.noteLabel}>{t("staff.note")}</Text>
-                            <Text style={styles.noteText}>{active.row.note}</Text>
+                            <AppText style={styles.noteLabel}>{t("staff.note")}</AppText>
+                            <AppText style={styles.noteText}>{active.row.note}</AppText>
                         </View>
                     )}
 
@@ -315,7 +308,7 @@ export default function BarberWorkSessionScreen() {
                                 disabled={busy}
                                 style={styles.extendButton}
                             >
-                                <Text style={styles.extendButtonText}>{t("barber.extend_min", { minutes: m })}</Text>
+                                <AppText style={styles.extendButtonText}>{t("barber.extend_min", { minutes: m })}</AppText>
                             </Pressable>
                         ))}
                     </View>
@@ -324,19 +317,19 @@ export default function BarberWorkSessionScreen() {
 
                     {next && (
                         <View style={styles.nextBox}>
-                            <Text style={styles.nextLabel}>{t("barber.next_label")}</Text>
+                            <AppText style={styles.nextLabel}>{t("barber.next_label")}</AppText>
                             <View style={styles.nextRow}>
                                 <Avatar
                                     fullName={customerDisplayName(nextCustomer)}
                                     imageUrl={nextCustomer?.avatar_url}
                                     size={28}
                                 />
-                                <Text style={styles.nextName}>
+                                <AppText style={styles.nextName}>
                                     {customerDisplayName(nextCustomer)} · {next.row.service_name}
-                                </Text>
-                                <Text style={styles.nextTime}>
+                                </AppText>
+                                <AppText style={styles.nextTime}>
                                     {t("barber.estimated_time", { minutes: next.row.service_duration_minutes })}
-                                </Text>
+                                </AppText>
                             </View>
                         </View>
                     )}
@@ -347,14 +340,14 @@ export default function BarberWorkSessionScreen() {
                 </View>
             ) : (
                 <View style={styles.emptyCard}>
-                    <Text style={styles.emptyTitle}>
+                    <AppText style={styles.emptyTitle}>
                         {completedCount > 0 ? t("barber.all_done_today") : t("barber.no_appointments_today")}
-                    </Text>
+                    </AppText>
                 </View>
             )}
 
             <View style={styles.queueHeader}>
-                <Text style={styles.queueTitle}>{t("barber.todays_queue")}</Text>
+                <AppText style={styles.queueTitle}>{t("barber.todays_queue")}</AppText>
             </View>
 
             <View style={styles.queueList}>
@@ -365,18 +358,18 @@ export default function BarberWorkSessionScreen() {
                         <View key={item.entry.row.id} style={styles.queueRow}>
                             <View style={[styles.queueDot, isCurrent && styles.queueDotActive]} />
                             <View style={styles.queueInfo}>
-                                <Text style={[styles.queueName, isDone && styles.queueNameDone]} numberOfLines={1}>
+                                <AppText style={[styles.queueName, isDone && styles.queueNameDone]} numberOfLines={1}>
                                     {customerDisplayName(item.customer)}
-                                </Text>
+                                </AppText>
                                 {!!item.entry.row.note && (
-                                    <Text style={styles.queueNote} numberOfLines={1}>
+                                    <AppText style={styles.queueNote} numberOfLines={1}>
                                         {item.entry.row.note}
-                                    </Text>
+                                    </AppText>
                                 )}
                             </View>
-                            <Text style={[styles.queueStatus, isDone && styles.queueStatusDone]}>
+                            <AppText style={[styles.queueStatus, isDone && styles.queueStatusDone]}>
                                 {isDone ? t("common.done") : isCurrent ? t("barber.in_chair") : t("barber.waiting")}
-                            </Text>
+                            </AppText>
                         </View>
                     );
                 })}

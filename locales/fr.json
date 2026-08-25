@@ -229,7 +229,8 @@
     "all_appointments": "Tous les rendez-vous de vos boutiques.",
     "no_bookings_filter": "Aucune réservation",
     "try_different_filter": "Essayez un autre filtre ou revenez plus tard.",
-    "will_appear_here": "Les réservations de vos boutiques apparaîtront ici."
+    "will_appear_here": "Les réservations de vos boutiques apparaîtront ici.",
+    "discover_hint": "Découvrez un barbier et prenez votre premier rendez-vous."
   },
   "shop": {
     "name": "Nom de la boutique",
@@ -357,7 +358,10 @@
     "could_not_update_service": "Impossible de mettre à jour le service",
     "opens_today_at": "Ouvre aujourd'hui à {{time}}",
     "open_closes_at": "Ouvert · Ferme à {{time}}",
-    "opens_day_at": "Ouvre {{day}} à {{time}}"
+    "opens_day_at": "Ouvre {{day}} à {{time}}",
+    "tap_to_change": "Appuyez pour modifier",
+    "reviews_suffix": "avis",
+    "view_barber_profile": "Voir le profil de {{name}}"
   },
   "profile": {
     "edit_profile": "Modifier le profil",
@@ -391,7 +395,12 @@
     "years_experience": "Années d'expérience",
     "save_changes": "Enregistrer les modifications",
     "add_specialty_error": "Ajoutez votre spécialité pour compléter votre profil barbier.",
-    "experience_range_error": "L'expérience doit être un nombre entier entre 0 et 100 ans."
+    "experience_range_error": "L'expérience doit être un nombre entier entre 0 et 100 ans.",
+    "jane_placeholder": "Jane",
+    "doe_placeholder": "Dupont",
+    "username_placeholder": "janedoe123",
+    "years_placeholder": "ex. 5",
+    "open_profile": "Ouvrir le profil"
   },
   "loyalty": {
     "title": "Fidélité",
@@ -705,7 +714,9 @@
     "portfolio": "Portfolio",
     "book_with": "Réserver avec {{name}}",
     "could_not_book": "Impossible de réserver",
-    "shop_not_available": "Cette boutique n'est pas disponible pour le moment."
+    "shop_not_available": "Cette boutique n'est pas disponible pour le moment.",
+    "specialty_placeholder": "ex. Fades, barbe",
+    "bio_placeholder": "Parlez aux clients de votre métier, style et à quoi s'attendre."
   },
   "customer": {
     "activity": "Activité",
@@ -728,7 +739,10 @@
     "about": "À propos",
     "version": "Version",
     "subtitle": "Gérez votre compte et vos préférences.",
-    "account_region": "Région du compte"
+    "account_region": "Région du compte",
+    "region_note": "Votre région est automatiquement détectée selon votre position et ne peut pas être modifiée manuellement. Tous les prix dans l'application sont affichés dans votre devise locale.",
+    "country": "Pays",
+    "currency": "Devise"
   },
   "days": {
     "sunday": "Dimanche",
@@ -1000,6 +1014,12 @@
     "enter_duration": "Veuillez entrer une durée valide en minutes.",
     "save_changes": "Enregistrer les modifications",
     "category_placeholder": "Coupe",
-    "description_placeholder": "Qu'est-ce qui est inclus ?"
+    "description_placeholder": "Qu'est-ce qui est inclus ?",
+    "name_placeholder": "Fade classique"
+  },
+  "username": {
+    "available": "Disponible",
+    "already_taken": "Déjà pris",
+    "checking": "Vérification de disponibilité…"
   }
 }

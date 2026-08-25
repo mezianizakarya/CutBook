@@ -1,4 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import { BookingStatusBadge } from "@/components/ui/BookingStatusBadge";
@@ -32,26 +34,26 @@ export function BookingCard({ booking, onPress }: BookingCardProps) {
         size={44}
       />
       <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={1}>
+        <AppText style={styles.name} numberOfLines={1}>
           {booking.service_name || "—"}
-        </Text>
-        <Text style={styles.subtitle} numberOfLines={1}>
+        </AppText>
+        <AppText style={styles.subtitle} numberOfLines={1}>
           {subtitle}
-        </Text>
-        <Text style={styles.time} numberOfLines={1}>
+        </AppText>
+        <AppText style={styles.time} numberOfLines={1}>
           {formatDateTime(booking.starts_at)}
-        </Text>
+        </AppText>
         {booking.applied_reward_title ? (
           <View style={styles.rewardBadge}>
-            <Text style={styles.rewardBadgeText} numberOfLines={1}>
+            <AppText style={styles.rewardBadgeText} numberOfLines={1}>
               {t("shop.applied", { title: booking.applied_reward_title })}
-            </Text>
+            </AppText>
           </View>
         ) : null}
       </View>
       <View style={styles.trailing}>
         <BookingStatusBadge status={booking.status} />
-        <Text style={styles.price}>{formattedPrice}</Text>
+        <AppText style={styles.price}>{formattedPrice}</AppText>
       </View>
     </Pressable>
   );

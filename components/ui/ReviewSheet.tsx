@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
@@ -110,10 +112,10 @@ export function ReviewSheet({
 
   return (
     <BottomSheet visible={visible} onClose={onClose}>
-      <Text style={styles.title}>{existing ? t("review.edit_review") : t("review.leave_review")}</Text>
-      <Text style={styles.subtitle}>{shopName}</Text>
+      <AppText style={styles.title}>{existing ? t("review.edit_review") : t("review.leave_review")}</AppText>
+      <AppText style={styles.subtitle}>{shopName}</AppText>
 
-      <Text style={styles.step}>{t("review.your_rating")}</Text>
+      <AppText style={styles.step}>{t("review.your_rating")}</AppText>
       <StarRating value={rating} onChange={setRating} size={36} />
 
       <TextField
@@ -126,7 +128,7 @@ export function ReviewSheet({
         style={styles.commentField}
       />
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       <Button
         title={existing ? t("review.save_changes") : t("review.submit_review")}

@@ -1,15 +1,9 @@
 import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
@@ -124,13 +118,13 @@ export default function AdminDashboardScreen() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>{t("tabs.dashboard")}</Text>
-          <Text style={styles.subtitle}>{dateLabel}</Text>
+          <AppText style={styles.title}>{t("tabs.dashboard")}</AppText>
+          <AppText style={styles.subtitle}>{dateLabel}</AppText>
         </View>
 
         {notice ? <NoticeBanner notice={notice} style={styles.noticeSpacing} /> : null}
 
-        {!!error && <Text style={styles.error}>{error}</Text>}
+        {!!error && <AppText style={styles.error}>{error}</AppText>}
 
         {!!stats && (
           <>
@@ -153,11 +147,11 @@ export default function AdminDashboardScreen() {
           style={({ pressed }) => [styles.reviewCard, pressed && styles.reviewCardPressed]}
         >
           <View style={styles.reviewInfo}>
-            <Text style={styles.reviewTitle}>{t("admin.pending_approvals")}</Text>
-            <Text style={styles.reviewSubtitle}>{t("admin.shops_waiting_approval")}</Text>
+            <AppText style={styles.reviewTitle}>{t("admin.pending_approvals")}</AppText>
+            <AppText style={styles.reviewSubtitle}>{t("admin.shops_waiting_approval")}</AppText>
           </View>
           <View style={styles.reviewCount}>
-            <Text style={styles.reviewCountText}>{stats?.pendingShops ?? 0}</Text>
+            <AppText style={styles.reviewCountText}>{stats?.pendingShops ?? 0}</AppText>
           </View>
           <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
         </Pressable>
@@ -167,11 +161,11 @@ export default function AdminDashboardScreen() {
           style={({ pressed }) => [styles.reviewCard, pressed && styles.reviewCardPressed]}
         >
           <View style={styles.reviewInfo}>
-            <Text style={styles.reviewTitle}>{t("admin.barber_verification")}</Text>
-            <Text style={styles.reviewSubtitle}>{t("admin.barbers_owners_verify")}</Text>
+            <AppText style={styles.reviewTitle}>{t("admin.barber_verification")}</AppText>
+            <AppText style={styles.reviewSubtitle}>{t("admin.barbers_owners_verify")}</AppText>
           </View>
           <View style={styles.reviewCount}>
-            <Text style={styles.reviewCountText}>{pendingVerificationCount}</Text>
+            <AppText style={styles.reviewCountText}>{pendingVerificationCount}</AppText>
           </View>
           <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
         </Pressable>
@@ -181,11 +175,11 @@ export default function AdminDashboardScreen() {
           style={({ pressed }) => [styles.reviewCard, pressed && styles.reviewCardPressed]}
         >
           <View style={styles.reviewInfo}>
-            <Text style={styles.reviewTitle}>{t("admin.shop_verification")}</Text>
-            <Text style={styles.reviewSubtitle}>{t("admin.shops_waiting_verified")}</Text>
+            <AppText style={styles.reviewTitle}>{t("admin.shop_verification")}</AppText>
+            <AppText style={styles.reviewSubtitle}>{t("admin.shops_waiting_verified")}</AppText>
           </View>
           <View style={styles.reviewCount}>
-            <Text style={styles.reviewCountText}>{pendingShopVerificationCount}</Text>
+            <AppText style={styles.reviewCountText}>{pendingShopVerificationCount}</AppText>
           </View>
           <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
         </Pressable>
@@ -193,7 +187,7 @@ export default function AdminDashboardScreen() {
         <SectionHeader title={t("admin.recent_signups")} />
         {recentUsers.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>{t("admin.no_recent_signups")}</Text>
+            <AppText style={styles.emptyTitle}>{t("admin.no_recent_signups")}</AppText>
           </View>
         ) : (
           recentUsers.map((user) => (
@@ -201,19 +195,19 @@ export default function AdminDashboardScreen() {
               <Avatar fullName={fullName(user)} imageUrl={user.avatar_url} size={44} />
               <View style={styles.rowInfo}>
                 <View style={styles.rowNameLine}>
-                  <Text style={styles.rowName} numberOfLines={1}>
+                  <AppText style={styles.rowName} numberOfLines={1}>
                     {fullName(user)}
-                  </Text>
+                  </AppText>
                   {user.is_verified && <VerifiedIcon size={16} />}
                 </View>
-                <Text style={styles.rowSubtitle} numberOfLines={1}>
+                <AppText style={styles.rowSubtitle} numberOfLines={1}>
                   {user.email ?? t("admin.no_email")}
-                </Text>
+                </AppText>
               </View>
               <View style={styles.roleBadge}>
-                <Text style={styles.roleBadgeText}>
+                <AppText style={styles.roleBadgeText}>
                   {user.role ? getRoleLabel(user.role) : "—"}
-                </Text>
+                </AppText>
               </View>
             </View>
           ))

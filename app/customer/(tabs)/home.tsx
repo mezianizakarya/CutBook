@@ -5,16 +5,9 @@ import { useUser } from "@clerk/expo";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useContext, useEffect, useRef, useState, type ComponentProps } from "react";
-import {
-  Animated,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  type DimensionValue,
-} from "react-native";
+import { Animated, Pressable, RefreshControl, ScrollView, StyleSheet, View, type DimensionValue } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -223,13 +216,13 @@ export default function HomeScreen() {
     <Screen style={styles.screenPadding}>
       <View style={styles.headerRow}>
         <View style={styles.headerText}>
-          <Text style={styles.greeting}>{greeting}</Text>
+          <AppText style={styles.greeting}>{greeting}</AppText>
           <Pressable
             onPress={handleLocationPress}
             accessibilityRole="button"
             style={({ pressed }) => [styles.locationRow, pressed && styles.pressed]}
           >
-            <Text
+            <AppText
               style={[
                 styles.locationText,
                 !locationLabel && styles.locationPlaceholder,
@@ -237,7 +230,7 @@ export default function HomeScreen() {
               numberOfLines={1}
             >
               {locationLabel ?? t("home.set_location")}
-            </Text>
+            </AppText>
             <RTLIcon name="chevron-forward" size={13} color={colors.muted} />
           </Pressable>
         </View>
@@ -245,7 +238,7 @@ export default function HomeScreen() {
           onPress={() => router.push("/customer/profile")}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Open profile"
+          accessibilityLabel={t("profile.open_profile")}
         >
           <Avatar
             fullName={user?.fullName}
@@ -261,12 +254,12 @@ export default function HomeScreen() {
         style={({ pressed }) => [styles.search, pressed && styles.pressed]}
       >
         <Ionicons name="search" size={18} color={colors.muted} />
-        <Text style={styles.searchText} numberOfLines={1}>
+        <AppText style={styles.searchText} numberOfLines={1}>
           {t("home.search_hint")}
-        </Text>
+        </AppText>
       </Pressable>
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -286,7 +279,7 @@ export default function HomeScreen() {
           />
         )}
 
-        <Text style={styles.sectionHeading}>{t("home.browse_by_service")}</Text>
+        <AppText style={styles.sectionHeading}>{t("home.browse_by_service")}</AppText>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -303,7 +296,7 @@ export default function HomeScreen() {
               <View style={styles.serviceIcon}>
                 <Ionicons name={category.icon} size={22} color={colors.primaryDark} />
               </View>
-              <Text style={styles.serviceLabel}>{t(category.label as Parameters<typeof t>[0])}</Text>
+              <AppText style={styles.serviceLabel}>{t(category.label as Parameters<typeof t>[0])}</AppText>
             </Pressable>
           ))}
         </ScrollView>
@@ -489,10 +482,10 @@ function SkeletonOpenToday() {
 function EmptyNearby({ onExplore }: { onExplore: () => void }) {
   return (
     <View style={styles.emptyCard}>
-      <Text style={styles.emptyTitle}>{t("home.no_barbers_nearby")}</Text>
-      <Text style={styles.emptySubtitle}>
+      <AppText style={styles.emptyTitle}>{t("home.no_barbers_nearby")}</AppText>
+      <AppText style={styles.emptySubtitle}>
         {t("home.try_location")}
-      </Text>
+      </AppText>
       <Button title={t("home.explore_all")} variant="outline" onPress={onExplore} style={styles.emptyButton} />
     </View>
   );
@@ -514,7 +507,7 @@ function UpcomingBookingCard({
         <View style={styles.upcomingIcon}>
           <Ionicons name="calendar" size={20} color={colors.primaryDark} />
         </View>
-        <Text style={styles.upcomingLabel}>{t("home.upcoming_appointment")}</Text>
+        <AppText style={styles.upcomingLabel}>{t("home.upcoming_appointment")}</AppText>
       </View>
       <View style={styles.upcomingContent}>
         <Avatar
@@ -523,23 +516,23 @@ function UpcomingBookingCard({
           size={44}
         />
         <View style={styles.upcomingInfo}>
-          <Text style={styles.upcomingShop} numberOfLines={1}>
+          <AppText style={styles.upcomingShop} numberOfLines={1}>
             {t("home.service_at_shop", { service: booking.service_name, shop: booking.shop?.name ?? "—" })}
-          </Text>
-          <Text style={styles.upcomingTime} numberOfLines={1}>
+          </AppText>
+          <AppText style={styles.upcomingTime} numberOfLines={1}>
             {formatDateTime(booking.starts_at)}
-          </Text>
+          </AppText>
           {!!booking.staff && (
-            <Text style={styles.upcomingStaff} numberOfLines={1}>
+            <AppText style={styles.upcomingStaff} numberOfLines={1}>
               {t("home.with_staff", { name: booking.staff.display_name })}
-            </Text>
+            </AppText>
           )}
         </View>
       </View>
       <View style={styles.upcomingBadge}>
-        <Text style={styles.upcomingBadgeText}>
+        <AppText style={styles.upcomingBadgeText}>
           {booking.status === "confirmed" ? t("bookings.confirmed") : t("bookings.pending")}
-        </Text>
+        </AppText>
       </View>
     </Pressable>
   );
@@ -560,12 +553,12 @@ function LoyaltyCard({
       <View style={styles.loyaltyHeader}>
         <Avatar fullName={card.shop_name} imageUrl={card.shop_logo_url} size={36} />
         <View style={styles.loyaltyShopInfo}>
-          <Text style={styles.loyaltyShopName} numberOfLines={1}>
+          <AppText style={styles.loyaltyShopName} numberOfLines={1}>
             {card.shop_name}
-          </Text>
-          <Text style={styles.loyaltyVisits}>
+          </AppText>
+          <AppText style={styles.loyaltyVisits}>
             {card.total_completed_visits} {card.total_completed_visits !== 1 ? t("home.visits") : t("home.visit")}
-          </Text>
+          </AppText>
         </View>
       </View>
       {!!card.next_milestone && (
@@ -578,9 +571,9 @@ function LoyaltyCard({
               ]}
             />
           </View>
-          <Text style={styles.loyaltyProgressText}>
+          <AppText style={styles.loyaltyProgressText}>
             {t("loyalty.progress", { total: card.total_completed_visits, milestone: card.next_milestone.visit_count, rewardLabel: card.next_milestone.reward_title })}
-          </Text>
+          </AppText>
         </View>
       )}
     </Pressable>
@@ -618,36 +611,36 @@ function NearbyCard({ shop, onPress }: { shop: NearbyShop; onPress: () => void }
               { backgroundColor: avatarColor(shop.name) },
             ]}
           >
-            <Text style={styles.nearbyImageLetter}>
+            <AppText style={styles.nearbyImageLetter}>
               {shop.name.charAt(0).toUpperCase()}
-            </Text>
+            </AppText>
           </View>
         )}
       </View>
       <View style={styles.nearbyInfo}>
         <View style={styles.nameRow}>
-          <Text style={styles.nearbyName} numberOfLines={1}>
+          <AppText style={styles.nearbyName} numberOfLines={1}>
             {shop.name || "—"}
-          </Text>
+          </AppText>
           {shop.is_verified && <VerifiedIcon size={16} />}
         </View>
         {!!servicesLabel && (
-          <Text style={styles.nearbyServices} numberOfLines={1}>
+          <AppText style={styles.nearbyServices} numberOfLines={1}>
             {servicesLabel}
-          </Text>
+          </AppText>
         )}
         <View style={styles.ratingRow}>
           <Ionicons name="star" size={13} color={colors.success} />
-          <Text style={styles.ratingText}>
+          <AppText style={styles.ratingText}>
             {formatRating(shop.rating_avg, shop.rating_count, {
               showCount: false,
               fallback: t("common.new"),
             })}
-          </Text>
+          </AppText>
           {shop.rating_count != null && shop.rating_count > 0 && (
-            <Text style={styles.ratingCount} numberOfLines={1}>
+            <AppText style={styles.ratingCount} numberOfLines={1}>
               {`· ${shop.rating_count} ${shop.rating_count === 1 ? t("home.review") : t("home.reviews")}`}
-            </Text>
+            </AppText>
           )}
         </View>
         {(!!shop.city || !!distanceLabel || minPrice != null) && (
@@ -660,22 +653,22 @@ function NearbyCard({ shop, onPress }: { shop: NearbyShop; onPress: () => void }
                   contentFit="contain"
                   tintColor={colors.muted}
                 />
-                <Text style={styles.nearbyMeta} numberOfLines={1}>
+                <AppText style={styles.nearbyMeta} numberOfLines={1}>
                   {shop.city}
-                </Text>
-                <Text style={styles.nearbyMetaDot}>·</Text>
+                </AppText>
+                <AppText style={styles.nearbyMetaDot}>·</AppText>
               </>
             )}
             {!!distanceLabel && (
               <>
-                <Text style={styles.nearbyMeta} numberOfLines={1}>
+                <AppText style={styles.nearbyMeta} numberOfLines={1}>
                   {distanceLabel}
-                </Text>
-                {minPrice != null && <Text style={styles.nearbyMetaDot}>·</Text>}
+                </AppText>
+                {minPrice != null && <AppText style={styles.nearbyMetaDot}>·</AppText>}
               </>
             )}
             {minPrice != null && (
-              <Text style={styles.nearbyPrice}>{t("home.from_price", { price: formattedMinPrice })}</Text>
+              <AppText style={styles.nearbyPrice}>{t("home.from_price", { price: formattedMinPrice })}</AppText>
             )}
           </View>
         )}
@@ -694,23 +687,23 @@ function OpenTodayCard({ shop, onPress }: { shop: ShopOpenToday; onPress: () => 
         <Avatar fullName={shop.name} imageUrl={shop.logo_url} size={48} />
         <View style={styles.openTodayInfo}>
           <View style={styles.nameRow}>
-            <Text style={styles.openTodayName} numberOfLines={1}>
+            <AppText style={styles.openTodayName} numberOfLines={1}>
               {shop.name || "—"}
-            </Text>
+            </AppText>
             {shop.is_verified && <VerifiedIcon size={15} />}
           </View>
           <View style={styles.ratingRow}>
             <Ionicons name="star" size={12} color={colors.success} />
-            <Text style={styles.ratingText}>
+            <AppText style={styles.ratingText}>
               {formatRating(shop.rating_avg, shop.rating_count, {
                 showCount: false,
                 fallback: t("common.new"),
               })}
-            </Text>
+            </AppText>
             {!!shop.city && (
-              <Text style={styles.ratingCount} numberOfLines={1}>
+              <AppText style={styles.ratingCount} numberOfLines={1}>
                 {`· ${shop.city}`}
-              </Text>
+              </AppText>
             )}
           </View>
         </View>
@@ -719,7 +712,7 @@ function OpenTodayCard({ shop, onPress }: { shop: ShopOpenToday; onPress: () => 
         <View style={styles.slotsRow}>
           {shop.slots.map((slot) => (
             <View key={slot.starts_at} style={styles.slotChip}>
-              <Text style={styles.slotText}>{slot.label}</Text>
+              <AppText style={styles.slotText}>{slot.label}</AppText>
             </View>
           ))}
         </View>
@@ -736,15 +729,15 @@ function BookAgainRowCard({ row, onPress }: { row: BookAgainRow; onPress: () => 
     >
       <Avatar fullName={row.shop?.name} imageUrl={row.shop?.logo_url} size={44} />
       <View style={styles.bookAgainInfo}>
-        <Text style={styles.bookAgainName} numberOfLines={1}>
+        <AppText style={styles.bookAgainName} numberOfLines={1}>
           {row.shop?.name ?? "—"}
-        </Text>
-        <Text style={styles.bookAgainService} numberOfLines={1}>
+        </AppText>
+        <AppText style={styles.bookAgainService} numberOfLines={1}>
           {row.service_name || "—"}
-        </Text>
+        </AppText>
       </View>
       <View style={styles.bookAgainChip}>
-        <Text style={styles.bookAgainChipText}>{t("bookings.book_again")}</Text>
+        <AppText style={styles.bookAgainChipText}>{t("bookings.book_again")}</AppText>
       </View>
     </Pressable>
   );

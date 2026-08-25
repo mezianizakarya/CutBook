@@ -1,6 +1,8 @@
 import * as Clipboard from "expo-clipboard";
 import { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import { BottomSheet } from "@/components/ui/BottomSheet";
@@ -42,9 +44,9 @@ const STATUS_TONES: Record<ShopStatus, StatusTone> = {
 
 function CopyPill({ copied }: { copied: boolean }) {
   return (
-    <Text style={[styles.copyPill, copied ? styles.copyPillCopied : null]}>
+    <AppText style={[styles.copyPill, copied ? styles.copyPillCopied : null]}>
       {copied ? t("common.copied") : t("common.copy")}
-    </Text>
+    </AppText>
   );
 }
 
@@ -135,9 +137,9 @@ export function ShopAdminSheet({
         <Avatar fullName={shop.name} imageUrl={shop.logo_url} size={48} />
         <View style={styles.headerInfo}>
           <View style={styles.nameLine}>
-            <Text style={styles.name} numberOfLines={1}>
+            <AppText style={styles.name} numberOfLines={1}>
               {shop.name}
-            </Text>
+            </AppText>
             {shop.is_verified && <VerifiedIcon size={16} />}
             <View style={styles.badgeRow}>
               <StatusBadge
@@ -147,9 +149,9 @@ export function ShopAdminSheet({
               {!shop.is_active && <StatusBadge label={t("status.closed")} tone="danger" />}
             </View>
           </View>
-          <Text style={styles.slug} numberOfLines={1}>
+          <AppText style={styles.slug} numberOfLines={1}>
             @{shop.slug}
-          </Text>
+          </AppText>
         </View>
       </View>
 

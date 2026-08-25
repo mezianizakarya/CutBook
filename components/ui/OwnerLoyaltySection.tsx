@@ -1,6 +1,8 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Switch, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
@@ -200,10 +202,10 @@ export function OwnerLoyaltySection({ shopId, onNotice }: OwnerLoyaltySectionPro
 
       {!program ? (
         <View style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>{t("loyalty.no_program_yet")}</Text>
-          <Text style={styles.emptySubtitle}>
+          <AppText style={styles.emptyTitle}>{t("loyalty.no_program_yet")}</AppText>
+          <AppText style={styles.emptySubtitle}>
             {t("loyalty.program_description")}
-          </Text>
+          </AppText>
           <Button
             title={t("loyalty.turn_on_program")}
             onPress={() => void handleEnable()}
@@ -215,12 +217,12 @@ export function OwnerLoyaltySection({ shopId, onNotice }: OwnerLoyaltySectionPro
         <>
           <View style={styles.toggleRow}>
             <View style={styles.toggleInfo}>
-              <Text style={styles.toggleTitle}>{t("loyalty.program_active")}</Text>
-              <Text style={styles.toggleSubtitle}>
+              <AppText style={styles.toggleTitle}>{t("loyalty.program_active")}</AppText>
+              <AppText style={styles.toggleSubtitle}>
                 {program.enabled
                   ? t("loyalty.program_active_description")
                   : t("loyalty.program_off")}
-              </Text>
+              </AppText>
             </View>
             <Switch
               value={program.enabled}
@@ -233,10 +235,10 @@ export function OwnerLoyaltySection({ shopId, onNotice }: OwnerLoyaltySectionPro
 
           {milestones.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>{t("loyalty.no_rewards_yet")}</Text>
-              <Text style={styles.emptySubtitle}>
+              <AppText style={styles.emptyTitle}>{t("loyalty.no_rewards_yet")}</AppText>
+              <AppText style={styles.emptySubtitle}>
                 {t("loyalty.add_rewards_description")}
-              </Text>
+              </AppText>
             </View>
           ) : (
             milestones.map((milestone) => (
@@ -280,26 +282,26 @@ function MilestoneRow({
         style={({ pressed }) => [styles.milestoneMain, pressed && styles.pressed]}
       >
         <View style={styles.visitPill}>
-          <Text style={styles.visitPillText}>{milestone.visit_count}</Text>
+          <AppText style={styles.visitPillText}>{milestone.visit_count}</AppText>
         </View>
         <View style={styles.milestoneInfo}>
-          <Text style={styles.milestoneTitle} numberOfLines={1}>
+          <AppText style={styles.milestoneTitle} numberOfLines={1}>
             {milestone.reward_title}
-          </Text>
-          <Text style={styles.milestoneMeta} numberOfLines={1}>
+          </AppText>
+          <AppText style={styles.milestoneMeta} numberOfLines={1}>
             {milestone.reward_type === "custom"
               ? milestone.reward_description || t("loyalty.custom_reward")
               : rewardMeta(milestone, userCountry)}
-          </Text>
+          </AppText>
         </View>
-        <Text
+        <AppText
           style={[
             styles.badgeText,
             milestone.active ? styles.activeText : styles.inactiveText,
           ]}
         >
           {milestone.active ? t("loyalty.active") : t("loyalty.hidden")}
-        </Text>
+        </AppText>
       </Pressable>
       <Pressable
         onPress={press}
@@ -309,14 +311,14 @@ function MilestoneRow({
           confirming && styles.deleteButtonConfirming,
         ]}
       >
-        <Text
+        <AppText
           style={[
             styles.deleteButtonText,
             confirming && styles.deleteButtonTextConfirming,
           ]}
         >
           {confirming ? t("loyalty.confirm_delete", { count }) : t("loyalty.delete")}
-        </Text>
+        </AppText>
       </Pressable>
     </View>
   );
@@ -400,9 +402,9 @@ function MilestoneSheet({
 
   return (
     <BottomSheet visible={visible} onClose={onClose}>
-      <Text style={styles.sheetTitle}>
+      <AppText style={styles.sheetTitle}>
         {isEditing ? t("loyalty.edit_reward") : t("loyalty.add_reward_title")}
-      </Text>
+      </AppText>
       <TextField
         label={t("loyalty.visit_count")}
         value={visitCount}
@@ -445,10 +447,10 @@ function MilestoneSheet({
       />
       <View style={styles.activeRow}>
         <View style={styles.toggleInfo}>
-          <Text style={styles.toggleTitle}>{t("loyalty.active_toggle")}</Text>
-          <Text style={styles.toggleSubtitle}>
+          <AppText style={styles.toggleTitle}>{t("loyalty.active_toggle")}</AppText>
+          <AppText style={styles.toggleSubtitle}>
             {t("loyalty.inactive_description")}
-          </Text>
+          </AppText>
         </View>
         <Switch
           value={active}
@@ -457,7 +459,7 @@ function MilestoneSheet({
           thumbColor={colors.white}
         />
       </View>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? <AppText style={styles.errorText}>{error}</AppText> : null}
       <Button
         title={isEditing ? t("common.save") : t("loyalty.add_reward")}
         onPress={handleSave}

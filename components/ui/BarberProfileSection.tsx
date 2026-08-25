@@ -1,7 +1,9 @@
 import { useUser } from "@clerk/expo";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { CompleteProfileFirstSheet } from "@/components/ui/CompleteProfileFirstSheet";
@@ -96,9 +98,9 @@ export function BarberProfileSection() {
         />
       ) : (
         <View style={styles.incompleteCard}>
-          <Text style={styles.incompleteText}>
+          <AppText style={styles.incompleteText}>
             {t("barber.complete_profile_to_join")}
-          </Text>
+          </AppText>
           <Button
             title={t("barber.complete_professional_profile")}
             onPress={() => router.push("/onboarding/barber-professional")}
@@ -127,7 +129,7 @@ export function BarberProfileSection() {
           )}
         </DetailsCard>
       )}
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       <SectionHeader title={t("barber.shop")} />
 
@@ -137,10 +139,10 @@ export function BarberProfileSection() {
         </View>
       ) : !data || data.shopNames.length === 0 ? (
         <View style={styles.shopCard}>
-          <Text style={styles.shopEmpty}>{t("shop.not_joined_yet")}</Text>
-          <Text style={styles.shopHint}>
+          <AppText style={styles.shopEmpty}>{t("shop.not_joined_yet")}</AppText>
+          <AppText style={styles.shopHint}>
             {t("shop.ask_for_code")}
-          </Text>
+          </AppText>
           <Button
             title={t("shop.join_with_code")}
             variant="outline"
@@ -151,9 +153,9 @@ export function BarberProfileSection() {
         <View style={styles.card}>
           {data.shopNames.map((name) => (
             <View key={name} style={styles.row}>
-              <Text style={styles.value} numberOfLines={1}>
+              <AppText style={styles.value} numberOfLines={1}>
                 {name}
-              </Text>
+              </AppText>
             </View>
           ))}
         </View>

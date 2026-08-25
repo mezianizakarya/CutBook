@@ -1,6 +1,8 @@
 import { useAuth } from "@clerk/expo";
 import { Redirect, useRouter } from "expo-router";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
@@ -30,10 +32,10 @@ export default function WelcomeScreen() {
               style={styles.logoImage}
             />
           </View>
-          <Text style={styles.title}>KUTZ</Text>
-          <Text style={styles.tagline}>
+          <AppText style={styles.title}>KUTZ</AppText>
+          <AppText style={styles.tagline}>
             {t("auth.tagline")}
-          </Text>
+          </AppText>
         </View>
 
         <View style={styles.actions}>

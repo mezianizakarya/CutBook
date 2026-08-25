@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { RTLIcon } from "@/components/ui/RTLIcon";
 import { Image } from "expo-image";
-import { Animated, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Modal, Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { t } from "@/lib/i18n";
@@ -56,7 +58,7 @@ export function LocationSheet({
           <View style={styles.dragHandleArea} {...panResponder.panHandlers}>
             <View style={styles.dragHandle} />
           </View>
-          <Text style={styles.title}>{t("location.your_location")}</Text>
+          <AppText style={styles.title}>{t("location.your_location")}</AppText>
           <Pressable
             onPress={onSelectCurrent}
             accessibilityRole="button"
@@ -76,11 +78,11 @@ export function LocationSheet({
               />
             </View>
             <View style={styles.rowInfo}>
-              <Text style={styles.rowTitle}>{t("location.current_location")}</Text>
+              <AppText style={styles.rowTitle}>{t("location.current_location")}</AppText>
               {!!currentLabel && (
-                <Text style={styles.rowSubtitle} numberOfLines={1}>
+                <AppText style={styles.rowSubtitle} numberOfLines={1}>
                   {currentLabel}
-                </Text>
+                </AppText>
               )}
             </View>
             {currentSelected && (
@@ -97,10 +99,10 @@ export function LocationSheet({
               <Ionicons name="map-outline" size={20} color={colors.muted} />
             </View>
             <View style={styles.rowInfo}>
-              <Text style={styles.rowTitle}>{t("location.select_another")}</Text>
-              <Text style={styles.rowSubtitle}>
+              <AppText style={styles.rowTitle}>{t("location.select_another")}</AppText>
+              <AppText style={styles.rowSubtitle}>
                 {t("location.search_description")}
-              </Text>
+              </AppText>
             </View>
             <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
           </Pressable>

@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 import type { StyleProp, ViewStyle } from "react-native";
 
 import type { Notice } from "@/lib/useNotice";
@@ -21,9 +23,9 @@ export function NoticeBanner({
   const styles = variant === "soft" ? soft : bordered;
   return (
     <View style={[styles.notice, styles[notice.tone], style]}>
-      <Text style={[styles.noticeText, styles[`${notice.tone}Text`]]}>
+      <AppText style={[styles.noticeText, styles[`${notice.tone}Text`]]}>
         {notice.message}
-      </Text>
+      </AppText>
     </View>
   );
 }

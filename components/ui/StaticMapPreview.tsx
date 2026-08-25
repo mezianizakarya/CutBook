@@ -1,7 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
+import { Pressable, StyleSheet, View, type ViewStyle } from "react-native";
+
+import { AppText } from "@/components/AppText";
 
 import { NativeMap } from "@/components/ui/NativeMap";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 
 type StaticMapPreviewProps = {
@@ -36,7 +39,7 @@ export function StaticMapPreview({
       {onPress ? (
         <View style={styles.expandBadge}>
           <Ionicons name="expand-outline" size={12} color={colors.text} />
-          <Text style={styles.expandText}>Tap to change</Text>
+          <AppText style={styles.expandText}>{t("shop.tap_to_change")}</AppText>
         </View>
       ) : null}
     </View>

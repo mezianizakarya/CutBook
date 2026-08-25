@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Keyboard, StyleSheet, Text, View } from "react-native";
+import { Keyboard, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
@@ -64,18 +66,18 @@ export function JoinShopForm({ visible, onClose, onJoined }: JoinShopFormProps) 
     <BottomSheet visible={visible} onClose={handleClose}>
       {joined ? (
         <View style={styles.success}>
-          <Text style={styles.successTitle}>{t("shop.youre_in")}</Text>
-          <Text style={styles.successText}>
+          <AppText style={styles.successTitle}>{t("shop.youre_in")}</AppText>
+          <AppText style={styles.successText}>
             {t("shop.welcome_to_shop", { shopName: joined })}
-          </Text>
+          </AppText>
           <Button title={t("common.done")} onPress={handleClose} style={styles.doneButton} />
         </View>
       ) : (
         <>
-          <Text style={styles.title}>{t("shop.join_shop")}</Text>
-          <Text style={styles.subtitle}>
+          <AppText style={styles.title}>{t("shop.join_shop")}</AppText>
+          <AppText style={styles.subtitle}>
             {t("shop.enter_invitation")}
-          </Text>
+          </AppText>
           <TextField
             label={t("shop.invitation_code")}
             value={code}

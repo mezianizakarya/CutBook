@@ -3,13 +3,9 @@ import { RTLIcon } from "@/components/ui/RTLIcon";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { LocationPickerModal } from "@/components/ui/LocationPickerModal";
@@ -224,7 +220,7 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
           autoCapitalize="words"
         />
 
-        <Text style={styles.label}>{t("shop.location")}</Text>
+        <AppText style={styles.label}>{t("shop.location")}</AppText>
         {hasLocation && pickedLocation ? (
           <View style={styles.locationCard}>
             <StaticMapPreview
@@ -234,9 +230,9 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
             />
             <View style={styles.locationSummaryRow}>
               <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-              <Text style={styles.locationSummary} numberOfLines={1}>
+              <AppText style={styles.locationSummary} numberOfLines={1}>
                 {formatLocationSummary(pickedLocation)}
-              </Text>
+              </AppText>
               <RTLIcon name="chevron-forward" size={16} color={colors.muted} />
             </View>
           </View>
@@ -250,10 +246,10 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
               pressed && styles.locationEmptyPressed,
             ]}
           >
-            <Text style={styles.locationEmptyTitle}>{t("shop.set_location")}</Text>
-            <Text style={styles.locationEmptySubtitle}>
+            <AppText style={styles.locationEmptyTitle}>{t("shop.set_location")}</AppText>
+            <AppText style={styles.locationEmptySubtitle}>
               {t("shop.search_address")}
-            </Text>
+            </AppText>
             <View style={styles.locationActions}>
               <Button
                 title={t("shop.use_my_location")}
@@ -271,11 +267,11 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
             </View>
           </Pressable>
         )}
-        <Text style={styles.hint}>
+        <AppText style={styles.hint}>
           {hasLocation
             ? t("shop.address_filled_automatically")
             : t("shop.set_location_fill")}
-        </Text>
+        </AppText>
 
         <TextField
           label={t("shop.address")}
@@ -339,7 +335,7 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
           autoCapitalize="sentences"
         />
 
-        <Text style={styles.label}>{t("shop.photos")}</Text>
+        <AppText style={styles.label}>{t("shop.photos")}</AppText>
         <View style={styles.logoRow}>
           <Pressable
             onPress={() => void handleChooseLogo()}
@@ -356,7 +352,7 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
             ) : (
               <View style={styles.logoPlaceholder}>
                 <Ionicons name="camera-outline" size={28} color={colors.muted} />
-                <Text style={styles.logoPlaceholderText}>{t("shop.add_photo")}</Text>
+                <AppText style={styles.logoPlaceholderText}>{t("shop.add_photo")}</AppText>
               </View>
             )}
           </Pressable>
@@ -372,11 +368,11 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
             </Pressable>
           )}
         </View>
-        <Text style={styles.hint}>
+        <AppText style={styles.hint}>
           {t("shop.shop_photo_shows")}
-        </Text>
+        </AppText>
 
-        <Text style={styles.label}>{t("shop.photos")}</Text>
+        <AppText style={styles.label}>{t("shop.photos")}</AppText>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -416,11 +412,11 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
             </Pressable>
           )}
         </ScrollView>
-        <Text style={styles.hint}>
+        <AppText style={styles.hint}>
           {t("shop.show_off_interior")}
-        </Text>
+        </AppText>
 
-        {!!error && <Text style={styles.errorText}>{error}</Text>}
+        {!!error && <AppText style={styles.errorText}>{error}</AppText>}
 
         <Button
           title={submitLabel}

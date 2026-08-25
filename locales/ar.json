@@ -229,7 +229,8 @@
     "all_appointments": "جميع المواعيد في محلاتك.",
     "no_bookings_filter": "لا توجد حجوزات",
     "try_different_filter": "جرّب فلتر مختلفاً أو تحقق لاحقاً.",
-    "will_appear_here": "ستظهر الحجوزات من محلاتك هنا."
+    "will_appear_here": "ستظهر الحجوزات من محلاتك هنا.",
+    "discover_hint": "اكتشف محل حلاقة واحجز موعدك الأول."
   },
   "shop": {
     "name": "اسم المحل",
@@ -357,7 +358,10 @@
     "could_not_update_service": "تعذر تحديث الخدمة",
     "opens_today_at": "يفتح اليوم في {{time}}",
     "open_closes_at": "مفتوح · يغلق في {{time}}",
-    "opens_day_at": "يفتح {{day}} في {{time}}"
+    "opens_day_at": "يفتح {{day}} في {{time}}",
+    "tap_to_change": "اضغط للتغيير",
+    "reviews_suffix": "تقييمات",
+    "view_barber_profile": "عرض ملف {{name}} الشخصي"
   },
   "profile": {
     "edit_profile": "تعديل الملف الشخصي",
@@ -391,7 +395,12 @@
     "years_experience": "سنوات الخبرة",
     "save_changes": "حفظ التغييرات",
     "add_specialty_error": "أضف تخصصك لإكمال ملفك المهني.",
-    "experience_range_error": "يجب أن تكون الخبرة عدداً صحيحاً بين 0 و100 سنة."
+    "experience_range_error": "يجب أن تكون الخبرة عدداً صحيحاً بين 0 و100 سنة.",
+    "jane_placeholder": "جين",
+    "doe_placeholder": "دو",
+    "username_placeholder": "janedoe123",
+    "years_placeholder": "مثال: 5",
+    "open_profile": "فتح الملف الشخصي"
   },
   "loyalty": {
     "title": "الولاء",
@@ -706,7 +715,9 @@
     "portfolio": "الأعمال",
     "book_with": "احجز مع {{name}}",
     "could_not_book": "تعذر الحجز",
-    "shop_not_available": "هذا المحل غير متاح حالياً."
+    "shop_not_available": "هذا المحل غير متاح حالياً.",
+    "specialty_placeholder": "مثال: قص شعر، عمل اللحية",
+    "bio_placeholder": "أخبر العملاء عن حرفتك وستالك وما يمكن توقعه."
   },
   "customer": {
     "activity": "النشاط",
@@ -730,7 +741,10 @@
     "about": "حول",
     "version": "الإصدار",
     "subtitle": "أدر حسابك وتفضيلات التطبيق.",
-    "account_region": "منطقة الحساب"
+    "account_region": "منطقة الحساب",
+    "region_note": "يتم تحديد منطقتك تلقائياً بناءً على موقع جهازك ولا يمكن تغييرها يدوياً. جميع الأسعار في التطبيق معروضة بعملتك المحلية.",
+    "country": "البلد",
+    "currency": "العملة"
   },
   "days": {
     "sunday": "الأحد",
@@ -1002,6 +1016,12 @@
     "enter_duration": "يرجى إدخال مدة صحيحة بالدقائق.",
     "save_changes": "حفظ التغييرات",
     "category_placeholder": "قص شعر",
-    "description_placeholder": "ماذا يتضمن؟"
+    "description_placeholder": "ماذا يتضمن؟",
+    "name_placeholder": "قصة فيد كلاسيكية"
+  },
+  "username": {
+    "available": "متاح",
+    "already_taken": "محجوز بالفعل",
+    "checking": "جارٍ التحقق من التوفر…"
   }
 }

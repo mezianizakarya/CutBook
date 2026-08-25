@@ -1,7 +1,9 @@
 import { useAuth, useSignIn, useSignUp, useUser } from "@clerk/expo";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
@@ -120,10 +122,10 @@ export default function VerifyEmailScreen() {
   return (
     <Screen scroll centered>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("auth.verify_your_email")}</Text>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.title}>{t("auth.verify_your_email")}</AppText>
+        <AppText style={styles.subtitle}>
           {t("auth.enter_6_digit_code")}
-        </Text>
+        </AppText>
       </View>
 
       <View style={styles.form}>
@@ -136,18 +138,18 @@ export default function VerifyEmailScreen() {
           error={errors?.fields.code?.message ?? verifyError}
         />
 
-        {sendError && <Text style={styles.errorText}>{sendError}</Text>}
+        {sendError && <AppText style={styles.errorText}>{sendError}</AppText>}
 
         <Button title={t("auth.verify_code")} onPress={handleVerify} loading={submitting} />
 
         <Pressable onPress={sendCode} disabled={submitting}>
-          <Text style={styles.resendText}>
+          <AppText style={styles.resendText}>
             {codeSent ? t("auth.resend_code") : t("auth.send_new_code")}
-          </Text>
+          </AppText>
         </Pressable>
 
         <Pressable onPress={() => router.replace("/loading")}>
-          <Text style={styles.link}>{t("auth.back_to_app")}</Text>
+          <AppText style={styles.link}>{t("auth.back_to_app")}</AppText>
         </Pressable>
       </View>
     </Screen>

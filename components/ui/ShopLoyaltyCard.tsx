@@ -2,7 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
@@ -161,8 +163,8 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
       <View style={styles.card}>
         <View style={styles.headerRow}>
           <View style={styles.headerText}>
-            <Text style={styles.title}>{t("loyalty.title")}</Text>
-            <Text style={styles.subtitle}>{t("loyalty.subtitle")}</Text>
+            <AppText style={styles.title}>{t("loyalty.title")}</AppText>
+            <AppText style={styles.subtitle}>{t("loyalty.subtitle")}</AppText>
           </View>
           <Ionicons name="pricetags" size={22} color={colors.primaryDark} />
         </View>
@@ -182,12 +184,12 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
                 style={[styles.progressFill, { width: `${progress * 100}%` }]}
               />
             </View>
-            <Text style={styles.progressText}>
+            <AppText style={styles.progressText}>
               {t("loyalty.progress", { total, milestone: nextMilestone.visit_count, rewardLabel: rewardLabel(nextMilestone, userCountry) })}
-            </Text>
+            </AppText>
           </View>
         ) : activeMilestones.length > 0 ? (
-          <Text style={styles.progressText}>{t("loyalty.all_rewards_unlocked")}</Text>
+          <AppText style={styles.progressText}>{t("loyalty.all_rewards_unlocked")}</AppText>
         ) : null}
 
         {activeMilestones.length > 0 ? (
@@ -203,25 +205,25 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
                       reached && styles.visitPillReached,
                     ]}
                   >
-                    <Text
+                    <AppText
                       style={[
                         styles.visitPillText,
                         reached && styles.visitPillTextReached,
                       ]}
                     >
                       {milestone.visit_count}
-                    </Text>
+                    </AppText>
                   </View>
                   <View style={styles.milestoneInfo}>
-                    <Text style={styles.milestoneTitle} numberOfLines={1}>
+                    <AppText style={styles.milestoneTitle} numberOfLines={1}>
                       {milestone.reward_title}
-                    </Text>
-                    <Text style={styles.milestoneMeta} numberOfLines={1}>
+                    </AppText>
+                    <AppText style={styles.milestoneMeta} numberOfLines={1}>
                       {rewardLabel(milestone, userCountry)}
                       {milestone.reward_description
                         ? ` · ${milestone.reward_description}`
                         : ""}
-                    </Text>
+                    </AppText>
                   </View>
                   <StatusBadge status={status} />
                 </View>
@@ -232,7 +234,7 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
 
         {unlockedRewards.length > 0 ? (
           <View style={styles.availableWrap}>
-            <Text style={styles.availableTitle}>{t("loyalty.ready_to_use")}</Text>
+            <AppText style={styles.availableTitle}>{t("loyalty.ready_to_use")}</AppText>
             {unlockedRewards.map((reward) => {
               const milestone = milestoneById.get(reward.milestone_id);
               if (!milestone) {
@@ -257,10 +259,10 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
         visible={redeemTarget !== null}
         onClose={() => setRedeemTarget(null)}
       >
-        <Text style={styles.sheetTitle}>{t("loyalty.apply_reward")}</Text>
-        <Text style={styles.sheetText}>
+        <AppText style={styles.sheetTitle}>{t("loyalty.apply_reward")}</AppText>
+        <AppText style={styles.sheetText}>
           {t("loyalty.choose_booking")}
-        </Text>
+        </AppText>
         {upcoming.map((booking) => (
           <Pressable
             key={booking.id}
@@ -275,12 +277,12 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
             ]}
           >
             <View style={styles.bookingInfo}>
-              <Text style={styles.bookingName} numberOfLines={1}>
+              <AppText style={styles.bookingName} numberOfLines={1}>
                 {booking.service_name}
-              </Text>
-              <Text style={styles.bookingMeta}>
+              </AppText>
+              <AppText style={styles.bookingMeta}>
                 {formatDateTime(booking.starts_at)}
-              </Text>
+              </AppText>
             </View>
             <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
           </Pressable>
@@ -293,8 +295,8 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
 function Stat({ value, label }: { value: number; label: string }) {
   return (
     <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <AppText style={styles.statValue}>{value}</AppText>
+      <AppText style={styles.statLabel}>{label}</AppText>
     </View>
   );
 }
@@ -314,7 +316,7 @@ function StatusBadge({
   if (status === "locked") {
     return (
       <View style={[styles.badge, styles.badgeLocked]}>
-        <Text style={[styles.badgeText, styles.badgeTextLocked]}>{t(statusKeyMap.locked)}</Text>
+        <AppText style={[styles.badgeText, styles.badgeTextLocked]}>{t(statusKeyMap.locked)}</AppText>
       </View>
     );
   }
@@ -326,9 +328,9 @@ function StatusBadge({
         : { bg: colors.dangerSoft, text: colors.danger };
   return (
     <View style={[styles.badge, { backgroundColor: tone.bg }]}>
-      <Text style={[styles.badgeText, { color: tone.text }]}>
+      <AppText style={[styles.badgeText, { color: tone.text }]}>
         {t(statusKeyMap[status])}
-      </Text>
+      </AppText>
     </View>
   );
 }

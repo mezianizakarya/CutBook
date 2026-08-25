@@ -1,7 +1,9 @@
 import { useAuth, useSignUp } from "@clerk/expo";
 import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
@@ -50,10 +52,10 @@ export default function SignUpScreen() {
   return (
     <Screen scroll centered>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("auth.create_your_account")}</Text>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.title}>{t("auth.create_your_account")}</AppText>
+        <AppText style={styles.subtitle}>
           {t("auth.verification_email_info")}
-        </Text>
+        </AppText>
       </View>
 
       <View style={styles.form}>
@@ -75,9 +77,9 @@ export default function SignUpScreen() {
         />
 
         {globalErrors?.map((err) => (
-          <Text key={err.code} style={styles.globalError}>
+          <AppText key={err.code} style={styles.globalError}>
             {err.message}
-          </Text>
+          </AppText>
         ))}
 
         <Button
@@ -92,9 +94,9 @@ export default function SignUpScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>{t("auth.already_have_account")}</Text>
+        <AppText style={styles.footerText}>{t("auth.already_have_account")}</AppText>
         <Pressable onPress={() => router.push("/sign-in")}>
-          <Text style={styles.link}>{t("auth.sign_in")}</Text>
+          <AppText style={styles.link}>{t("auth.sign_in")}</AppText>
         </Pressable>
       </View>
     </Screen>

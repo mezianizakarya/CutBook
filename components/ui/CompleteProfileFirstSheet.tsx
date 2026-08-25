@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
@@ -25,10 +27,10 @@ export function CompleteProfileFirstSheet({
   return (
     <BottomSheet visible={visible} onClose={onClose}>
       <View style={styles.content}>
-        <Text style={styles.title}>{t("onboarding.complete_profile_first")}</Text>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.title}>{t("onboarding.complete_profile_first")}</AppText>
+        <AppText style={styles.subtitle}>
           {t("onboarding.need_specialty")}
-        </Text>
+        </AppText>
         <Button title={t("onboarding.complete_profile_button")} onPress={onCompleteProfile} />
       </View>
     </BottomSheet>

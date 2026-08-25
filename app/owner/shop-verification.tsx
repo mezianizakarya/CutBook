@@ -1,7 +1,9 @@
 import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
@@ -120,7 +122,7 @@ export default function ShopVerificationScreen() {
     return (
       <Screen centered>
         <Pressable onPress={() => router.back()} accessibilityRole="button">
-          <Text style={styles.error}>{t("verification.shop_not_found")}</Text>
+          <AppText style={styles.error}>{t("verification.shop_not_found")}</AppText>
         </Pressable>
       </Screen>
     );
@@ -142,16 +144,16 @@ export default function ShopVerificationScreen() {
         >
           <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>{t("verification.shop_verification_title")}</Text>
+        <AppText style={styles.title}>{t("verification.shop_verification_title")}</AppText>
       </View>
-      <Text style={styles.subtitle}>
+      <AppText style={styles.subtitle}>
         {name
           ? t("verification.subtitle_named", { name })
           : t("verification.subtitle_default")}
-      </Text>
+      </AppText>
 
       {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       {loading && !state ? (
         <View style={styles.loading}>
@@ -161,23 +163,23 @@ export default function ShopVerificationScreen() {
         <>
           {isVerified ? (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>{t("verification.shop_verified")}</Text>
-              <Text style={styles.cardText}>
+              <AppText style={styles.cardTitle}>{t("verification.shop_verified")}</AppText>
+              <AppText style={styles.cardText}>
                 {t("verification.shop_verified_desc")}
-              </Text>
+              </AppText>
             </View>
           ) : pending ? (
             <View style={styles.card}>
               <View style={styles.cardBadge}>
                 <StatusBadge label={t("verification.pending_review")} tone="warning" />
               </View>
-              <Text style={styles.cardTitle}>{t("verification.under_review")}</Text>
-              <Text style={styles.cardText}>
+              <AppText style={styles.cardTitle}>{t("verification.under_review")}</AppText>
+              <AppText style={styles.cardText}>
                 {t("verification.requested_on", { date: formatDate(request.created_at) })}
-              </Text>
+              </AppText>
               {!!request.note && (
                 <View style={styles.quote}>
-                  <Text style={styles.quoteText}>{request.note}</Text>
+                  <AppText style={styles.quoteText}>{request.note}</AppText>
                 </View>
               )}
               <Button
@@ -198,23 +200,23 @@ export default function ShopVerificationScreen() {
                 <View style={styles.cardBadge}>
                   <StatusBadge label={t("verification.rejected")} tone="danger" />
                 </View>
-                <Text style={styles.cardTitle}>{t("verification.request_rejected")}</Text>
-                <Text style={styles.cardText}>
+                <AppText style={styles.cardTitle}>{t("verification.request_rejected")}</AppText>
+                <AppText style={styles.cardText}>
                   {t("verification.request_not_approved")}
-                </Text>
+                </AppText>
                 {!!request?.review_note && (
                   <View style={styles.quote}>
-                    <Text style={styles.quoteText}>{request.review_note}</Text>
+                    <AppText style={styles.quoteText}>{request.review_note}</AppText>
                   </View>
                 )}
                 <Button title={t("verification.request_again")} onPress={() => setShowForm(true)} />
               </View>
             ) : (
               <View style={styles.card}>
-                <Text style={styles.cardTitle}>{t("verification.request_verification")}</Text>
-                <Text style={styles.cardText}>
+                <AppText style={styles.cardTitle}>{t("verification.request_verification")}</AppText>
+                <AppText style={styles.cardText}>
                   {t("verification.tell_us_about_shop")}
-                </Text>
+                </AppText>
                 <TextField
                   label={t("verification.why_shop_verified")}
                   value={note}
@@ -232,10 +234,10 @@ export default function ShopVerificationScreen() {
             )
           )           : (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>{t("verification.get_verified")}</Text>
-              <Text style={styles.cardText}>
+              <AppText style={styles.cardTitle}>{t("verification.get_verified")}</AppText>
+              <AppText style={styles.cardText}>
                 {t("verification.shop_badge_desc")}
-              </Text>
+              </AppText>
               <Button title={t("verification.request_verification_button")} onPress={() => setShowForm(true)} />
             </View>
           )}

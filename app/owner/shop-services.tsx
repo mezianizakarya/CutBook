@@ -2,15 +2,9 @@ import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useUser } from "@clerk/expo";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Switch, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
@@ -122,14 +116,14 @@ export default function ShopServicesScreen() {
         >
           <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>{t("shop.services")}</Text>
+        <AppText style={styles.title}>{t("shop.services")}</AppText>
       </View>
-      <Text style={styles.subtitle}>
+      <AppText style={styles.subtitle}>
         {t("services.subtitle")}
-      </Text>
+      </AppText>
 
       {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
-      {!!error && <Text style={styles.errorText}>{error}</Text>}
+      {!!error && <AppText style={styles.errorText}>{error}</AppText>}
 
       {loading ? (
         <View style={styles.loading}>
@@ -163,15 +157,15 @@ export default function ShopServicesScreen() {
                 ]}
               >
                 <View style={styles.serviceInfo}>
-                  <Text style={styles.serviceName} numberOfLines={1}>
+                  <AppText style={styles.serviceName} numberOfLines={1}>
                     {service.name}
-                  </Text>
-                  <Text style={styles.serviceMeta} numberOfLines={1}>
-                    <Text style={styles.servicePrice}>
+                  </AppText>
+                  <AppText style={styles.serviceMeta} numberOfLines={1}>
+                    <AppText style={styles.servicePrice}>
                       {formatCents(service.price_cents, userCountry)}
-                    </Text>
+                    </AppText>
                     {`  ·  ${service.duration_minutes} ${t("common.min")}`}
-                  </Text>
+                  </AppText>
                 </View>
                 {canEdit ? (
                   <Switch
@@ -189,7 +183,7 @@ export default function ShopServicesScreen() {
                         : styles.statusPillHidden,
                     ]}
                   >
-                    <Text
+                    <AppText
                       style={[
                         styles.statusPillText,
                         service.is_active
@@ -198,7 +192,7 @@ export default function ShopServicesScreen() {
                       ]}
                     >
                       {service.is_active ? t("services.active") : t("services.hidden")}
-                    </Text>
+                    </AppText>
                   </View>
                 )}
               </Pressable>
@@ -289,19 +283,19 @@ function ServiceSheet({
 
   return (
     <BottomSheet visible={visible} onClose={onClose}>
-      <Text style={styles.sheetTitle}>
+      <AppText style={styles.sheetTitle}>
         {isEditing ? t("services.edit_service") : t("services.add_service_title")}
-      </Text>
+      </AppText>
       {isEditing ? null : (
-        <Text style={styles.sheetText}>
+        <AppText style={styles.sheetText}>
           {t("services.service_description")}
-        </Text>
+        </AppText>
       )}
       <TextField
         label={t("services.name_label")}
         value={name}
         onChangeText={setName}
-        placeholder="Classic fade"
+        placeholder={t("services.name_placeholder")}
         autoCapitalize="words"
       />
       <View style={styles.rowFields}>
@@ -338,7 +332,7 @@ function ServiceSheet({
         placeholder={t("services.description_placeholder")}
         autoCapitalize="sentences"
       />
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? <AppText style={styles.errorText}>{error}</AppText> : null}
       <Button
         title={isEditing ? t("services.save_changes") : t("services.add_service")}
         onPress={handleSave}

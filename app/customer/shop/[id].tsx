@@ -4,16 +4,9 @@ import { useUser } from "@clerk/expo";
 import { Image } from "expo-image";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import { BookingModal } from "@/components/ui/BookingModal";
@@ -173,8 +166,8 @@ export default function ShopDetailScreen() {
   if (error || !shop) {
     return (
       <Screen centered>
-        <Text style={styles.errorTitle}>{t("shop.could_not_load")}</Text>
-        <Text style={styles.errorText}>{error ?? t("common.error")}</Text>
+        <AppText style={styles.errorTitle}>{t("shop.could_not_load")}</AppText>
+        <AppText style={styles.errorText}>{error ?? t("common.error")}</AppText>
         <Button
           title={t("shop.go_back")}
           variant="outline"
@@ -219,15 +212,15 @@ export default function ShopDetailScreen() {
         >
           <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>{t("shop.page_title")}</Text>
+        <AppText style={styles.title}>{t("shop.page_title")}</AppText>
       </View>
 
       <View style={styles.hero}>
         {heroImages.length === 0 ? (
           <View style={[styles.heroImage, styles.heroFallback]}>
-            <Text style={styles.heroLetter}>
+            <AppText style={styles.heroLetter}>
               {(shop.name || "?").charAt(0).toUpperCase()}
-            </Text>
+            </AppText>
           </View>
         ) : (
           <>
@@ -271,9 +264,9 @@ export default function ShopDetailScreen() {
                   ))}
                 </View>
                 <View style={styles.heroCount}>
-                  <Text style={styles.heroCountText}>
+                  <AppText style={styles.heroCountText}>
                     {activeSlide + 1}/{heroImages.length}
-                  </Text>
+                  </AppText>
                 </View>
               </>
             )}
@@ -284,26 +277,26 @@ export default function ShopDetailScreen() {
       <View style={styles.titleRow}>
         <View style={styles.titleInfo}>
           <View style={styles.nameRow}>
-            <Text style={styles.name} numberOfLines={1}>
+            <AppText style={styles.name} numberOfLines={1}>
               {shop.name || "—"}
-            </Text>
+            </AppText>
             {shop.is_verified && <VerifiedIcon size={18} />}
           </View>
           <View style={styles.metaRow}>
             <Ionicons name="star" size={13} color={colors.success} />
-            <Text style={styles.metaText}>
-              {formatRating(shop.rating_avg, shop.rating_count, { suffix: "reviews" })}
-            </Text>
+            <AppText style={styles.metaText}>
+              {formatRating(shop.rating_avg, shop.rating_count, { suffix: t("shop.reviews_suffix") })}
+            </AppText>
             {!!shop.city && (
               <>
-                <Text style={styles.metaDot}>·</Text>
+                <AppText style={styles.metaDot}>·</AppText>
                 <Image
                   source={require("@/assets/images/location.png")}
                   style={styles.metaLocationIcon}
                   contentFit="contain"
                   tintColor={colors.muted}
                 />
-                <Text style={styles.metaText}>{shop.city}</Text>
+                <AppText style={styles.metaText}>{shop.city}</AppText>
               </>
             )}
           </View>
@@ -314,7 +307,7 @@ export default function ShopDetailScreen() {
                 { backgroundColor: status.open ? colors.success : colors.muted },
               ]}
             />
-            <Text
+            <AppText
               style={[
                 styles.statusText,
                 { color: status.open ? colors.success : colors.muted },
@@ -322,7 +315,7 @@ export default function ShopDetailScreen() {
               numberOfLines={1}
             >
               {status.label}
-            </Text>
+            </AppText>
           </View>
         </View>
         <Pressable
@@ -344,7 +337,7 @@ export default function ShopDetailScreen() {
         </Pressable>
       </View>
 
-      {!!shop.description && <Text style={styles.description}>{shop.description}</Text>}
+      {!!shop.description && <AppText style={styles.description}>{shop.description}</AppText>}
 
       <View style={styles.detailsCard}>
         {!!shop.address_line1 && (
@@ -355,35 +348,35 @@ export default function ShopDetailScreen() {
               contentFit="contain"
               tintColor={colors.muted}
             />
-            <Text style={styles.detailValue} numberOfLines={1}>
+            <AppText style={styles.detailValue} numberOfLines={1}>
               {[shop.address_line1, shop.address_line2, shop.city, shop.state]
                 .filter(Boolean)
                 .join(", ")}
-            </Text>
+            </AppText>
           </View>
         )}
         {!!shop.phone && (
           <View style={styles.detailRow}>
             <Ionicons name="call-outline" size={16} color={colors.muted} />
-            <Text style={styles.detailValue} numberOfLines={1}>
+            <AppText style={styles.detailValue} numberOfLines={1}>
               {shop.phone}
-            </Text>
+            </AppText>
           </View>
         )}
         {!!shop.email && (
           <View style={styles.detailRow}>
             <Ionicons name="mail-outline" size={16} color={colors.muted} />
-            <Text style={styles.detailValue} numberOfLines={1}>
+            <AppText style={styles.detailValue} numberOfLines={1}>
               {shop.email}
-            </Text>
+            </AppText>
           </View>
         )}
         {!!shop.website && (
           <View style={styles.detailRow}>
             <Ionicons name="globe-outline" size={16} color={colors.muted} />
-            <Text style={styles.detailValue} numberOfLines={1}>
+            <AppText style={styles.detailValue} numberOfLines={1}>
               {shop.website}
-            </Text>
+            </AppText>
           </View>
         )}
       </View>
@@ -413,12 +406,12 @@ export default function ShopDetailScreen() {
           const isToday = hours.day_of_week === today;
           return (
             <View key={hours.id} style={styles.detailRow}>
-              <Text style={[styles.hoursDay, isToday && styles.hoursDayToday]}>
+              <AppText style={[styles.hoursDay, isToday && styles.hoursDayToday]}>
                 {isToday ? t("shop.today") : dayName(hours.day_of_week)}
-              </Text>
-              <Text style={[styles.detailValue, isToday && styles.hoursValueToday]}>
+              </AppText>
+              <AppText style={[styles.detailValue, isToday && styles.hoursValueToday]}>
                 {hours.is_closed ? t("shop.closed") : formatOpenRange(hours.opens_at, hours.closes_at)}
-              </Text>
+              </AppText>
             </View>
           );
         })}
@@ -426,28 +419,28 @@ export default function ShopDetailScreen() {
 
       <SectionHeader title={t("shop.services")} />
       {shop.services.length === 0 ? (
-        <Text style={styles.emptyText}>{t("shop.no_services")}</Text>
+        <AppText style={styles.emptyText}>{t("shop.no_services")}</AppText>
       ) : (
         categories.map((category) => (
           <View key={category} style={styles.servicesGroup}>
-            <Text style={styles.categoryTitle}>{category}</Text>
+            <AppText style={styles.categoryTitle}>{category}</AppText>
             <View style={styles.detailsCard}>
               {shop.services
                 .filter((service) => service.category === category)
                 .map((service) => (
                   <View key={service.id} style={styles.serviceRow}>
                     <View style={styles.serviceInfo}>
-                      <Text style={styles.serviceName} numberOfLines={1}>
+                      <AppText style={styles.serviceName} numberOfLines={1}>
                         {service.name}
-                      </Text>
-                      <Text style={styles.serviceMeta} numberOfLines={1}>
+                      </AppText>
+                      <AppText style={styles.serviceMeta} numberOfLines={1}>
                         {formatDurationMinutes(service.duration_minutes)}
                         {!!service.description ? ` · ${service.description}` : ""}
-                      </Text>
+                      </AppText>
                     </View>
-                    <Text style={styles.servicePrice}>
+                    <AppText style={styles.servicePrice}>
                       {formatCents(service.price_cents, userCountry)}
-                    </Text>
+                    </AppText>
                   </View>
                 ))}
             </View>
@@ -457,7 +450,7 @@ export default function ShopDetailScreen() {
 
       <SectionHeader title={t("shop.barbers")} />
       {shop.members.length === 0 ? (
-        <Text style={styles.emptyText}>{t("shop.no_barbers")}</Text>
+        <AppText style={styles.emptyText}>{t("shop.no_barbers")}</AppText>
       ) : (
         <View style={styles.detailsCard}>
           {shop.members.map((member) => (
@@ -478,7 +471,7 @@ export default function ShopDetailScreen() {
                 pressed && styles.barberRowPressed,
               ]}
               accessibilityRole="button"
-              accessibilityLabel={`View ${member.display_name || "barber"} profile`}
+              accessibilityLabel={t("shop.view_barber_profile", { name: member.display_name || t("barber.unavailable") })}
             >
               <Avatar
                 fullName={member.display_name}
@@ -486,10 +479,10 @@ export default function ShopDetailScreen() {
                 size={40}
               />
               <View style={styles.barberInfo}>
-                <Text style={styles.barberName} numberOfLines={1}>
+                <AppText style={styles.barberName} numberOfLines={1}>
                   {member.display_name || "—"}
-                </Text>
-                <Text style={styles.barberMeta} numberOfLines={1}>
+                </AppText>
+                <AppText style={styles.barberMeta} numberOfLines={1}>
                   {[
                     member.specialty,
                     member.years_of_experience != null
@@ -506,7 +499,7 @@ export default function ShopDetailScreen() {
                   ]
                     .filter(Boolean)
                     .join(" · ")}
-                </Text>
+                </AppText>
               </View>
               <RTLIcon name="chevron-forward" size={16} color={colors.muted} />
             </Pressable>
@@ -532,27 +525,27 @@ export default function ShopDetailScreen() {
       )}
 
       {myReview?.status === "pending" && (
-        <Text style={styles.reviewPending}>{t("shop.review_awaiting")}</Text>
+        <AppText style={styles.reviewPending}>{t("shop.review_awaiting")}</AppText>
       )}
 
       {reviews.length === 0 ? (
         <View style={styles.reviewEmptyCard}>
-          <Text style={styles.reviewEmptyTitle}>{t("shop.no_reviews")}</Text>
-          <Text style={styles.reviewEmptySubtitle}>
+          <AppText style={styles.reviewEmptyTitle}>{t("shop.no_reviews")}</AppText>
+          <AppText style={styles.reviewEmptySubtitle}>
             {t("shop.be_first")}
-          </Text>
+          </AppText>
         </View>
       ) : (
         <>
           <View style={styles.reviewSummaryCard}>
             <View style={styles.reviewSummaryMain}>
-              <Text style={styles.reviewSummaryAvg}>
+              <AppText style={styles.reviewSummaryAvg}>
                 {Number(shop.rating_avg ?? 0).toFixed(1)}
-              </Text>
+              </AppText>
               <StarRating value={Math.round(shop.rating_avg ?? 0)} size={16} />
-              <Text style={styles.reviewSummaryCount}>
+              <AppText style={styles.reviewSummaryCount}>
                 {shop.rating_count} {shop.rating_count === 1 ? t("shop.review") : t("shop.reviews_count")}
-              </Text>
+              </AppText>
             </View>
             <View style={styles.reviewDistribution}>
               {[5, 4, 3, 2, 1].map((star) => {
@@ -560,11 +553,11 @@ export default function ShopDetailScreen() {
                 const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
                 return (
                   <View key={star} style={styles.distributionRow}>
-                    <Text style={styles.distributionStar}>{star}</Text>
+                    <AppText style={styles.distributionStar}>{star}</AppText>
                     <View style={styles.distributionTrack}>
                       <View style={[styles.distributionFill, { width: `${pct}%` }]} />
                     </View>
-                    <Text style={styles.distributionCount}>{count}</Text>
+                    <AppText style={styles.distributionCount}>{count}</AppText>
                   </View>
                 );
               })}

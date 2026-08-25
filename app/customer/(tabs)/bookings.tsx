@@ -1,19 +1,9 @@
 import { useUser } from "@clerk/expo";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Animated,
-  FlatList,
-  Modal,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Animated, FlatList, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Avatar } from "@/components/ui/Avatar";
@@ -213,10 +203,10 @@ export default function BookingsScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("bookings.title")}</Text>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.title}>{t("bookings.title")}</AppText>
+        <AppText style={styles.subtitle}>
           {t("bookings.subtitle", { upcoming: counts.upcoming, past: counts.past })}
-        </Text>
+        </AppText>
       </View>
 
       {notice ? (
@@ -237,16 +227,16 @@ export default function BookingsScreen() {
               onPress={() => setFilter(value)}
               style={[styles.chip, isActive && styles.chipActive]}
             >
-              <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+              <AppText style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
                 {value === "all" ? t("bookings.filter_all") : value === "upcoming" ? t("bookings.upcoming") : t("bookings.past")} (
                 {counts[value]})
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
       </ScrollView>
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       <FlatList
         style={styles.list}
@@ -263,14 +253,14 @@ export default function BookingsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>
+            <AppText style={styles.emptyTitle}>
               {filter === "all" ? t("bookings.no_bookings") : t("bookings.nothing_here")}
-            </Text>
-            <Text style={styles.emptySubtitle}>
+            </AppText>
+            <AppText style={styles.emptySubtitle}>
               {filter === "all"
-                ? "Discover a barbershop and book your first appointment."
+                ? t("bookings.discover_hint")
                 : t("bookings.try_filter")}
-            </Text>
+            </AppText>
             {filter === "all" && (
               <Button
                 title={t("bookings.discover_shops")}
@@ -504,12 +494,12 @@ function BookingDetailSheet({
               size={48}
             />
             <View style={styles.modalHeaderInfo}>
-              <Text style={styles.modalName} numberOfLines={1}>
+              <AppText style={styles.modalName} numberOfLines={1}>
                 {row.service_name || "—"}
-              </Text>
-              <Text style={styles.modalUsername} numberOfLines={1}>
+              </AppText>
+              <AppText style={styles.modalUsername} numberOfLines={1}>
                 {staffName} · {shopName}
-              </Text>
+              </AppText>
             </View>
             <BookingStatusBadge status={row.status} />
           </View>
@@ -518,37 +508,37 @@ function BookingDetailSheet({
 
           <View style={styles.detailsCard}>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{t("bookings.when")}</Text>
-              <Text style={styles.detailValue}>{formatDateTime(row.starts_at)}</Text>
+              <AppText style={styles.detailLabel}>{t("bookings.when")}</AppText>
+              <AppText style={styles.detailValue}>{formatDateTime(row.starts_at)}</AppText>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{t("bookings.barber_label")}</Text>
-              <Text style={styles.detailValue} numberOfLines={1}>
+              <AppText style={styles.detailLabel}>{t("bookings.barber_label")}</AppText>
+              <AppText style={styles.detailValue} numberOfLines={1}>
                 {staffName}
-              </Text>
+              </AppText>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{t("bookings.shop_label")}</Text>
-              <Text style={styles.detailValue} numberOfLines={1}>
+              <AppText style={styles.detailLabel}>{t("bookings.shop_label")}</AppText>
+              <AppText style={styles.detailValue} numberOfLines={1}>
                 {shopName}
-              </Text>
+              </AppText>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{t("bookings.price")}</Text>
-              <Text style={styles.detailValue}>
+              <AppText style={styles.detailLabel}>{t("bookings.price")}</AppText>
+              <AppText style={styles.detailValue}>
                 {formattedPrice}
-              </Text>
+              </AppText>
             </View>
             {!!row.note && (
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>{t("bookings.note")}</Text>
-                <Text style={styles.detailValue}>{row.note}</Text>
+                <AppText style={styles.detailLabel}>{t("bookings.note")}</AppText>
+                <AppText style={styles.detailValue}>{row.note}</AppText>
               </View>
             )}
             {!!row.cancel_reason && (
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>{t("bookings.reason")}</Text>
-                <Text style={styles.detailValue}>{row.cancel_reason}</Text>
+                <AppText style={styles.detailLabel}>{t("bookings.reason")}</AppText>
+                <AppText style={styles.detailValue}>{row.cancel_reason}</AppText>
               </View>
             )}
           </View>
@@ -560,29 +550,29 @@ function BookingDetailSheet({
           {row.status === "completed" && !!row.shop?.id && !!customerId && (
             <View style={styles.reviewSection}>
               <View style={styles.reviewHeader}>
-                <Text style={styles.reviewLabel}>{t("bookings.your_review")}</Text>
+                <AppText style={styles.reviewLabel}>{t("bookings.your_review")}</AppText>
                 {!!myReview && (
                   <Pressable
                     onPress={() => setReviewVisible(true)}
                     hitSlop={8}
                     accessibilityRole="button"
                   >
-                    <Text style={styles.reviewEditLabel}>{t("common.edit")}</Text>
+                    <AppText style={styles.reviewEditLabel}>{t("common.edit")}</AppText>
                   </Pressable>
                 )}
               </View>
               {reviewLoading ? (
-                <Text style={styles.reviewHint}>{t("common.loading")}</Text>
+                <AppText style={styles.reviewHint}>{t("common.loading")}</AppText>
               ) : myReview ? (
                 <View style={styles.yourReviewCard}>
                   <StarRating value={myReview.rating} />
                   {myReview.status === "pending" && (
-                    <Text style={styles.reviewPending}>{t("bookings.awaiting_approval")}</Text>
+                    <AppText style={styles.reviewPending}>{t("bookings.awaiting_approval")}</AppText>
                   )}
                   {!!myReview.comment && (
-                    <Text style={styles.reviewComment} numberOfLines={2}>
+                    <AppText style={styles.reviewComment} numberOfLines={2}>
                       {myReview.comment}
-                    </Text>
+                    </AppText>
                   )}
                 </View>
               ) : (
@@ -651,8 +641,8 @@ function LiveProgressCard({ live, error }: LiveProgressCardProps) {
   if (!live) {
     return (
       <View style={styles.liveCard}>
-        <Text style={styles.liveLabel}>{t("bookings.live_status")}</Text>
-        <Text style={styles.liveSubtitle}>{t("bookings.checking_schedule")}</Text>
+        <AppText style={styles.liveLabel}>{t("bookings.live_status")}</AppText>
+        <AppText style={styles.liveSubtitle}>{t("bookings.checking_schedule")}</AppText>
       </View>
     );
   }
@@ -674,8 +664,8 @@ function LiveProgressCard({ live, error }: LiveProgressCardProps) {
   return (
     <View style={styles.liveCard}>
       <View style={styles.liveBadge} />
-      <Text style={[styles.liveTitle, { color: tone }]}>{title}</Text>
-      <Text style={styles.liveSubtitle}>{subtitle}</Text>
+      <AppText style={[styles.liveTitle, { color: tone }]}>{title}</AppText>
+      <AppText style={styles.liveSubtitle}>{subtitle}</AppText>
     </View>
   );
 }

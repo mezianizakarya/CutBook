@@ -2,22 +2,15 @@ import { useUser } from "@clerk/expo";
 import * as Clipboard from "expo-clipboard";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { t } from "@/lib/i18n";
 import { Avatar } from "@/components/ui/Avatar";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
@@ -116,7 +109,7 @@ export default function OwnerStaffScreen() {
   }
 
   const shopName = useCallback(
-    (shopId: number) => shops.find((shop) => shop.id === shopId)?.name ?? "Shop",
+    (shopId: number) => shops.find((shop) => shop.id === shopId)?.name ?? t("shop.name"),
     [shops]
   );
 
@@ -223,7 +216,7 @@ export default function OwnerStaffScreen() {
     return (
       <Screen centered>
         <View style={styles.centerWrap}>
-          <Text style={styles.errorText}>{error}</Text>
+          <AppText style={styles.errorText}>{error}</AppText>
         </View>
       </Screen>
     );
@@ -243,15 +236,15 @@ export default function OwnerStaffScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("tabs.staff")}</Text>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.title}>{t("tabs.staff")}</AppText>
+        <AppText style={styles.subtitle}>
           {t("staff.owner_subtitle")}
-        </Text>
+        </AppText>
       </View>
 
       {notice ? <NoticeBanner notice={notice} variant="soft" /> : null}
 
-      {!!error && <Text style={styles.errorText}>{error}</Text>}
+      {!!error && <AppText style={styles.errorText}>{error}</AppText>}
 
       <FlatList
         style={styles.list}
@@ -293,10 +286,10 @@ export default function OwnerStaffScreen() {
             <SectionHeader title={t("staff.invitations")} />
             {visibleInvitations.length === 0 ? (
               <View style={styles.inviteEmpty}>
-                <Text style={styles.inviteEmptyTitle}>{t("staff.no_invitations")}</Text>
-                <Text style={styles.inviteEmptySubtitle}>
+                <AppText style={styles.inviteEmptyTitle}>{t("staff.no_invitations")}</AppText>
+                <AppText style={styles.inviteEmptySubtitle}>
                   {t("staff.invite_description")}
-                </Text>
+                </AppText>
               </View>
             ) : (
               visibleInvitations.map((invite) => {
@@ -304,10 +297,10 @@ export default function OwnerStaffScreen() {
                 return (
                   <View key={invite.id} style={styles.inviteRow}>
                     <View style={styles.inviteInfo}>
-                      <Text style={styles.inviteCode}>{invite.code}</Text>
-                      <Text style={styles.inviteMeta}>
+                      <AppText style={styles.inviteCode}>{invite.code}</AppText>
+                      <AppText style={styles.inviteMeta}>
                         {shopName(invite.shop_id)} · {inviteStatusLabel(status, invite)}
-                      </Text>
+                      </AppText>
                     </View>
                     {status === "active" ? (
                       <View style={styles.inviteActions}>
@@ -317,7 +310,7 @@ export default function OwnerStaffScreen() {
                           style={styles.iconButton}
                           accessibilityRole="button"
                         >
-                          <Text style={styles.iconButtonText}>{t("common.copy")}</Text>
+                          <AppText style={styles.iconButtonText}>{t("common.copy")}</AppText>
                         </Pressable>
                         <Pressable
                           onPress={() => handleRevoke(invite)}
@@ -325,7 +318,7 @@ export default function OwnerStaffScreen() {
                           style={styles.revokeButton}
                           accessibilityRole="button"
                         >
-                          <Text style={styles.revokeButtonText}>{t("staff.revoke")}</Text>
+                          <AppText style={styles.revokeButtonText}>{t("staff.revoke")}</AppText>
                         </Pressable>
                       </View>
                     ) : (
@@ -358,10 +351,10 @@ export default function OwnerStaffScreen() {
         }
         ListEmptyComponent={
           <View style={styles.inviteEmpty}>
-            <Text style={styles.inviteEmptyTitle}>{t("staff.no_staff")}</Text>
-            <Text style={styles.inviteEmptySubtitle}>
+            <AppText style={styles.inviteEmptyTitle}>{t("staff.no_staff")}</AppText>
+            <AppText style={styles.inviteEmptySubtitle}>
               {t("staff.staff_empty_description")}
-            </Text>
+            </AppText>
           </View>
         }
         renderItem={({ item }) => (
@@ -371,14 +364,14 @@ export default function OwnerStaffScreen() {
           >
             <Avatar fullName={item.display_name} imageUrl={item.avatar_url} size={44} />
             <View style={styles.staffInfo}>
-              <Text style={styles.staffName} numberOfLines={1}>
+              <AppText style={styles.staffName} numberOfLines={1}>
                 {item.display_name || t("staff.unnamed")}
-              </Text>
-              <Text style={styles.staffMeta} numberOfLines={1}>
+              </AppText>
+              <AppText style={styles.staffMeta} numberOfLines={1}>
                 {memberRoleLabel(item.member_role)} · {shopName(item.shop_id)}
-              </Text>
+              </AppText>
             </View>
-            <Text style={styles.chevron}>›</Text>
+            <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
           </Pressable>
         )}
       />
@@ -387,8 +380,8 @@ export default function OwnerStaffScreen() {
         visible={pickShop}
         onClose={() => setPickShop(false)}
       >
-        <Text style={styles.sheetTitle}>{t("staff.invite_a_barber")}</Text>
-        <Text style={styles.sheetText}>{t("staff.which_shop")}</Text>
+        <AppText style={styles.sheetTitle}>{t("staff.invite_a_barber")}</AppText>
+        <AppText style={styles.sheetText}>{t("staff.which_shop")}</AppText>
         {shops.map((shop) => (
           <Pressable
             key={shop.id}
@@ -398,8 +391,8 @@ export default function OwnerStaffScreen() {
             }}
             style={({ pressed }) => [styles.shopOption, pressed && styles.shopOptionPressed]}
           >
-            <Text style={styles.shopOptionText}>{shop.name}</Text>
-            <Text style={styles.chevron}>›</Text>
+            <AppText style={styles.shopOptionText}>{shop.name}</AppText>
+            <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
           </Pressable>
         ))}
       </BottomSheet>
@@ -408,17 +401,17 @@ export default function OwnerStaffScreen() {
         visible={generated !== null}
         onClose={() => setGenerated(null)}
       >
-        <Text style={styles.sheetTitle}>{t("staff.barber_invitation")}</Text>
+        <AppText style={styles.sheetTitle}>{t("staff.barber_invitation")}</AppText>
         {generated ? (
           <>
-            <Text style={styles.sheetText}>
+            <AppText style={styles.sheetText}>
               {t("staff.share_code_description", { date: formatDate(generated.expires_at) })}
-            </Text>
+            </AppText>
             <Pressable
               onPress={() => void handleCopy(generated.code)}
               style={({ pressed }) => [styles.codeBox, pressed && styles.codeBoxPressed]}
             >
-              <Text style={styles.codeText}>{generated.code}</Text>
+              <AppText style={styles.codeText}>{generated.code}</AppText>
             </Pressable>
             <Button
               title={t("staff.copy_code")}
@@ -445,17 +438,17 @@ export default function OwnerStaffScreen() {
                 size={52}
               />
               <View style={styles.staffSheetInfo}>
-                <Text style={styles.staffName} numberOfLines={1}>
+                <AppText style={styles.staffName} numberOfLines={1}>
                   {selectedStaff.display_name || t("staff.unnamed")}
-                </Text>
-                <Text style={styles.staffMeta} numberOfLines={1}>
+                </AppText>
+                <AppText style={styles.staffMeta} numberOfLines={1}>
                   {memberRoleLabel(selectedStaff.member_role)} ·{" "}
                   {shopName(selectedStaff.shop_id)}
-                </Text>
+                </AppText>
                 {!!selectedStaff.joined_at && (
-                  <Text style={styles.staffMeta}>
+                  <AppText style={styles.staffMeta}>
                     {t("staff.joined_date", { date: formatDate(selectedStaff.joined_at) })}
-                  </Text>
+                  </AppText>
                 )}
               </View>
             </View>
@@ -466,9 +459,9 @@ export default function OwnerStaffScreen() {
                 onPress={() => handleRemove(selectedStaff)}
               />
             ) : (
-              <Text style={styles.sheetText}>
+              <AppText style={styles.sheetText}>
                 {t("staff.owners_managers_removal")}
-              </Text>
+              </AppText>
             )}
           </>
         ) : null}
@@ -641,11 +634,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.muted,
     marginTop: 2,
-  },
-  chevron: {
-    fontSize: 22,
-    color: colors.muted,
-    fontWeight: "400",
   },
   sheetTitle: {
     fontSize: 18,

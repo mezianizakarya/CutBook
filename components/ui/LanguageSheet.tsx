@@ -1,5 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
+
+import { AppText } from "@/components/AppText";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { useI18n } from "@/lib/I18nProvider";
@@ -23,7 +25,7 @@ export function LanguageSheet({ visible, onClose }: Props) {
 
   return (
     <BottomSheet visible={visible} onClose={onClose}>
-      <Text style={styles.title}>{t("settings.language")}</Text>
+      <AppText style={styles.title}>{t("settings.language")}</AppText>
       {LANGUAGES.map((lang) => (
         <Pressable
           key={lang.value}
@@ -36,14 +38,14 @@ export function LanguageSheet({ visible, onClose }: Props) {
             onClose();
           }}
         >
-          <Text
+          <AppText
             style={[
               styles.label,
               locale === lang.value && styles.labelActive,
             ]}
           >
             {lang.label}
-          </Text>
+          </AppText>
           {locale === lang.value && (
             <Ionicons name="checkmark" size={20} color={colors.primary} />
           )}

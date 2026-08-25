@@ -1,7 +1,9 @@
 import { useAuth } from "@clerk/expo";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { errorMessageFromUnknown } from "@/lib/errors";
@@ -57,7 +59,7 @@ export function SignOutButton() {
         disabled={signingOut}
         style={!confirming ? styles.button : undefined}
       />
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && <AppText style={styles.errorText}>{error}</AppText>}
     </View>
   );
 }

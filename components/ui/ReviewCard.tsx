@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import { StarRating } from "@/components/ui/StarRating";
@@ -18,24 +20,24 @@ export function ReviewCard({ review }: ReviewCardProps) {
       <View style={styles.header}>
         <Avatar fullName={review.author_name} size={36} />
         <View style={styles.headerInfo}>
-          <Text style={styles.author} numberOfLines={1}>
+          <AppText style={styles.author} numberOfLines={1}>
             {review.author_name || t("review.customer")}
-          </Text>
-          <Text style={styles.date}>{formatDate(review.created_at)}</Text>
+          </AppText>
+          <AppText style={styles.date}>{formatDate(review.created_at)}</AppText>
         </View>
         <StarRating value={review.rating} />
       </View>
 
-      {!!review.comment && <Text style={styles.comment}>{review.comment}</Text>}
+      {!!review.comment && <AppText style={styles.comment}>{review.comment}</AppText>}
 
       {!!review.owner_response && (
         <View style={styles.response}>
-          <Text style={styles.responseLabel}>
+          <AppText style={styles.responseLabel}>
             {review.responded_at
               ? t("review.shop_response_date", { date: formatDate(review.responded_at) })
               : t("review.shop_response")}
-          </Text>
-          <Text style={styles.responseText}>{review.owner_response}</Text>
+          </AppText>
+          <AppText style={styles.responseText}>{review.owner_response}</AppText>
         </View>
       )}
     </View>

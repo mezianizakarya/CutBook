@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -22,7 +24,7 @@ type StatusBadgeProps = {
 export function StatusBadge({ label, tone }: StatusBadgeProps) {
   return (
     <View style={[styles.badge, styles[tone]]}>
-      <Text style={[styles.label, styles[`${tone}Label`]]}>{label}</Text>
+      <AppText style={[styles.label, styles[`${tone}Label`]]}>{label}</AppText>
     </View>
   );
 }

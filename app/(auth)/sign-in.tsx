@@ -1,7 +1,9 @@
 import { useAuth, useClerk, useSignIn } from "@clerk/expo";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
@@ -140,12 +142,12 @@ export default function SignInScreen() {
     return (
       <Screen scroll centered>
         <View style={styles.header}>
-          <Text style={styles.title}>{t("auth.verify_your_account")}</Text>
-          <Text style={styles.subtitle}>
+          <AppText style={styles.title}>{t("auth.verify_your_account")}</AppText>
+          <AppText style={styles.subtitle}>
             {secondFactorStrategy === "totp"
               ? t("auth.enter_authenticator_code")
               : t("auth.enter_email_or_phone_code")}
-          </Text>
+          </AppText>
         </View>
 
         <View style={styles.form}>
@@ -167,7 +169,7 @@ export default function SignInScreen() {
 
           {secondFactorStrategy !== "totp" && (
             <Pressable onPress={startSecondFactor} disabled={submitting}>
-              <Text style={styles.link}>{t("auth.resend_code")}</Text>
+              <AppText style={styles.link}>{t("auth.resend_code")}</AppText>
             </Pressable>
           )}
 
@@ -178,7 +180,7 @@ export default function SignInScreen() {
               setLocalError(null);
             }}
           >
-            <Text style={styles.link}>{t("auth.start_over")}</Text>
+            <AppText style={styles.link}>{t("auth.start_over")}</AppText>
           </Pressable>
         </View>
       </Screen>
@@ -188,8 +190,8 @@ export default function SignInScreen() {
   return (
     <Screen scroll centered>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("auth.welcome_back")}</Text>
-        <Text style={styles.subtitle}>{t("auth.sign_in_to_account")}</Text>
+        <AppText style={styles.title}>{t("auth.welcome_back")}</AppText>
+        <AppText style={styles.subtitle}>{t("auth.sign_in_to_account")}</AppText>
       </View>
 
       <View style={styles.form}>
@@ -211,19 +213,19 @@ export default function SignInScreen() {
         />
 
         {globalErrors?.map((err) => (
-          <Text key={err.code} style={styles.globalError}>
+          <AppText key={err.code} style={styles.globalError}>
             {err.message}
-          </Text>
+          </AppText>
         ))}
 
-        {localError && <Text style={styles.globalError}>{localError}</Text>}
+        {localError && <AppText style={styles.globalError}>{localError}</AppText>}
 
         {typeof message === "string" && message.length > 0 && (
-          <Text style={styles.successText}>{message}</Text>
+          <AppText style={styles.successText}>{message}</AppText>
         )}
 
         <Pressable onPress={() => router.push("/forgot-password")}>
-          <Text style={styles.link}>{t("auth.forgot_password")}</Text>
+          <AppText style={styles.link}>{t("auth.forgot_password")}</AppText>
         </Pressable>
 
         <Button
@@ -235,9 +237,9 @@ export default function SignInScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>{t("auth.dont_have_account")}</Text>
+        <AppText style={styles.footerText}>{t("auth.dont_have_account")}</AppText>
         <Pressable onPress={() => router.push("/sign-up")}>
-          <Text style={styles.link}>{t("auth.sign_up")}</Text>
+          <AppText style={styles.link}>{t("auth.sign_up")}</AppText>
         </Pressable>
       </View>
     </Screen>

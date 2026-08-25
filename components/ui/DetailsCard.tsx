@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -30,10 +32,10 @@ export function DetailRow({
 }: DetailRowProps) {
   const content = (
     <>
-      <Text style={[styles.label, { width: labelWidth }]}>{label}</Text>
-      <Text style={styles.value} numberOfLines={numberOfLines}>
+      <AppText style={[styles.label, { width: labelWidth }]}>{label}</AppText>
+      <AppText style={styles.value} numberOfLines={numberOfLines}>
         {value}
-      </Text>
+      </AppText>
       {action}
     </>
   );

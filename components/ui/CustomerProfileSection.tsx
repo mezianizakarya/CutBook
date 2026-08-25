@@ -1,5 +1,7 @@
 import { useUser } from "@clerk/expo";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { CustomerReputationSection } from "@/components/ui/CustomerReputationSection";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -74,7 +76,7 @@ export function CustomerProfileSection() {
             <StatCard label={t("customer.favorites")} value={String(data?.favorites ?? 0)} />
           </View>
         )}
-        {!!error && <Text style={styles.error}>{error}</Text>}
+        {!!error && <AppText style={styles.error}>{error}</AppText>}
       </View>
     </>
   );

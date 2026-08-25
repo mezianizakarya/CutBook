@@ -1,17 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
-import {
-  FlatList,
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { FlatList, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+import { AppTextInput } from "@/components/AppTextInput";
+
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
@@ -84,7 +76,7 @@ export function PhoneInput({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      <AppText style={styles.label}>{label}</AppText>
       <View style={[styles.row, !!error && styles.rowError]}>
         <Pressable
           onPress={() => setPickerVisible(true)}
@@ -95,12 +87,12 @@ export function PhoneInput({
             pressed && styles.codeButtonPressed,
           ]}
         >
-          <Text style={styles.codeText}>
+          <AppText style={styles.codeText}>
             {country.flag} {country.dialCode}
-          </Text>
+          </AppText>
           <Ionicons name="chevron-down" size={16} color={colors.muted} />
         </Pressable>
-        <TextInput
+        <AppTextInput
           style={styles.input}
           value={localNumber}
           onChangeText={handleChangeText}
@@ -112,7 +104,7 @@ export function PhoneInput({
           maxLength={country.maxDigits}
         />
       </View>
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       <Modal
         visible={pickerVisible}
@@ -137,8 +129,8 @@ export function PhoneInput({
             ]}
           >
             <View style={styles.dragHandle} />
-            <Text style={styles.sheetTitle}>{t("phone.select_country")}</Text>
-            <TextInput
+            <AppText style={styles.sheetTitle}>{t("phone.select_country")}</AppText>
+            <AppTextInput
               style={styles.search}
               value={query}
               onChangeText={setQuery}
@@ -158,7 +150,7 @@ export function PhoneInput({
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
-                <Text style={styles.empty}>{t("phone.no_countries")}</Text>
+                <AppText style={styles.empty}>{t("phone.no_countries")}</AppText>
               }
               renderItem={({ item }) => (
                 <Pressable
@@ -170,11 +162,11 @@ export function PhoneInput({
                     item.code === country.code && styles.countryRowActive,
                   ]}
                 >
-                  <Text style={styles.countryFlag}>{item.flag}</Text>
-                  <Text style={styles.countryName} numberOfLines={1}>
+                  <AppText style={styles.countryFlag}>{item.flag}</AppText>
+                  <AppText style={styles.countryName} numberOfLines={1}>
                     {item.name}
-                  </Text>
-                  <Text style={styles.countryDial}>{item.dialCode}</Text>
+                  </AppText>
+                  <AppText style={styles.countryDial}>{item.dialCode}</AppText>
                 </Pressable>
               )}
             />

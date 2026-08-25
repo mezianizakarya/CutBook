@@ -1,10 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+
+import { AppText } from "@/components/AppText";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { COUNTRIES } from "@/lib/countries";
 import { getCurrencyForCountry } from "@/lib/currency";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 
 export function useRegionSheet(countryCode: string) {
@@ -19,16 +22,16 @@ export function useRegionSheet(countryCode: string) {
 
   const sheetContent = (
     <BottomSheet visible={visible} onClose={() => setVisible(false)}>
-      <Text style={styles.title}>Account region</Text>
+      <AppText style={styles.title}>{t("settings.account_region")}</AppText>
 
       <View style={styles.infoCard}>
         <View style={styles.infoRow}>
           <Ionicons name="location" size={20} color={colors.primary} />
           <View style={styles.infoTextGroup}>
-            <Text style={styles.infoLabel}>Country</Text>
-            <Text style={styles.infoValue}>
+            <AppText style={styles.infoLabel}>{t("settings.country")}</AppText>
+            <AppText style={styles.infoValue}>
               {countryInfo?.flag} {countryInfo?.name ?? "Unknown"}
-            </Text>
+            </AppText>
           </View>
         </View>
 
@@ -37,25 +40,23 @@ export function useRegionSheet(countryCode: string) {
         <View style={styles.infoRow}>
           <Ionicons name="cash" size={20} color={colors.primary} />
           <View style={styles.infoTextGroup}>
-            <Text style={styles.infoLabel}>Currency</Text>
-            <Text style={styles.infoValue}>
+            <AppText style={styles.infoLabel}>{t("settings.currency")}</AppText>
+            <AppText style={styles.infoValue}>
               {currency.symbol} ({currency.code})
-            </Text>
+            </AppText>
           </View>
         </View>
       </View>
 
-      <Text style={styles.note}>
-        Your region is automatically detected based on your device location
-        and cannot be changed manually. All prices in the app are displayed
-        in your local currency.
-      </Text>
+      <AppText style={styles.note}>
+        {t("settings.region_note")}
+      </AppText>
 
       <Pressable
         onPress={() => setVisible(false)}
         style={({ pressed }) => [styles.doneButton, pressed && styles.donePressed]}
       >
-        <Text style={styles.doneText}>Done</Text>
+        <AppText style={styles.doneText}>{t("common.done")}</AppText>
       </Pressable>
     </BottomSheet>
   );

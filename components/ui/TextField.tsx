@@ -1,4 +1,7 @@
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+import { AppTextInput } from "@/components/AppTextInput";
+
 import type { StyleProp, ViewStyle } from "react-native";
 
 import { colors, radius, spacing } from "@/lib/theme";
@@ -36,7 +39,7 @@ export function TextField({
 }: TextFieldProps) {
   return (
     <View style={[styles.container, style]}>
-      <Text style={styles.label}>{label}</Text>
+      <AppText style={styles.label}>{label}</AppText>
       <View
         style={[
           styles.inputRow,
@@ -44,8 +47,8 @@ export function TextField({
           !!error && styles.inputRowError,
         ]}
       >
-        {!!prefix && <Text style={styles.prefix}>{prefix}</Text>}
-        <TextInput
+        {!!prefix && <AppText style={styles.prefix}>{prefix}</AppText>}
+        <AppTextInput
           style={[styles.input, multiline && styles.inputMultiline]}
           value={value}
           onChangeText={onChangeText}
@@ -59,7 +62,7 @@ export function TextField({
           textAlignVertical={multiline ? "top" : "center"}
         />
       </View>
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
     </View>
   );
 }
@@ -103,7 +106,7 @@ const styles = StyleSheet.create({
   prefix: {
     fontSize: 16,
     color: colors.muted,
-    marginRight: spacing.xs,
+    marginEnd: spacing.xs,
   },
   input: {
     flex: 1,

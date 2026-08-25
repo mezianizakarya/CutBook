@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { TextField } from "@/components/ui/TextField";
+import { t } from "@/lib/i18n";
 import { colors, spacing } from "@/lib/theme";
 import {
   isUsernameTaken,
@@ -87,12 +90,12 @@ export function UsernameField({
         error={fieldError}
       />
       {extraErrors.map((message) => (
-        <Text key={message} style={styles.error}>
+        <AppText key={message} style={styles.error}>
           {message}
-        </Text>
+        </AppText>
       ))}
       {showAvailability && (
-        <Text
+        <AppText
           style={
             availability === "available"
               ? styles.available
@@ -102,11 +105,11 @@ export function UsernameField({
           }
         >
           {availability === "available"
-            ? "Available"
+            ? t("username.available")
             : availability === "taken"
-              ? "Already taken"
-              : "Checking availability…"}
-        </Text>
+              ? t("username.already_taken")
+              : t("username.checking")}
+        </AppText>
       )}
     </View>
   );

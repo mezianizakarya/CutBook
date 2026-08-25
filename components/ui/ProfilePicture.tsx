@@ -1,15 +1,9 @@
 import { useUser } from "@clerk/expo";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type AlertButton,
-} from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, View, type AlertButton } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import { errorMessageFromUnknown } from "@/lib/errors";
@@ -119,7 +113,7 @@ export function ProfilePicture() {
           </View>
         )}
       </Pressable>
-      {!!error && <Text style={styles.errorText}>{error}</Text>}
+      {!!error && <AppText style={styles.errorText}>{error}</AppText>}
     </View>
   );
 }

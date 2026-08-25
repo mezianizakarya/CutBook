@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import { I18nManager } from "react-native";
-import * as Updates from "expo-updates";
+import RNRestart from "react-native-restart";
 import {
   loadSavedLocale,
   saveLocale,
@@ -36,27 +36,20 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     loadSavedLocale().then((saved) => {
       setLocale(saved);
       setLocaleState(saved);
-      applyRTL(saved);
       setIsLoading(false);
     });
-  }, []);
-
-  const applyRTL = useCallback(async (nextLocale: SupportedLocale) => {
-    const shouldBeRTL = isRTL(nextLocale);
-    if (I18nManager.isRTL !== shouldBeRTL) {
-      I18nManager.allowRTL(shouldBeRTL);
-      I18nManager.forceRTL(shouldBeRTL);
-      try {
-        await Updates.reloadAsync();
-      } catch {}
-    }
   }, []);
 
   const handleSetLocale = useCallback(async (newLocale: SupportedLocale) => {
     await saveLocale(newLocale);
     setLocaleState(newLocale);
-    await applyRTL(newLocale);
-  }, [applyRTL]);
+    const shouldBeRTL = isRTL(newLocale);
+    I18nManager.allowRTL(shouldBeRTL);
+    I18nManager.forceRTL(shouldBeRTL);
+    try {
+      RNRestart.restart();
+    } catch {}
+  }, []);
 
   return (
     <I18nContext.Provider value={{ locale, isRTL: isRTL(locale), setLocale: handleSetLocale, isLoading }}>

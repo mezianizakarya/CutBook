@@ -1,7 +1,9 @@
 import { useAuth, useSignIn } from "@clerk/expo";
 import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
@@ -50,10 +52,10 @@ export default function ForgotPasswordScreen() {
   return (
     <Screen scroll centered>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("auth.forgot_your_password")}</Text>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.title}>{t("auth.forgot_your_password")}</AppText>
+        <AppText style={styles.subtitle}>
           {t("auth.forgot_password_info")}
-        </Text>
+        </AppText>
       </View>
 
       <View style={styles.form}>
@@ -67,9 +69,9 @@ export default function ForgotPasswordScreen() {
         />
 
         {globalErrors?.map((err) => (
-          <Text key={err.code} style={styles.globalError}>
+          <AppText key={err.code} style={styles.globalError}>
             {errorMessage(err)}
-          </Text>
+          </AppText>
         ))}
 
         <Button
@@ -81,9 +83,9 @@ export default function ForgotPasswordScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>{t("auth.remembered_password")}</Text>
+        <AppText style={styles.footerText}>{t("auth.remembered_password")}</AppText>
         <Pressable onPress={() => router.push("/sign-in")}>
-          <Text style={styles.link}>{t("auth.sign_in")}</Text>
+          <AppText style={styles.link}>{t("auth.sign_in")}</AppText>
         </Pressable>
       </View>
     </Screen>

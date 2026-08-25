@@ -1,15 +1,9 @@
 import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -118,14 +112,14 @@ export default function PendingVerificationsScreen() {
           >
             <RTLIcon name="chevron-back" size={26} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>{t("admin.verification_requests")}</Text>
+          <AppText style={styles.title}>{t("admin.verification_requests")}</AppText>
         </View>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.subtitle}>
           {t("admin.barbers_owners_verify")}
-        </Text>
+        </AppText>
 
         {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
-        {!!error && <Text style={styles.error}>{error}</Text>}
+        {!!error && <AppText style={styles.error}>{error}</AppText>}
 
         <SectionHeader
           title={t("admin.requests")}
@@ -133,10 +127,10 @@ export default function PendingVerificationsScreen() {
         />
         {requests.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>{t("admin.nothing_to_review")}</Text>
-            <Text style={styles.emptySubtitle}>
+            <AppText style={styles.emptyTitle}>{t("admin.nothing_to_review")}</AppText>
+            <AppText style={styles.emptySubtitle}>
               {t("admin.no_verification_requests")}
-            </Text>
+            </AppText>
           </View>
         ) : (
           requests.map((req) => (
@@ -147,17 +141,17 @@ export default function PendingVerificationsScreen() {
                 size={44}
               />
               <View style={styles.rowInfo}>
-                <Text style={styles.rowName} numberOfLines={1}>
+                <AppText style={styles.rowName} numberOfLines={1}>
                   {applicantName(req)}
-                </Text>
-                <Text style={styles.rowSubtitle} numberOfLines={1}>
+                </AppText>
+                <AppText style={styles.rowSubtitle} numberOfLines={1}>
                   {req.profiles?.role ? getRoleLabel(req.profiles.role) : "—"} ·{" "}
                   {formatDate(req.created_at)}
-                </Text>
+                </AppText>
                 {!!req.note && (
-                  <Text style={styles.requestNote} numberOfLines={2}>
+                  <AppText style={styles.requestNote} numberOfLines={2}>
                     {req.note}
-                  </Text>
+                  </AppText>
                 )}
               </View>
               <Button

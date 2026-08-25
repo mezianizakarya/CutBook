@@ -1,7 +1,9 @@
 import { useUser } from "@clerk/expo";
 import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Screen } from "@/components/ui/Screen";
 import { FullScreenLoader } from "@/lib/auth";
@@ -44,10 +46,10 @@ export default function ChooseRoleScreen() {
   return (
     <Screen scroll centered>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("roles.how_will_you_use")}</Text>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.title}>{t("roles.how_will_you_use")}</AppText>
+        <AppText style={styles.subtitle}>
           {t("roles.pick_role_info")}
-        </Text>
+        </AppText>
       </View>
 
       <View style={styles.list}>
@@ -65,10 +67,10 @@ export default function ChooseRoleScreen() {
               ]}
             >
               <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>{getRoleLabel(role)}</Text>
-                {isSelected && <Text style={styles.savingText}>{t("roles.saving")}</Text>}
+                <AppText style={styles.cardTitle}>{getRoleLabel(role)}</AppText>
+                {isSelected && <AppText style={styles.savingText}>{t("roles.saving")}</AppText>}
               </View>
-              <Text style={styles.cardDescription}>{getRoleDescription(role)}</Text>
+              <AppText style={styles.cardDescription}>{getRoleDescription(role)}</AppText>
             </Pressable>
           );
         })}

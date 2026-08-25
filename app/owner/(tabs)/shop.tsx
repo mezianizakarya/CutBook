@@ -3,17 +3,9 @@ import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useUser } from "@clerk/expo";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -251,7 +243,7 @@ export default function OwnerShopScreen() {
     return (
       <Screen centered>
         <View style={styles.centerWrap}>
-          <Text style={styles.errorText}>{error}</Text>
+          <AppText style={styles.errorText}>{error}</AppText>
         </View>
       </Screen>
     );
@@ -283,17 +275,17 @@ export default function OwnerShopScreen() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>{t("tabs.shop")}</Text>
-          <Text style={styles.subtitle}>
+          <AppText style={styles.title}>{t("tabs.shop")}</AppText>
+          <AppText style={styles.subtitle}>
             {selectedShop.status === "pending"
               ? t("shop.shop_subtitle_pending")
               : t("shop.shop_subtitle_active")}
-          </Text>
+          </AppText>
         </View>
 
         {notice ? <NoticeBanner notice={notice} variant="soft" /> : null}
 
-        {!!error && <Text style={styles.errorText}>{error}</Text>}
+        {!!error && <AppText style={styles.errorText}>{error}</AppText>}
 
         <ScrollView
           horizontal
@@ -345,9 +337,9 @@ export default function OwnerShopScreen() {
             />
             <InfoRow label={t("shop.postal_code")} value={selectedShop.postal_code} />
             <InfoRow label={t("shop.phone")} value={selectedShop.phone} />
-            <Text style={styles.managerHint}>
+            <AppText style={styles.managerHint}>
               {t("shop.manager_hint")}
-            </Text>
+            </AppText>
           </View>
         )}
 
@@ -370,10 +362,10 @@ export default function OwnerShopScreen() {
         />
         {services.length === 0 ? (
           <View style={styles.inlineEmpty}>
-            <Text style={styles.inlineEmptyTitle}>{t("shop.no_services_yet")}</Text>
-            <Text style={styles.inlineEmptySubtitle}>
+            <AppText style={styles.inlineEmptyTitle}>{t("shop.no_services_yet")}</AppText>
+            <AppText style={styles.inlineEmptySubtitle}>
               {t("shop.add_services_hint")}
-            </Text>
+            </AppText>
           </View>
         ) : (
           <View style={styles.groupCard}>
@@ -383,15 +375,15 @@ export default function OwnerShopScreen() {
                 style={[styles.serviceRow, index > 0 && styles.groupDivider]}
               >
                 <View style={styles.serviceInfo}>
-                  <Text style={styles.serviceName} numberOfLines={1}>
+                  <AppText style={styles.serviceName} numberOfLines={1}>
                     {service.name}
-                  </Text>
-                  <Text style={styles.serviceMeta} numberOfLines={1}>
-                    <Text style={styles.servicePrice}>
+                  </AppText>
+                  <AppText style={styles.serviceMeta} numberOfLines={1}>
+                    <AppText style={styles.servicePrice}>
                       {formatCents(service.price_cents, userCountry)}
-                    </Text>
+                    </AppText>
                     {`  ·  ${service.duration_minutes} ${t("common.min")}`}
-                  </Text>
+                  </AppText>
                 </View>
                 {canEdit ? (
                   <Switch
@@ -409,7 +401,7 @@ export default function OwnerShopScreen() {
                         : styles.statusPillHidden,
                     ]}
                   >
-                    <Text
+                    <AppText
                       style={[
                         styles.statusPillText,
                         service.is_active
@@ -418,7 +410,7 @@ export default function OwnerShopScreen() {
                       ]}
                     >
                       {service.is_active ? t("shop.active_label") : t("shop.hidden_label")}
-                    </Text>
+                    </AppText>
                   </View>
                 )}
               </View>
@@ -437,9 +429,9 @@ export default function OwnerShopScreen() {
             })
           }
         />
-        <Text style={styles.hoursHint}>
+        <AppText style={styles.hoursHint}>
           {t("shop.hours_hint")}
-        </Text>
+        </AppText>
         <View style={styles.groupCard}>
           {hours.map((day, index) => {
             const isToday = day.day_of_week === todayDayOfWeek;
@@ -448,12 +440,12 @@ export default function OwnerShopScreen() {
                 key={day.day_of_week}
                 style={[styles.hoursRow, index > 0 && styles.groupDivider]}
               >
-                <Text
+                <AppText
                   style={[styles.hoursDay, isToday && styles.hoursDayToday]}
                 >
                   {dayName(day.day_of_week)}
-                </Text>
-                <Text
+                </AppText>
+                <AppText
                   style={[
                     styles.hoursValue,
                     isToday && styles.hoursDayToday,
@@ -462,7 +454,7 @@ export default function OwnerShopScreen() {
                   {day.is_closed
                     ? t("shop.closed")
                     : formatOpenRange(day.opens_at, day.closes_at)}
-                </Text>
+                </AppText>
               </View>
             );
           })}
@@ -490,25 +482,25 @@ export default function OwnerShopScreen() {
           ]}
         >
           <View style={styles.serviceInfo}>
-            <Text style={styles.serviceName} numberOfLines={1}>
+            <AppText style={styles.serviceName} numberOfLines={1}>
               {selectedShop.is_verified
                 ? t("shop.verified_badge")
                 : t("shop.request_verification")}
-            </Text>
-            <Text style={styles.serviceMeta} numberOfLines={1}>
+            </AppText>
+            <AppText style={styles.serviceMeta} numberOfLines={1}>
               {selectedShop.is_verified
                 ? t("shop.verified_badge_desc")
                 : t("shop.request_verification_desc")}
-            </Text>
+            </AppText>
           </View>
           <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
         </Pressable>
 
         {canEdit ? (
           <View style={styles.dangerZone}>
-            <Text style={styles.dangerHint}>
+            <AppText style={styles.dangerHint}>
               {t("shop.delete_description")}
-            </Text>
+            </AppText>
             <Button
               title={confirming ? t("shop.confirm_delete", { count }) : t("shop.delete_shop")}
               variant="danger"
@@ -527,10 +519,10 @@ export default function OwnerShopScreen() {
 function InfoRow({ label, value }: { label: string; value: string | null }) {
   return (
     <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue} numberOfLines={1}>
+      <AppText style={styles.infoLabel}>{label}</AppText>
+      <AppText style={styles.infoValue} numberOfLines={1}>
         {value || "—"}
-      </Text>
+      </AppText>
     </View>
   );
 }

@@ -1,15 +1,9 @@
 import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -131,14 +125,14 @@ export default function PendingShopsScreen() {
           >
             <RTLIcon name="chevron-back" size={26} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>{t("admin.pending_approvals")}</Text>
+          <AppText style={styles.title}>{t("admin.pending_approvals")}</AppText>
         </View>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.subtitle}>
           {t("admin.shops_waiting_approval")}
-        </Text>
+        </AppText>
 
         {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
-        {!!error && <Text style={styles.error}>{error}</Text>}
+        {!!error && <AppText style={styles.error}>{error}</AppText>}
 
         <SectionHeader
           title={t("admin.shops_title")}
@@ -146,10 +140,10 @@ export default function PendingShopsScreen() {
         />
         {shops.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>{t("admin.nothing_to_review")}</Text>
-            <Text style={styles.emptySubtitle}>
+            <AppText style={styles.emptyTitle}>{t("admin.nothing_to_review")}</AppText>
+            <AppText style={styles.emptySubtitle}>
               {t("admin.no_shops_waiting")}
-            </Text>
+            </AppText>
           </View>
         ) : (
           shops.map((shop) => (
@@ -160,12 +154,12 @@ export default function PendingShopsScreen() {
             >
               <Avatar fullName={shop.name} imageUrl={shop.logo_url} size={44} />
               <View style={styles.rowInfo}>
-                <Text style={styles.rowName} numberOfLines={1}>
+                <AppText style={styles.rowName} numberOfLines={1}>
                   {shop.name}
-                </Text>
-                <Text style={styles.rowSubtitle} numberOfLines={1}>
+                </AppText>
+                <AppText style={styles.rowSubtitle} numberOfLines={1}>
                   {shop.city ?? t("owner.no_city")} · {formatDate(shop.created_at)}
-                </Text>
+                </AppText>
               </View>
               <Button
                 title={t("admin.approve")}

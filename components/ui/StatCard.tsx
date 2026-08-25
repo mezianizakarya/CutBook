@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -10,8 +12,8 @@ type StatCardProps = {
 export function StatCard({ label, value }: StatCardProps) {
   return (
     <View style={styles.card}>
-      <Text style={styles.value}>{value}</Text>
-      <Text style={styles.label}>{label}</Text>
+      <AppText style={styles.value}>{value}</AppText>
+      <AppText style={styles.label}>{label}</AppText>
     </View>
   );
 }

@@ -1,5 +1,7 @@
 import { Image } from "expo-image";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { avatarColor, getInitials } from "@/lib/avatar";
 import { colors, radius } from "@/lib/theme";
@@ -19,9 +21,9 @@ export function Avatar({ fullName, imageUrl, size = 96 }: AvatarProps) {
 
   return (
     <View style={[styles.initials, dimensions, { backgroundColor: avatarColor(fullName) }]}>
-      <Text style={[styles.initialsText, { fontSize: size * 0.38 }]}>
+      <AppText style={[styles.initialsText, { fontSize: size * 0.38 }]}>
         {getInitials(fullName)}
-      </Text>
+      </AppText>
     </View>
   );
 }

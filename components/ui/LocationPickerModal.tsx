@@ -3,16 +3,10 @@ import { RTLIcon } from "@/components/ui/RTLIcon";
 import { Image } from "expo-image";
 import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Keyboard,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Keyboard, Modal, Pressable, StyleSheet, View, type TextInput } from "react-native";
+import { AppText } from "@/components/AppText";
+import { AppTextInput } from "@/components/AppTextInput";
+
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 
@@ -254,11 +248,11 @@ export function LocationPickerModal({
           style={[styles.backRow, { top: insets.top + spacing.md }]}
         >
           <RTLIcon name="chevron-back" size={22} color={colors.text} />
-          <Text style={styles.backLabel}>{t("common.back")}</Text>
+          <AppText style={styles.backLabel}>{t("common.back")}</AppText>
         </Pressable>
 
         <View style={[styles.searchContainer, { top: searchTop }]}>
-          <TextInput
+          <AppTextInput
             ref={searchInputRef}
             style={styles.search}
             value={query}
@@ -325,10 +319,10 @@ export function LocationPickerModal({
             { paddingBottom: spacing.md + insets.bottom },
           ]}
         >
-          <Text style={styles.previewTitle} numberOfLines={2}>
+          <AppText style={styles.previewTitle} numberOfLines={2}>
             {resolving ? t("location.looking_up") : summary}
-          </Text>
-          {!!error && <Text style={styles.errorText}>{error}</Text>}
+          </AppText>
+          {!!error && <AppText style={styles.errorText}>{error}</AppText>}
           <View style={styles.actions}>
             <Button
               title={t("location.use_my_location")}

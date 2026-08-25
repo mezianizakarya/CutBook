@@ -1,4 +1,6 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
+import { AppText } from "@/components/AppText";
+
 import type { StyleProp, ViewStyle } from "react-native";
 
 import { colors, radius, spacing } from "@/lib/theme";
@@ -21,9 +23,9 @@ export function FilterChip({ label, selected, onPress, style }: FilterChipProps)
         style,
       ]}
     >
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+      <AppText style={[styles.chipText, selected && styles.chipTextSelected]}>
         {label}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }

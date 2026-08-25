@@ -1,4 +1,6 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -60,9 +62,9 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={labelColor} />
       ) : (
-        <Text style={[styles.label, { color: labelColor }]}>
+        <AppText style={[styles.label, { color: labelColor }]}>
           {title}
-        </Text>
+        </AppText>
       )}
     </Pressable>
   );

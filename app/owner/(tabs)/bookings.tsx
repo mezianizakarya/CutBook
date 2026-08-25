@@ -1,16 +1,9 @@
 import { useUser } from "@clerk/expo";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { t } from "@/lib/i18n";
 import { BookingCard } from "@/components/ui/BookingCard";
@@ -156,7 +149,7 @@ export default function OwnerBookingsScreen() {
     return (
       <Screen centered>
         <View style={styles.centerWrap}>
-          <Text style={styles.errorText}>{error}</Text>
+          <AppText style={styles.errorText}>{error}</AppText>
         </View>
       </Screen>
     );
@@ -176,13 +169,13 @@ export default function OwnerBookingsScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("bookings.title")}</Text>
-        <Text style={styles.subtitle}>{t("bookings.all_appointments")}</Text>
+        <AppText style={styles.title}>{t("bookings.title")}</AppText>
+        <AppText style={styles.subtitle}>{t("bookings.all_appointments")}</AppText>
       </View>
 
       {notice ? <NoticeBanner notice={notice} variant="soft" /> : null}
 
-      {!!error && <Text style={styles.errorText}>{error}</Text>}
+      {!!error && <AppText style={styles.errorText}>{error}</AppText>}
 
       <ScrollView
         horizontal
@@ -198,13 +191,13 @@ export default function OwnerBookingsScreen() {
               onPress={() => setStatusFilter(filter.key)}
               style={[styles.chip, isActive && styles.chipActive]}
             >
-              <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+              <AppText style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
                 {t(filter.labelKey as string)} (
                 {filter.key === "all"
                   ? bookings?.length ?? 0
                   : counts.get(filter.key) ?? 0}
                 )
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}

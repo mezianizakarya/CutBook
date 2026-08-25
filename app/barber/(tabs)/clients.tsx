@@ -2,16 +2,10 @@ import { useFocusEffect } from "expo-router";
 import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+import { AppTextInput } from "@/components/AppTextInput";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import {
@@ -151,7 +145,7 @@ export default function BarberClientsScreen() {
     return (
       <Screen scroll paddingHorizontal={14} paddingTop={spacing.sm}>
         <View style={styles.pageHeader}>
-          <Text style={styles.pageTitle}>{t("tabs.clients")}</Text>
+          <AppText style={styles.pageTitle}>{t("tabs.clients")}</AppText>
         </View>
         <EmptyState
           title={t("barber.not_assigned_shop")}
@@ -164,16 +158,16 @@ export default function BarberClientsScreen() {
   return (
     <Screen paddingHorizontal={14} style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("tabs.clients")}</Text>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.title}>{t("tabs.clients")}</AppText>
+        <AppText style={styles.subtitle}>
           {clients.length === 1
             ? t("barber.client_count", { count: clients.length })
             : t("barber.client_count_plural", { count: clients.length })}
-        </Text>
+        </AppText>
       </View>
 
       <View style={styles.searchWrap}>
-        <TextInput
+        <AppTextInput
           style={styles.search}
           value={query}
           onChangeText={setQuery}
@@ -195,7 +189,7 @@ export default function BarberClientsScreen() {
         )}
       </View>
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       <FlatList
         style={styles.list}
@@ -267,23 +261,23 @@ function ClientRow({ client, onPress }: ClientRowProps) {
         size={44}
       />
       <View style={styles.rowInfo}>
-        <Text style={styles.rowName} numberOfLines={1}>
+        <AppText style={styles.rowName} numberOfLines={1}>
           {fullName || t("staff.customer")}
-        </Text>
-        <Text style={styles.rowSubtitle} numberOfLines={1}>
+        </AppText>
+        <AppText style={styles.rowSubtitle} numberOfLines={1}>
           {subtitle}
-        </Text>
+        </AppText>
         {!!client.last_booking && (
-          <Text style={styles.rowDate} numberOfLines={1}>
+          <AppText style={styles.rowDate} numberOfLines={1}>
             {t("staff.last_visit")} {formatDate(client.last_booking)}
-          </Text>
+          </AppText>
         )}
       </View>
       {client.upcoming_count > 0 && (
         <View style={styles.upcomingBadge}>
-          <Text style={styles.upcomingBadgeText}>
+          <AppText style={styles.upcomingBadgeText}>
             {t("barber.upcoming_count", { count: client.upcoming_count })}
-          </Text>
+          </AppText>
         </View>
       )}
     </Pressable>
@@ -305,27 +299,27 @@ function ClientDetailSheet({ client, history, onClose }: ClientDetailSheetProps)
       <View style={styles.sheetHeader}>
         <Avatar fullName={fullName} imageUrl={client.avatar_url} size={56} />
         <View style={styles.sheetHeaderInfo}>
-          <Text style={styles.sheetName} numberOfLines={1}>
+          <AppText style={styles.sheetName} numberOfLines={1}>
             {fullName}
-          </Text>
-          <Text style={styles.sheetSubtitle} numberOfLines={1}>
+          </AppText>
+          <AppText style={styles.sheetSubtitle} numberOfLines={1}>
             {[client.phone, client.email].filter(Boolean).join(" · ") || "—"}
-          </Text>
+          </AppText>
         </View>
       </View>
 
       <View style={styles.sheetStats}>
         <View style={styles.sheetStat}>
-          <Text style={styles.sheetStatValue}>{client.booking_count}</Text>
-          <Text style={styles.sheetStatLabel}>{t("staff.bookings")}</Text>
+          <AppText style={styles.sheetStatValue}>{client.booking_count}</AppText>
+          <AppText style={styles.sheetStatLabel}>{t("staff.bookings")}</AppText>
         </View>
         <View style={styles.sheetStat}>
-          <Text style={styles.sheetStatValue}>{client.completed_count}</Text>
-          <Text style={styles.sheetStatLabel}>{t("status.completed")}</Text>
+          <AppText style={styles.sheetStatValue}>{client.completed_count}</AppText>
+          <AppText style={styles.sheetStatLabel}>{t("status.completed")}</AppText>
         </View>
         <View style={styles.sheetStat}>
-          <Text style={styles.sheetStatValue}>{client.upcoming_count}</Text>
-          <Text style={styles.sheetStatLabel}>{t("staff.upcoming")}</Text>
+          <AppText style={styles.sheetStatValue}>{client.upcoming_count}</AppText>
+          <AppText style={styles.sheetStatLabel}>{t("staff.upcoming")}</AppText>
         </View>
       </View>
 
@@ -344,19 +338,19 @@ function ClientDetailSheet({ client, history, onClose }: ClientDetailSheetProps)
         )}
       </DetailsCard>
 
-      <Text style={styles.historyTitle}>{t("barber.recent_bookings")}</Text>
+      <AppText style={styles.historyTitle}>{t("barber.recent_bookings")}</AppText>
       {history.length === 0 ? (
-        <Text style={styles.historyEmpty}>{t("barber.no_bookings_record")}</Text>
+        <AppText style={styles.historyEmpty}>{t("barber.no_bookings_record")}</AppText>
       ) : (
         history.map((row) => (
           <View key={row.id} style={styles.historyRow}>
             <View style={styles.historyInfo}>
-              <Text style={styles.historyName} numberOfLines={1}>
+              <AppText style={styles.historyName} numberOfLines={1}>
                 {row.service_name || "—"}
-              </Text>
-              <Text style={styles.historyMeta} numberOfLines={1}>
+              </AppText>
+              <AppText style={styles.historyMeta} numberOfLines={1}>
                 {formatDateTime(row.starts_at)} · {formatCents(row.service_price_cents, userCountry)}
-              </Text>
+              </AppText>
             </View>
             <BookingStatusBadge status={row.status as BookingStatus} />
           </View>

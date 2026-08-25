@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import {
@@ -112,12 +114,12 @@ export function StaffBookingSheet({
       <View style={styles.header}>
         <Avatar fullName={name} imageUrl={customer?.avatar_url} size={48} />
         <View style={styles.headerInfo}>
-          <Text style={styles.headerName} numberOfLines={1}>
+          <AppText style={styles.headerName} numberOfLines={1}>
             {name}
-          </Text>
-          <Text style={styles.headerSubtitle} numberOfLines={1}>
+          </AppText>
+          <AppText style={styles.headerSubtitle} numberOfLines={1}>
             {subtitle}
-          </Text>
+          </AppText>
         </View>
         <BookingStatusBadge status={current.status} />
       </View>

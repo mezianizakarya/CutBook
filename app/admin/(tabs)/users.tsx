@@ -3,23 +3,10 @@ import { useUser } from "@clerk/expo";
 import * as Clipboard from "expo-clipboard";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Animated,
-  FlatList,
-  Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Animated, FlatList, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+import { AppTextInput } from "@/components/AppTextInput";
+
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Avatar } from "@/components/ui/Avatar";
@@ -375,17 +362,17 @@ export default function UsersScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("tabs.users")}</Text>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.title}>{t("tabs.users")}</AppText>
+        <AppText style={styles.subtitle}>
           {t("admin.active_deleted", { active: counts.active, deleted: counts.deleted })}
-        </Text>
+        </AppText>
       </View>
 
       {notice ? (
         <NoticeBanner notice={notice} style={styles.noticeSpacing} />
       ) : (
         <View style={styles.searchContainer}>
-          <TextInput
+          <AppTextInput
             style={styles.search}
             value={query}
             onChangeText={setQuery}
@@ -422,10 +409,10 @@ export default function UsersScreen() {
               onPress={() => setStatusFilter(filter)}
               style={[styles.chip, isActive && styles.chipActive]}
             >
-              <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+              <AppText style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
                 {filter === "all" ? t("admin.all_users") : filter === "active" ? t("admin.active") : t("admin.deleted")} (
                 {counts[filter]})
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
@@ -445,11 +432,11 @@ export default function UsersScreen() {
               onPress={() => setRoleFilter(isActive ? "all" : role)}
               style={[styles.chip, isActive && styles.chipActive]}
             >
-              <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+              <AppText style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
                 {role === "all"
                   ? t("admin.all_roles")
                   : `${getRoleLabel(role)} (${roleCounts[role]})`}
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
@@ -466,9 +453,9 @@ export default function UsersScreen() {
             onPress={() => setRegionFilter("all")}
             style={[styles.chip, regionFilter === "all" && styles.chipActive]}
           >
-            <Text style={[styles.chipLabel, regionFilter === "all" && styles.chipLabelActive]}>
+            <AppText style={[styles.chipLabel, regionFilter === "all" && styles.chipLabelActive]}>
               {t("admin.all_regions", { count: profiles?.length ?? 0 })}
-            </Text>
+            </AppText>
           </Pressable>
           {regionCounts.map(([region, count]) => {
             const isActive = regionFilter === region;
@@ -478,16 +465,16 @@ export default function UsersScreen() {
                 onPress={() => setRegionFilter(isActive ? "all" : region)}
                 style={[styles.chip, isActive && styles.chipActive]}
               >
-                <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+                <AppText style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
                   {region} ({count})
-                </Text>
+                </AppText>
               </Pressable>
             );
           })}
         </ScrollView>
       )}
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       <FlatList
         style={styles.list}
@@ -505,10 +492,10 @@ export default function UsersScreen() {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>{t("admin.no_users_found")}</Text>
-            <Text style={styles.emptySubtitle}>
+            <AppText style={styles.emptyTitle}>{t("admin.no_users_found")}</AppText>
+            <AppText style={styles.emptySubtitle}>
               {t("admin.try_different_filter")}
-            </Text>
+            </AppText>
             {hasActiveFilters && (
               <Button
                 title={t("admin.reset_filters")}
@@ -545,20 +532,20 @@ export default function UsersScreen() {
             <Avatar fullName={fullName(item)} imageUrl={item.avatar_url} size={44} />
             <View style={styles.rowInfo}>
               <View style={styles.rowNameLine}>
-                <Text style={styles.rowName} numberOfLines={1}>
+                <AppText style={styles.rowName} numberOfLines={1}>
                   {fullName(item)}
-                </Text>
+                </AppText>
                 {item.is_verified && <VerifiedIcon size={16} />}
               </View>
-              <Text style={styles.rowUsername} numberOfLines={1}>
+              <AppText style={styles.rowUsername} numberOfLines={1}>
                 {item.username ?? t("admin.no_username")}
-              </Text>
+              </AppText>
             </View>
             <View style={styles.rowBadges}>
               <View style={styles.roleBadge}>
-                <Text style={styles.roleBadgeText}>
+                <AppText style={styles.roleBadgeText}>
                     {item.role ? getRoleLabel(item.role) : "—"}
-                </Text>
+                </AppText>
               </View>
               <View
                 style={[
@@ -568,7 +555,7 @@ export default function UsersScreen() {
                     : styles.statusBadgeActive,
                 ]}
               >
-                <Text
+                <AppText
                   style={[
                     styles.statusBadgeText,
                     item.account_status === "deleted"
@@ -577,7 +564,7 @@ export default function UsersScreen() {
                   ]}
                 >
                   {item.account_status === "deleted" ? t("admin.deleted") : t("admin.active")}
-                </Text>
+                </AppText>
               </View>
             </View>
           </Pressable>
@@ -801,9 +788,9 @@ function ActionModal({
             <Avatar fullName={fullName(row)} imageUrl={row.avatar_url} size={48} />
             <View style={styles.modalHeaderInfo}>
               <View style={styles.modalNameRow}>
-                <Text style={styles.modalName} numberOfLines={1}>
+                <AppText style={styles.modalName} numberOfLines={1}>
                   {fullName(row)}
-                </Text>
+                </AppText>
                 {row.is_verified && (
                   <Pressable
                     onPress={handleVerificationBadgePress}
@@ -822,9 +809,9 @@ function ActionModal({
                     pressed && styles.roleBadgePressed,
                   ]}
                 >
-                  <Text style={styles.roleBadgeText}>
+                  <AppText style={styles.roleBadgeText}>
                     {row.role ? getRoleLabel(row.role) : "—"}
-                  </Text>
+                  </AppText>
                 </Pressable>
                 <View
                   style={[
@@ -832,14 +819,14 @@ function ActionModal({
                     deleted ? styles.statusBadgeDeleted : styles.statusBadgeActive,
                   ]}
                 >
-                  <Text
+                  <AppText
                     style={[
                       styles.statusBadgeText,
                       deleted ? styles.statusBadgeTextDeleted : styles.statusBadgeTextActive,
                     ]}
                   >
                     {deleted ? t("admin.deleted") : t("admin.active")}
-                  </Text>
+                  </AppText>
                 </View>
                 {(row.role === "barber" || row.role === "owner") &&
                   (request?.status === "pending" ? (
@@ -848,15 +835,15 @@ function ActionModal({
                     <StatusBadge label={t("admin.rejected")} tone="danger" />
                   ) : null)}
               </View>
-              <Text style={styles.modalUsername} numberOfLines={1}>
+              <AppText style={styles.modalUsername} numberOfLines={1}>
                 {row.username ?? t("admin.no_username")}
-              </Text>
+              </AppText>
             </View>
           </View>
 
           {showingRoles ? (
             <>
-              <Text style={styles.rolePickerTitle}>{t("admin.change_role")}</Text>
+              <AppText style={styles.rolePickerTitle}>{t("admin.change_role")}</AppText>
               <View style={styles.roleChipsBleed}>
               <ScrollView
                 horizontal
@@ -885,7 +872,7 @@ function ActionModal({
                         isSelected && styles.chipSelected,
                       ]}
                     >
-                      <Text
+                      <AppText
                         style={[
                           styles.chipLabel,
                           isCurrent && styles.chipRoleCurrentLabel,
@@ -893,7 +880,7 @@ function ActionModal({
                         ]}
                       >
                         {getRoleLabel(role)}
-                      </Text>
+                      </AppText>
                     </Pressable>
                   );
                 })}
@@ -955,11 +942,11 @@ function ActionModal({
             </>
           ) : showingVerification ? (
             <>
-              <Text style={styles.verificationRemoveTitle}>{t("admin.verification_remove_title")}</Text>
+              <AppText style={styles.verificationRemoveTitle}>{t("admin.verification_remove_title")}</AppText>
               <View style={styles.verificationRemoveCard}>
-                <Text style={styles.verificationRemoveText}>
+                <AppText style={styles.verificationRemoveText}>
                   {t("admin.verification_remove_desc", { name: fullName(row) })}
-                </Text>
+                </AppText>
               </View>
               <Button
                 title={t("admin.remove_verification")}
@@ -979,9 +966,9 @@ function ActionModal({
           ) : (
             <>
           {isLastActiveAdmin && !deleted && (
-            <Text style={styles.modalHint}>
+            <AppText style={styles.modalHint}>
               {t("admin.only_active_admin")}
-            </Text>
+            </AppText>
           )}
 
           <View style={styles.detailsCard}>
@@ -990,14 +977,14 @@ function ActionModal({
                 onPress={() => copyToClipboard(row.username ?? "", "username")}
                 style={styles.detailRow}
               >
-                <Text style={styles.detailLabel}>{t("admin.username")}</Text>
-                <Text style={styles.detailValue} numberOfLines={1}>
+                <AppText style={styles.detailLabel}>{t("admin.username")}</AppText>
+                <AppText style={styles.detailValue} numberOfLines={1}>
                   {row.username}
-                </Text>
+                </AppText>
                 {copiedField === "username" ? (
-                  <Text style={styles.copiedText}>{t("common.copied")}</Text>
+                  <AppText style={styles.copiedText}>{t("common.copied")}</AppText>
                 ) : (
-                  <Text style={styles.copyHint}>{t("common.copy")}</Text>
+                  <AppText style={styles.copyHint}>{t("common.copy")}</AppText>
                 )}
               </Pressable>
             ) : null}
@@ -1005,14 +992,14 @@ function ActionModal({
               onPress={() => copyToClipboard(row.email ?? "", "email")}
               style={styles.detailRow}
             >
-              <Text style={styles.detailLabel}>{t("staff.email")}</Text>
-              <Text style={styles.detailValue} numberOfLines={1}>
+              <AppText style={styles.detailLabel}>{t("staff.email")}</AppText>
+              <AppText style={styles.detailValue} numberOfLines={1}>
                 {row.email ?? t("admin.no_email")}
-              </Text>
+              </AppText>
               {copiedField === "email" ? (
-                <Text style={styles.copiedText}>Copied</Text>
+                <AppText style={styles.copiedText}>{t("common.copied")}</AppText>
               ) : (
-                <Text style={styles.copyHint}>Copy</Text>
+                <AppText style={styles.copyHint}>{t("common.copy")}</AppText>
               )}
             </Pressable>
             {row.phone ? (
@@ -1020,36 +1007,36 @@ function ActionModal({
                 onPress={() => copyToClipboard(row.phone ?? "", "phone")}
                 style={styles.detailRow}
               >
-                <Text style={styles.detailLabel}>{t("staff.phone")}</Text>
-                <Text style={styles.detailValue} numberOfLines={1}>
+                <AppText style={styles.detailLabel}>{t("staff.phone")}</AppText>
+                <AppText style={styles.detailValue} numberOfLines={1}>
                   {row.phone}
-                </Text>
+                </AppText>
                 {copiedField === "phone" ? (
-                  <Text style={styles.copiedText}>{t("common.copied")}</Text>
+                  <AppText style={styles.copiedText}>{t("common.copied")}</AppText>
                 ) : (
-                  <Text style={styles.copyHint}>{t("common.copy")}</Text>
+                  <AppText style={styles.copyHint}>{t("common.copy")}</AppText>
                 )}
               </Pressable>
             ) : null}
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{t("admin.member_since")}</Text>
-              <Text style={styles.detailValue}>
+              <AppText style={styles.detailLabel}>{t("admin.member_since")}</AppText>
+              <AppText style={styles.detailValue}>
                 {formatDate(row.created_at)}
-              </Text>
+              </AppText>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{t("admin.last_active")}</Text>
-              <Text style={styles.detailValue}>
+              <AppText style={styles.detailLabel}>{t("admin.last_active")}</AppText>
+              <AppText style={styles.detailValue}>
                 {formatDate(row.last_active_at)}
-              </Text>
+              </AppText>
             </View>
             {row.country && (
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>{t("admin.region")}</Text>
-                <Text style={styles.detailValue}>
+                <AppText style={styles.detailLabel}>{t("admin.region")}</AppText>
+                <AppText style={styles.detailValue}>
                   {COUNTRIES.find((c) => c.code === row.country)?.flag}{" "}
                   {COUNTRIES.find((c) => c.code === row.country)?.name ?? row.country}
-                </Text>
+                </AppText>
               </View>
             )}
           </View>

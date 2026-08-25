@@ -3,16 +3,9 @@ import { useUser } from "@clerk/expo";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Screen } from "@/components/ui/Screen";
@@ -108,13 +101,13 @@ export default function FavoritesScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("favorites.title")}</Text>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.title}>{t("favorites.title")}</AppText>
+        <AppText style={styles.subtitle}>
           {count === 1 ? t("favorites.one_saved_shop") : t("favorites.shop_count", { count })}
-        </Text>
+        </AppText>
       </View>
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       <FlatList
         style={styles.list}
@@ -151,19 +144,19 @@ export default function FavoritesScreen() {
             />
             <View style={styles.rowInfo}>
               <View style={styles.nameRow}>
-                <Text style={styles.rowName} numberOfLines={1}>
+                <AppText style={styles.rowName} numberOfLines={1}>
                   {item.name || "—"}
-                </Text>
+                </AppText>
                 {item.is_verified && <VerifiedIcon size={16} />}
               </View>
-              <Text style={styles.rowSubtitle} numberOfLines={1}>
+              <AppText style={styles.rowSubtitle} numberOfLines={1}>
                 {item.city ?? "—"}
-              </Text>
+              </AppText>
               <View style={styles.ratingRow}>
                 <Ionicons name="star" size={12} color={colors.success} />
-                <Text style={styles.ratingText}>
+                <AppText style={styles.ratingText}>
                   {formatRating(item.rating_avg, item.rating_count)}
-                </Text>
+                </AppText>
               </View>
             </View>
             <Pressable
@@ -171,7 +164,7 @@ export default function FavoritesScreen() {
               disabled={removingIds.has(item.id)}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel={`Remove ${item.name} from favorites`}
+              accessibilityLabel={t("shop.remove_from_favorites", { name: item.name })}
               style={({ pressed }) => [
                 styles.heartButton,
                 pressed && styles.heartButtonPressed,

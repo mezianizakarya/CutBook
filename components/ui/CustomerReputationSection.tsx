@@ -1,5 +1,7 @@
 import { useUser } from "@clerk/expo";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatCard } from "@/components/ui/StatCard";
@@ -39,10 +41,10 @@ export function CustomerReputationSection() {
         <>
           <View style={styles.levelCard}>
             <View style={styles.levelRow}>
-              <Text style={styles.levelLabel}>{t("customer.trust_level")}</Text>
-              <Text style={styles.levelValue}>
+              <AppText style={styles.levelLabel}>{t("customer.trust_level")}</AppText>
+              <AppText style={styles.levelValue}>
                 {getReputationLabel(reputation.level)}
-              </Text>
+              </AppText>
             </View>
           </View>
           <View style={styles.statsRow}>
@@ -57,7 +59,7 @@ export function CustomerReputationSection() {
           </View>
         </>
       )}
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
     </View>
   );
 }

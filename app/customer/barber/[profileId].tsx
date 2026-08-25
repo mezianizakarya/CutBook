@@ -3,15 +3,9 @@ import { RTLIcon } from "@/components/ui/RTLIcon";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Avatar } from "@/components/ui/Avatar";
 import { BookingModal } from "@/components/ui/BookingModal";
@@ -144,7 +138,7 @@ export default function BarberProfileScreen() {
           >
             <RTLIcon name="chevron-back" size={26} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>{t("barber.page_title")}</Text>
+          <AppText style={styles.title}>{t("barber.page_title")}</AppText>
         </View>
 
         {loading ? (
@@ -153,8 +147,8 @@ export default function BarberProfileScreen() {
           </View>
         ) : error || !profile ? (
           <View style={styles.errorBox}>
-            <Text style={styles.errorTitle}>{t("barber.could_not_load")}</Text>
-            <Text style={styles.errorText}>{error ?? t("common.error")}</Text>
+            <AppText style={styles.errorTitle}>{t("barber.could_not_load")}</AppText>
+            <AppText style={styles.errorText}>{error ?? t("common.error")}</AppText>
             <Button
               title={t("shop.go_back")}
               variant="outline"
@@ -170,9 +164,9 @@ export default function BarberProfileScreen() {
                 imageUrl={profile.avatar_url}
                 size={120}
               />
-              <Text style={styles.name} numberOfLines={1}>
+              <AppText style={styles.name} numberOfLines={1}>
                 {profile.display_name}
-              </Text>
+              </AppText>
               {!!profile.city && (
                 <View style={styles.cityRow}>
                   <Image
@@ -181,7 +175,7 @@ export default function BarberProfileScreen() {
                     contentFit="contain"
                     tintColor={colors.muted}
                   />
-                  <Text style={styles.cityText}>{profile.city}</Text>
+                  <AppText style={styles.cityText}>{profile.city}</AppText>
                 </View>
               )}
             </View>
@@ -190,12 +184,12 @@ export default function BarberProfileScreen() {
               <View style={styles.chips}>
                 {!!profile.specialty && (
                   <View style={styles.chip}>
-                    <Text style={styles.chipText}>{profile.specialty}</Text>
+                    <AppText style={styles.chipText}>{profile.specialty}</AppText>
                   </View>
                 )}
                 {!!years && (
                   <View style={styles.chip}>
-                    <Text style={styles.chipText}>{years}</Text>
+                    <AppText style={styles.chipText}>{years}</AppText>
                   </View>
                 )}
               </View>
@@ -204,9 +198,9 @@ export default function BarberProfileScreen() {
             {profile.shop_names.length > 0 && (
               <View style={styles.shopRow}>
                 <Ionicons name="storefront-outline" size={16} color={colors.muted} />
-                <Text style={styles.shopText} numberOfLines={2}>
+                <AppText style={styles.shopText} numberOfLines={2}>
                   {profile.shop_names.join(" · ")}
-                </Text>
+                </AppText>
               </View>
             )}
 
@@ -214,7 +208,7 @@ export default function BarberProfileScreen() {
               <>
                 <SectionHeader title={t("barber.about")} />
                 <DetailsCard>
-                  <Text style={styles.bio}>{profile.bio}</Text>
+                  <AppText style={styles.bio}>{profile.bio}</AppText>
                 </DetailsCard>
               </>
             )}
@@ -225,25 +219,25 @@ export default function BarberProfileScreen() {
                 {serviceCategories.length > 0
                   ? serviceCategories.map((category) => (
                       <View key={category} style={styles.servicesGroup}>
-                        <Text style={styles.categoryTitle}>{category}</Text>
+                        <AppText style={styles.categoryTitle}>{category}</AppText>
                         <DetailsCard>
                           {services
                             .filter((service) => service.category === category)
                             .map((service) => (
                               <View key={service.id} style={styles.serviceRow}>
                                 <View style={styles.serviceInfo}>
-                                  <Text style={styles.serviceName} numberOfLines={2}>
+                                  <AppText style={styles.serviceName} numberOfLines={2}>
                                     {service.name}
-                                  </Text>
-                                  <Text style={styles.serviceMeta} numberOfLines={1}>
+                                  </AppText>
+                                  <AppText style={styles.serviceMeta} numberOfLines={1}>
                                     {formatDurationMinutes(service.duration_minutes)}
                                     {!!service.description &&
                                       ` · ${service.description}`}
-                                  </Text>
+                                  </AppText>
                                 </View>
-                                <Text style={styles.servicePrice}>
+                                <AppText style={styles.servicePrice}>
                                   {formatCents(service.price_cents, userCountry)}
-                                </Text>
+                                </AppText>
                               </View>
                             ))}
                         </DetailsCard>
@@ -254,17 +248,17 @@ export default function BarberProfileScreen() {
                       {services.map((service) => (
                         <View key={service.id} style={styles.serviceRow}>
                           <View style={styles.serviceInfo}>
-                            <Text style={styles.serviceName} numberOfLines={2}>
+                            <AppText style={styles.serviceName} numberOfLines={2}>
                               {service.name}
-                            </Text>
-                            <Text style={styles.serviceMeta} numberOfLines={1}>
+                            </AppText>
+                            <AppText style={styles.serviceMeta} numberOfLines={1}>
                               {formatDurationMinutes(service.duration_minutes)}
                               {!!service.description && ` · ${service.description}`}
-                            </Text>
+                            </AppText>
                           </View>
-                          <Text style={styles.servicePrice}>
+                          <AppText style={styles.servicePrice}>
                             {formatCents(service.price_cents, userCountry)}
-                          </Text>
+                          </AppText>
                         </View>
                       ))}
                     </DetailsCard>

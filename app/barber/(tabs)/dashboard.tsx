@@ -1,16 +1,9 @@
 import { useUser } from "@clerk/expo";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { BookingCard } from "@/components/ui/BookingCard";
 import { Button } from "@/components/ui/Button";
@@ -279,7 +272,7 @@ export default function BarberDashboardScreen() {
     return (
       <Screen scroll paddingHorizontal={14} paddingTop={spacing.sm}>
         <View style={styles.pageHeader}>
-          <Text style={styles.pageTitle}>{t("tabs.dashboard")}</Text>
+          <AppText style={styles.pageTitle}>{t("tabs.dashboard")}</AppText>
         </View>
         <EmptyState
           title={t("barber.not_assigned_shop")}
@@ -342,13 +335,13 @@ export default function BarberDashboardScreen() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>
+          <AppText style={styles.title}>
             {greetingFor(today)}, {greetingName}
-          </Text>
-          <Text style={styles.subtitle}>{dateLabel}</Text>
+          </AppText>
+          <AppText style={styles.subtitle}>{dateLabel}</AppText>
           {!!shop && (
             <View style={styles.shopRow}>
-              <Text style={styles.shopName}>{shop.name}</Text>
+              <AppText style={styles.shopName}>{shop.name}</AppText>
               <Pressable
                 hitSlop={8}
                 onPress={() => {
@@ -363,14 +356,14 @@ export default function BarberDashboardScreen() {
                   leaveArmed && styles.leaveButtonArmed,
                 ]}
               >
-                <Text
+                <AppText
                   style={[
                     styles.leaveButtonText,
                     leaveArmed && styles.leaveButtonTextArmed,
                   ]}
                 >
                   {leaveArmed ? t("barber.confirm_leave", { count: leaveCountdown }) : t("barber.leave_shop")}
-                </Text>
+                </AppText>
               </Pressable>
             </View>
           )}
@@ -378,33 +371,33 @@ export default function BarberDashboardScreen() {
 
         {notice ? <NoticeBanner notice={notice} /> : null}
 
-        {!!error && <Text style={styles.error}>{error}</Text>}
+        {!!error && <AppText style={styles.error}>{error}</AppText>}
 
         {joinedShop ? (
           <View style={[styles.pill, styles.pillAvailable]}>
-            <Text style={styles.pillAvailableText}>
+            <AppText style={styles.pillAvailableText}>
               {t("shop.you_joined", { shopName: joinedShop })}
-            </Text>
+            </AppText>
           </View>
         ) : leaveToday ? (
           <View style={[styles.pill, styles.pillLeave]}>
-            <Text style={styles.pillLeaveText}>
+            <AppText style={styles.pillLeaveText}>
               {t("barber.on_leave_today", { reason: leaveToday.reason ?? t("barber.unavailable") })}
-            </Text>
+            </AppText>
           </View>
         ) : availabilityToday.length > 0 ? (
           <View style={[styles.pill, styles.pillAvailable]}>
-            <Text style={styles.pillAvailableText}>
+            <AppText style={styles.pillAvailableText}>
               {t("barber.available_today", { ranges: availabilityToday
                 .map((window) =>
                   formatOpenRange(window.starts_at, window.ends_at)
                 )
                 .join(" · ") })}
-            </Text>
+            </AppText>
           </View>
         ) : (
           <View style={[styles.pill, styles.pillOff]}>
-            <Text style={styles.pillOffText}>{t("barber.not_scheduled_today")}</Text>
+            <AppText style={styles.pillOffText}>{t("barber.not_scheduled_today")}</AppText>
           </View>
         )}
 
@@ -425,18 +418,18 @@ export default function BarberDashboardScreen() {
           <>
             <View style={styles.workdayRow}>
               <View style={styles.workdayInfo}>
-                <Text style={styles.workdayTitle}>
+                <AppText style={styles.workdayTitle}>
                   {workSchedule.length === 1
                     ? t("barber.appointment_count", { count: workSchedule.length })
                     : t("barber.appointment_count_plural", { count: workSchedule.length })}
-                </Text>
-                <Text style={styles.workdaySubtitle}>
+                </AppText>
+                <AppText style={styles.workdaySubtitle}>
                   {workActive
                     ? t("barber.serving_now", { name: customerDisplayName(customerById.get(workActive.row.id)) })
                     : workNext
                       ? t("barber.next_up_at", { time: formatTime(new Date(workNext.expectedStartMs).toISOString()) })
                       : t("barber.all_completed")}
-                </Text>
+                </AppText>
               </View>
               {(workActive || workNext) && (
                 <Button

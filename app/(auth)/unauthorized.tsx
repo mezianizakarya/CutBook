@@ -1,7 +1,9 @@
 import { useAuth, useUser } from "@clerk/expo";
 import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
@@ -40,12 +42,12 @@ export default function UnauthorizedScreen() {
   return (
     <Screen centered>
       <View style={styles.container}>
-        <Text style={styles.code}>403</Text>
-        <Text style={styles.title}>{t("error.access_denied")}</Text>
-        <Text style={styles.description}>
+        <AppText style={styles.code}>403</AppText>
+        <AppText style={styles.title}>{t("error.access_denied")}</AppText>
+        <AppText style={styles.description}>
           {t("error.no_permission")}
           {role ? ` ${t("error.your_role", { role: getRoleLabel(role) })}` : ""}
-        </Text>
+        </AppText>
 
         <View style={styles.actions}>
           {homeRoute && (

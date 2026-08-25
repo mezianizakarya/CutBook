@@ -4,18 +4,9 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
@@ -318,14 +309,14 @@ export default function ShopHoursScreen() {
         >
           <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>{t("shop.shop_hours")}</Text>
+        <AppText style={styles.title}>{t("shop.shop_hours")}</AppText>
       </View>
-      <Text style={styles.subtitle}>
+      <AppText style={styles.subtitle}>
         {t("hours.opening_hours_subtitle")}
-      </Text>
+      </AppText>
 
       {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
-      {!!error && <Text style={styles.errorText}>{error}</Text>}
+      {!!error && <AppText style={styles.errorText}>{error}</AppText>}
 
       {loading && hours.length === 0 ? (
         <View style={styles.loading}>
@@ -345,22 +336,22 @@ export default function ShopHoursScreen() {
               const isToday = day.day_of_week === todayDayOfWeek;
               return (
                 <View key={day.day_of_week} style={styles.dayBlock}>
-                  <Text
+                  <AppText
                     style={[styles.dayName, isToday && styles.dayNameToday]}
                   >
                     {dayName(day.day_of_week)}
-                  </Text>
+                  </AppText>
                   <View style={styles.dayCard}>
                     <View style={styles.dayValue}>
                       {day.is_closed ? (
-                        <Text
+                        <AppText
                           style={[
                             styles.closedText,
                             isToday && styles.dayValueToday,
                           ]}
                         >
                           {t("shop.closed")}
-                        </Text>
+                        </AppText>
                       ) : (
                         <View style={styles.dayTimes}>
                           <Pressable
@@ -377,16 +368,16 @@ export default function ShopHoursScreen() {
                               pressed && styles.timePressablePressed,
                             ]}
                           >
-                            <Text
+                            <AppText
                               style={[
                                 styles.timeText,
                                 isToday && styles.dayValueToday,
                               ]}
                             >
                               {formatTimeOfDay(day.opens_at)}
-                            </Text>
+                            </AppText>
                           </Pressable>
-                          <Text style={styles.dash}>–</Text>
+                          <AppText style={styles.dash}>–</AppText>
                           <Pressable
                             onPress={() =>
                               setTimePicker({
@@ -401,14 +392,14 @@ export default function ShopHoursScreen() {
                               pressed && styles.timePressablePressed,
                             ]}
                           >
-                            <Text
+                            <AppText
                               style={[
                                 styles.timeText,
                                 isToday && styles.dayValueToday,
                               ]}
                             >
                               {formatTimeOfDay(day.closes_at)}
-                            </Text>
+                            </AppText>
                           </Pressable>
                         </View>
                       )}
@@ -429,18 +420,18 @@ export default function ShopHoursScreen() {
 
           {conflicts && conflicts.length > 0 ? (
             <View style={styles.conflictCard}>
-              <Text style={styles.conflictTitle}>
+              <AppText style={styles.conflictTitle}>
                 {t("hours.conflict_title")}
-              </Text>
+              </AppText>
               {conflicts.map((conflict) => (
-                <Text key={conflict.id} style={styles.conflictRow}>
+                <AppText key={conflict.id} style={styles.conflictRow}>
                   {dayName(conflict.day_of_week)} · {conflict.service_name} ·{" "}
                   {localTimeLabel(new Date(conflict.starts_at))}
-                </Text>
+                </AppText>
               ))}
-              <Text style={styles.conflictHint}>
+              <AppText style={styles.conflictHint}>
                 {t("hours.conflict_hint")}
-              </Text>
+              </AppText>
             </View>
           ) : null}
 
@@ -482,7 +473,7 @@ export default function ShopHoursScreen() {
           />
           <View style={styles.timePickerCard}>
             <View style={styles.timePickerHandle} />
-            <Text style={styles.timePickerTitle}>{t("hours.change_time")}</Text>
+            <AppText style={styles.timePickerTitle}>{t("hours.change_time")}</AppText>
             {timePicker && (
               <DateTimePicker
                 value={dateFromTimeValue(hours[timePicker.index]?.[timePicker.field])}
@@ -501,12 +492,12 @@ export default function ShopHoursScreen() {
         visible={applySheet}
         onClose={() => setApplySheet(false)}
       >
-        <Text style={styles.sheetTitle}>{t("hours.apply_to_days_title")}</Text>
-        <Text style={styles.sheetText}>
+        <AppText style={styles.sheetTitle}>{t("hours.apply_to_days_title")}</AppText>
+        <AppText style={styles.sheetText}>
           {t("hours.apply_to_days_desc")}
-        </Text>
+        </AppText>
 
-        <Text style={styles.sheetLabel}>{t("hours.copy_from")}</Text>
+        <AppText style={styles.sheetLabel}>{t("hours.copy_from")}</AppText>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -522,7 +513,7 @@ export default function ShopHoursScreen() {
           ))}
         </ScrollView>
 
-        <Text style={styles.sheetLabel}>{t("hours.apply_to")}</Text>
+        <AppText style={styles.sheetLabel}>{t("hours.apply_to")}</AppText>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -539,7 +530,7 @@ export default function ShopHoursScreen() {
         </ScrollView>
 
         <View style={styles.applyPreview}>
-          <Text style={styles.applyPreviewLabel}>
+          <AppText style={styles.applyPreviewLabel}>
             {applySourceDay
               ? applySourceDay.is_closed
                 ? t("hours.day_is_closed", { day: dayName(applySource) })
@@ -549,7 +540,7 @@ export default function ShopHoursScreen() {
                     close: formatTimeOfDay(applySourceDay.closes_at),
                   })
               : ""}
-          </Text>
+          </AppText>
         </View>
 
         <Button

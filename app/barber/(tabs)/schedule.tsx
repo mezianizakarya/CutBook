@@ -1,16 +1,9 @@
 import { useFocusEffect } from "expo-router";
 import { useUser } from "@clerk/expo";
 import { useCallback, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { BookingCard } from "@/components/ui/BookingCard";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -238,7 +231,7 @@ export default function BarberScheduleScreen() {
     return (
       <Screen scroll paddingHorizontal={14} paddingTop={spacing.sm}>
         <View style={styles.pageHeader}>
-          <Text style={styles.pageTitle}>{t("tabs.schedule")}</Text>
+          <AppText style={styles.pageTitle}>{t("tabs.schedule")}</AppText>
         </View>
         <EmptyState
           title={t("barber.not_assigned_shop")}
@@ -268,15 +261,15 @@ export default function BarberScheduleScreen() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>{t("tabs.schedule")}</Text>
-          <Text style={styles.subtitle}>
+          <AppText style={styles.title}>{t("tabs.schedule")}</AppText>
+          <AppText style={styles.subtitle}>
             {shop?.name ?? "—"} · {selectedLabel}
-          </Text>
+          </AppText>
         </View>
 
         {notice ? <NoticeBanner notice={notice} /> : null}
 
-        {!!error && <Text style={styles.error}>{error}</Text>}
+        {!!error && <AppText style={styles.error}>{error}</AppText>}
 
         <ScrollView
           horizontal
@@ -301,21 +294,21 @@ export default function BarberScheduleScreen() {
 
         {dayOff ? (
           <View style={[styles.dayPill, styles.dayPillLeave]}>
-            <Text style={styles.dayPillLeaveText}>
+            <AppText style={styles.dayPillLeaveText}>
               {t("barber.on_leave", { reason: dayOff.reason ?? t("barber.unavailable") })}
-            </Text>
+            </AppText>
           </View>
         ) : dayAvailability.length > 0 ? (
           <View style={[styles.dayPill, styles.dayPillAvailable]}>
-            <Text style={styles.dayPillAvailableText}>
+            <AppText style={styles.dayPillAvailableText}>
               {t("barber.available", { ranges: dayAvailability
                 .map((window) => formatOpenRange(window.starts_at, window.ends_at))
                 .join(" · ") })}
-            </Text>
+            </AppText>
           </View>
         ) : (
           <View style={[styles.dayPill, styles.dayPillOff]}>
-            <Text style={styles.dayPillOffText}>{t("barber.not_available_day")}</Text>
+            <AppText style={styles.dayPillOffText}>{t("barber.not_available_day")}</AppText>
           </View>
         )}
 
@@ -339,19 +332,19 @@ export default function BarberScheduleScreen() {
           />
         )}
 
-        <Text style={styles.dayBookingsTitle}>
+        <AppText style={styles.dayBookingsTitle}>
           {dayBookings.length > 0
             ? dayBookings.length === 1
               ? t("barber.booking_count", { count: dayBookings.length })
               : t("barber.booking_count_plural", { count: dayBookings.length })
             : t("barber.no_bookings_day")}
-        </Text>
+        </AppText>
         {dayBookings.length === 0 ? (
           <View style={styles.emptyDay}>
-            <Text style={styles.emptyDayTitle}>{t("barber.nothing_scheduled")}</Text>
-            <Text style={styles.emptyDaySubtitle}>
+            <AppText style={styles.emptyDayTitle}>{t("barber.nothing_scheduled")}</AppText>
+            <AppText style={styles.emptyDaySubtitle}>
               {t("barber.bookings_show_here")}
-            </Text>
+            </AppText>
           </View>
         ) : (
           dayBookings.map((row) => (
@@ -393,12 +386,12 @@ type PressableDayProps = {
 function PressableDay({ day, active, today, onPress }: PressableDayProps) {
   return (
     <PressableDayButton active={active} today={today} onPress={onPress}>
-      <Text style={[styles.dayLetter, active && styles.dayLetterActive]}>
+      <AppText style={[styles.dayLetter, active && styles.dayLetterActive]}>
         {dayLetter(day.getDay())}
-      </Text>
-      <Text style={[styles.dayNumber, active && styles.dayNumberActive]}>
+      </AppText>
+      <AppText style={[styles.dayNumber, active && styles.dayNumberActive]}>
         {day.getDate()}
-      </Text>
+      </AppText>
     </PressableDayButton>
   );
 }

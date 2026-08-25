@@ -229,7 +229,8 @@
     "all_appointments": "All appointments across your shops.",
     "no_bookings_filter": "No bookings",
     "try_different_filter": "Try a different filter or check back later.",
-    "will_appear_here": "Bookings across your shops will appear here."
+    "will_appear_here": "Bookings across your shops will appear here.",
+    "discover_hint": "Discover a barbershop and book your first appointment."
   },
   "shop": {
     "name": "Shop name",
@@ -357,7 +358,10 @@
     "could_not_update_service": "Could not update service",
     "opens_today_at": "Opens today at {{time}}",
     "open_closes_at": "Open · Closes at {{time}}",
-    "opens_day_at": "Opens {{day}} at {{time}}"
+    "opens_day_at": "Opens {{day}} at {{time}}",
+    "tap_to_change": "Tap to change",
+    "reviews_suffix": "reviews",
+    "view_barber_profile": "View {{name}} profile"
   },
   "profile": {
     "edit_profile": "Edit Profile",
@@ -391,7 +395,12 @@
     "years_experience": "Years of experience",
     "save_changes": "Save changes",
     "add_specialty_error": "Add your specialty to complete your barber profile.",
-    "experience_range_error": "Experience must be a whole number between 0 and 100 years."
+    "experience_range_error": "Experience must be a whole number between 0 and 100 years.",
+    "jane_placeholder": "Jane",
+    "doe_placeholder": "Doe",
+    "username_placeholder": "janedoe123",
+    "years_placeholder": "e.g. 5",
+    "open_profile": "Open profile"
   },
   "loyalty": {
     "title": "Loyalty",
@@ -705,7 +714,9 @@
     "portfolio": "Portfolio",
     "book_with": "Book with {{name}}",
     "could_not_book": "Couldn't book",
-    "shop_not_available": "This shop is not available right now."
+    "shop_not_available": "This shop is not available right now.",
+    "specialty_placeholder": "e.g. Fades, beard work",
+    "bio_placeholder": "Tell clients about your craft, style and what to expect."
   },
   "customer": {
     "activity": "Activity",
@@ -728,7 +739,10 @@
     "about": "About",
     "version": "Version",
     "subtitle": "Manage your account and app preferences.",
-    "account_region": "Account region"
+    "account_region": "Account region",
+    "region_note": "Your region is automatically detected based on your device location and cannot be changed manually. All prices in the app are displayed in your local currency.",
+    "country": "Country",
+    "currency": "Currency"
   },
   "days": {
     "sunday": "Sunday",
@@ -1000,6 +1014,12 @@
     "enter_duration": "Please enter a valid duration in minutes.",
     "save_changes": "Save changes",
     "category_placeholder": "Haircut",
-    "description_placeholder": "What's included?"
+    "description_placeholder": "What's included?",
+    "name_placeholder": "Classic fade"
+  },
+  "username": {
+    "available": "Available",
+    "already_taken": "Already taken",
+    "checking": "Checking availability…"
   }
 }

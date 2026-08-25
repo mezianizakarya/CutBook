@@ -2,13 +2,9 @@ import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useUser } from "@clerk/expo";
 import { Redirect, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
@@ -146,14 +142,14 @@ export default function VerificationScreen() {
         >
           <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>{t("verification.request_verification")}</Text>
+        <AppText style={styles.title}>{t("verification.request_verification")}</AppText>
       </View>
-      <Text style={styles.subtitle}>
+      <AppText style={styles.subtitle}>
         {t("verification.get_badge_info")}
-      </Text>
+      </AppText>
 
       {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       {loading && !state ? (
         <View style={styles.loading}>
@@ -163,23 +159,23 @@ export default function VerificationScreen() {
         <>
           {isVerified ? (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>{t("verification.youre_verified")}</Text>
-              <Text style={styles.cardText}>
+              <AppText style={styles.cardTitle}>{t("verification.youre_verified")}</AppText>
+              <AppText style={styles.cardText}>
                 {t("verification.badge_shown")}
-              </Text>
+              </AppText>
             </View>
           ) : pending ? (
             <View style={styles.card}>
               <View style={styles.cardBadge}>
                 <StatusBadge label={t("verification.pending_review")} tone="warning" />
               </View>
-              <Text style={styles.cardTitle}>{t("verification.request_under_review")}</Text>
-              <Text style={styles.cardText}>
+              <AppText style={styles.cardTitle}>{t("verification.request_under_review")}</AppText>
+              <AppText style={styles.cardText}>
                 {t("verification.requested_on", { date: formatDate(request.created_at) })}
-              </Text>
+              </AppText>
               {!!request.note && (
                 <View style={styles.quote}>
-                  <Text style={styles.quoteText}>{request.note}</Text>
+                  <AppText style={styles.quoteText}>{request.note}</AppText>
                 </View>
               )}
               <Button
@@ -200,13 +196,13 @@ export default function VerificationScreen() {
                 <View style={styles.cardBadge}>
                   <StatusBadge label={t("verification.rejected")} tone="danger" />
                 </View>
-                <Text style={styles.cardTitle}>{t("verification.request_rejected")}</Text>
-                <Text style={styles.cardText}>
+                <AppText style={styles.cardTitle}>{t("verification.request_rejected")}</AppText>
+                <AppText style={styles.cardText}>
                   {t("verification.request_not_approved")}
-                </Text>
+                </AppText>
                 {!!request?.review_note && (
                   <View style={styles.quote}>
-                    <Text style={styles.quoteText}>{request.review_note}</Text>
+                    <AppText style={styles.quoteText}>{request.review_note}</AppText>
                   </View>
                 )}
                 <Button
@@ -216,10 +212,10 @@ export default function VerificationScreen() {
               </View>
             ) : (
               <View style={styles.card}>
-                <Text style={styles.cardTitle}>{t("verification.request_verification")}</Text>
-                <Text style={styles.cardText}>
+                <AppText style={styles.cardTitle}>{t("verification.request_verification")}</AppText>
+                <AppText style={styles.cardText}>
                   {t("verification.tell_about_self")}
-                </Text>
+                </AppText>
                 <TextField
                   label={t("verification.why_verified")}
                   value={note}
@@ -237,10 +233,10 @@ export default function VerificationScreen() {
             )
           ) : (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>{t("verification.get_verified")}</Text>
-              <Text style={styles.cardText}>
+              <AppText style={styles.cardTitle}>{t("verification.get_verified")}</AppText>
+              <AppText style={styles.cardText}>
                 {t("verification.verified_badge_info")}
-              </Text>
+              </AppText>
               <Button title={t("verification.request_verification_button")} onPress={() => setShowForm(true)} />
             </View>
           )}

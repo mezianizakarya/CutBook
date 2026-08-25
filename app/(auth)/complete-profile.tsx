@@ -1,7 +1,9 @@
 import { useUser } from "@clerk/expo";
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { PhoneInput } from "@/components/ui/PhoneInput";
@@ -131,10 +133,10 @@ export default function CompleteProfileScreen() {
   return (
     <Screen scroll centered paddingHorizontal={14}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("onboarding.complete_your_profile")}</Text>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.title}>{t("onboarding.complete_your_profile")}</AppText>
+        <AppText style={styles.subtitle}>
           {t("onboarding.profile_details_info")}
-        </Text>
+        </AppText>
       </View>
 
       <View style={styles.form}>
@@ -144,7 +146,7 @@ export default function CompleteProfileScreen() {
                 label={t("profile.first_name")}
               value={firstName}
               onChangeText={setFirstName}
-              placeholder="Jane"
+              placeholder={t("profile.jane_placeholder")}
               autoCapitalize="words"
             />
           </View>
@@ -153,7 +155,7 @@ export default function CompleteProfileScreen() {
                 label={t("profile.last_name")}
               value={lastName}
               onChangeText={setLastName}
-              placeholder="Doe"
+              placeholder={t("profile.doe_placeholder")}
               autoCapitalize="words"
             />
           </View>
@@ -166,7 +168,7 @@ export default function CompleteProfileScreen() {
             setUsernameEdited(true);
             setUsername(text);
           }}
-          placeholder="janedoe123"
+          placeholder={t("profile.username_placeholder")}
           error={usernameError}
         />
 
@@ -180,7 +182,7 @@ export default function CompleteProfileScreen() {
           error={phoneError}
         />
 
-        {error && <Text style={styles.errorText}>{error}</Text>}
+        {error && <AppText style={styles.errorText}>{error}</AppText>}
 
         <Button title={t("profile.finish")} onPress={handleComplete} loading={submitting} />
       </View>

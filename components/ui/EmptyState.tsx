@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { colors, spacing } from "@/lib/theme";
@@ -13,8 +15,8 @@ type EmptyStateProps = {
 export function EmptyState({ title, subtitle, actionLabel, onAction }: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      <AppText style={styles.title}>{title}</AppText>
+      <AppText style={styles.subtitle}>{subtitle}</AppText>
       {!!actionLabel && (
         <Button
           title={actionLabel}

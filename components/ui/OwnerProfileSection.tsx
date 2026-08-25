@@ -1,7 +1,9 @@
 import { useUser } from "@clerk/expo";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
@@ -50,9 +52,9 @@ export function OwnerProfileSection() {
         </View>
       ) : shops && shops.length === 0 ? (
         <View style={styles.card}>
-          <Text style={styles.emptyText}>
+          <AppText style={styles.emptyText}>
             {t("owner.no_shop_yet")}
-          </Text>
+          </AppText>
         </View>
       ) : (
         (shops ?? []).map((shop) => (
@@ -71,19 +73,19 @@ export function OwnerProfileSection() {
                   { backgroundColor: avatarColor(shop.name) },
                 ]}
               >
-                <Text style={styles.thumbLetter}>
+                <AppText style={styles.thumbLetter}>
                   {shop.name.charAt(0).toUpperCase()}
-                </Text>
+                </AppText>
               </View>
             )}
             <View style={styles.shopInfo}>
-              <Text style={styles.shopName} numberOfLines={1}>
+              <AppText style={styles.shopName} numberOfLines={1}>
                 {shop.name}
-              </Text>
-              <Text style={styles.shopMeta}>
+              </AppText>
+              <AppText style={styles.shopMeta}>
                 {shop.city ?? t("owner.no_city")} ·{" "}
                 {shop.myRole === "owner" ? t("owner.owner") : t("owner.manager")}
-              </Text>
+              </AppText>
             </View>
             <StatusBadge
               label={STATUS_LABELS[shop.status]}
@@ -92,7 +94,7 @@ export function OwnerProfileSection() {
           </View>
         ))
       )}
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
     </View>
   );
 }

@@ -1,6 +1,8 @@
 import { useUser } from "@clerk/expo";
 import * as Clipboard from "expo-clipboard";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { ReputationBadge } from "@/components/ui/ReputationBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -36,9 +38,9 @@ export function ProfileSummary({
   return (
     <View style={styles.container}>
       <View style={styles.nameRow}>
-        <Text style={styles.name} numberOfLines={1}>
+        <AppText style={styles.name} numberOfLines={1}>
           {name}
-        </Text>
+        </AppText>
         {verified && <VerifiedIcon size={17} />}
         <View style={styles.badgeRow}>
           <StatusBadge label={getAccountTypeLabel(role)} tone="warning" />
@@ -53,7 +55,7 @@ export function ProfileSummary({
           accessibilityLabel="Copy username"
           style={styles.usernameRow}
         >
-          <Text style={styles.username}>{formatUsername(username)}</Text>
+          <AppText style={styles.username}>{formatUsername(username)}</AppText>
         </Pressable>
       )}
     </View>

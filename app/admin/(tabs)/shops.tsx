@@ -1,17 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+import { AppTextInput } from "@/components/AppTextInput";
+
 
 import { EmptyState } from "@/components/ui/EmptyState";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
@@ -140,17 +133,17 @@ export default function AdminShopsScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("tabs.shop")}</Text>
-        <Text style={styles.subtitle}>
+        <AppText style={styles.title}>{t("tabs.shop")}</AppText>
+        <AppText style={styles.subtitle}>
           {shops ? t("admin.shops_count", { count: shops.length }) : t("common.loading")}
-        </Text>
+        </AppText>
       </View>
 
       {notice ? (
         <NoticeBanner notice={notice} style={styles.noticeSpacing} />
       ) : (
         <View style={styles.searchContainer}>
-          <TextInput
+          <AppTextInput
             style={styles.search}
             value={query}
             onChangeText={setQuery}
@@ -187,9 +180,9 @@ export default function AdminShopsScreen() {
               onPress={() => setStatusFilter(filter)}
               style={[styles.chip, isActive && styles.chipActive]}
             >
-              <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+              <AppText style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
                 {getStatusLabels()[filter]}
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
@@ -206,9 +199,9 @@ export default function AdminShopsScreen() {
             onPress={() => setRegionFilter("all")}
             style={[styles.chip, regionFilter === "all" && styles.chipActive]}
           >
-            <Text style={[styles.chipLabel, regionFilter === "all" && styles.chipLabelActive]}>
+            <AppText style={[styles.chipLabel, regionFilter === "all" && styles.chipLabelActive]}>
               {t("admin.all_regions", { count: shops?.length ?? 0 })}
-            </Text>
+            </AppText>
           </Pressable>
           {regionCounts.map(([region, count]) => {
             const isActive = regionFilter === region;
@@ -218,16 +211,16 @@ export default function AdminShopsScreen() {
                 onPress={() => setRegionFilter(isActive ? "all" : region)}
                 style={[styles.chip, isActive && styles.chipActive]}
               >
-                <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
+                <AppText style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
                   {region} ({count})
-                </Text>
+                </AppText>
               </Pressable>
             );
           })}
         </ScrollView>
       )}
 
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <AppText style={styles.error}>{error}</AppText>}
 
       {loading && !shops ? (
         <View style={styles.loading}>
@@ -270,20 +263,20 @@ export default function AdminShopsScreen() {
                 <Avatar fullName={item.name} imageUrl={item.logo_url} size={44} />
                 <View style={styles.rowInfo}>
                   <View style={styles.rowNameLine}>
-                    <Text style={styles.rowName} numberOfLines={1}>
+                    <AppText style={styles.rowName} numberOfLines={1}>
                       {item.name}
-                    </Text>
+                    </AppText>
                     {item.is_verified && <VerifiedIcon size={16} />}
                   </View>
-                  <Text style={styles.rowSubtitle} numberOfLines={1}>
+                  <AppText style={styles.rowSubtitle} numberOfLines={1}>
                     {item.city ?? t("owner.no_city")}{item.country ? `, ${item.country}` : ""} · {formatDate(item.created_at)}
-                  </Text>
+                  </AppText>
                 </View>
                 <View style={styles.rowBadges}>
                   <View style={statusStyles.badge}>
-                    <Text style={statusStyles.text}>
+                    <AppText style={statusStyles.text}>
                       {item.status === "approved" ? t("owner.approved") : item.status === "suspended" ? t("owner.suspended") : t("owner.pending")}
-                    </Text>
+                    </AppText>
                   </View>
                 </View>
               </Pressable>

@@ -1,7 +1,9 @@
 import { useAuth, useSignIn } from "@clerk/expo";
 import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
@@ -76,8 +78,8 @@ export default function ResetPasswordScreen() {
   return (
     <Screen scroll centered>
       <View style={styles.header}>
-        <Text style={styles.title}>{t("auth.set_new_password")}</Text>
-        <Text style={styles.subtitle}>{t("auth.choose_strong_password")}</Text>
+        <AppText style={styles.title}>{t("auth.set_new_password")}</AppText>
+        <AppText style={styles.subtitle}>{t("auth.choose_strong_password")}</AppText>
       </View>
 
       <View style={styles.form}>
@@ -97,11 +99,11 @@ export default function ResetPasswordScreen() {
           secureTextEntry
         />
 
-        {localError && <Text style={styles.errorText}>{localError}</Text>}
+        {localError && <AppText style={styles.errorText}>{localError}</AppText>}
         {globalErrors?.map((err) => (
-          <Text key={err.code} style={styles.errorText}>
+          <AppText key={err.code} style={styles.errorText}>
             {errorMessage(err)}
-          </Text>
+          </AppText>
         ))}
 
         <Button
@@ -114,7 +116,7 @@ export default function ResetPasswordScreen() {
 
       <View style={styles.footer}>
         <Pressable onPress={() => router.push("/sign-in")}>
-          <Text style={styles.link}>{t("auth.back_to_sign_in")}</Text>
+          <AppText style={styles.link}>{t("auth.back_to_sign_in")}</AppText>
         </Pressable>
       </View>
     </Screen>

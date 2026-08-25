@@ -2,7 +2,9 @@ import { useUser } from "@clerk/expo";
 import { RTLIcon } from "@/components/ui/RTLIcon";
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
@@ -174,11 +176,11 @@ export default function EditProfileScreen() {
         >
           <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>{t("profile.edit_title")}</Text>
+        <AppText style={styles.title}>{t("profile.edit_title")}</AppText>
       </View>
-      <Text style={styles.subtitle}>
+      <AppText style={styles.subtitle}>
         {t("profile.update_info")}
-      </Text>
+      </AppText>
 
       {loaded ? (
         <View style={styles.form}>
@@ -188,7 +190,7 @@ export default function EditProfileScreen() {
                 label={t("profile.first_name")}
                 value={firstName}
                 onChangeText={setFirstName}
-                placeholder="Jane"
+                placeholder={t("profile.jane_placeholder")}
                 autoCapitalize="words"
               />
             </View>
@@ -197,7 +199,7 @@ export default function EditProfileScreen() {
                 label={t("profile.last_name")}
                 value={lastName}
                 onChangeText={setLastName}
-                placeholder="Doe"
+                placeholder={t("profile.doe_placeholder")}
                 autoCapitalize="words"
               />
             </View>
@@ -207,23 +209,23 @@ export default function EditProfileScreen() {
             label={t("profile.username")}
             value={username}
             onChangeText={setUsername}
-            placeholder="janedoe123"
+            placeholder={t("profile.username_placeholder")}
             error={usernameError}
           />
 
           {isBarber && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>{t("profile.professional_section_title")}</Text>
-                <Text style={styles.sectionSubtitle}>
+                <AppText style={styles.sectionTitle}>{t("profile.professional_section_title")}</AppText>
+                <AppText style={styles.sectionSubtitle}>
                   {t("profile.professional_section_subtitle")}
-                </Text>
+                </AppText>
               </View>
               <TextField
                 label={t("barber.specialty")}
                 value={specialty}
                 onChangeText={setSpecialty}
-                placeholder="e.g. Fades, beard work"
+                placeholder={t("barber.specialty_placeholder")}
                 autoCapitalize="sentences"
               />
 
@@ -242,11 +244,11 @@ export default function EditProfileScreen() {
                       onPress={() => setSpecialty(active ? "" : suggestion)}
                       style={[styles.chip, active && styles.chipActive]}
                     >
-                      <Text
+                      <AppText
                         style={[styles.chipText, active && styles.chipTextActive]}
                       >
                         {suggestion}
-                      </Text>
+                      </AppText>
                     </Pressable>
                   );
                 })}
@@ -255,21 +257,21 @@ export default function EditProfileScreen() {
                 label={t("profile.years_experience")}
                 value={years}
                 onChangeText={setYears}
-                placeholder="e.g. 5"
+                placeholder={t("profile.years_placeholder")}
                 keyboardType="numeric"
               />
               <TextField
                 label={t("barber.bio")}
                 value={bio}
                 onChangeText={setBio}
-                placeholder="Tell clients about your craft, style and what to expect."
+                placeholder={t("barber.bio_placeholder")}
                 autoCapitalize="sentences"
                 multiline
               />
             </View>
           )}
 
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {error && <AppText style={styles.errorText}>{error}</AppText>}
 
           <Button title={t("profile.save_changes")} onPress={handleSave} loading={submitting} />
         </View>

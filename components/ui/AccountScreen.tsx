@@ -2,7 +2,9 @@ import { useUser } from "@clerk/expo";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState, type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/components/AppText";
+
 
 import { Button } from "@/components/ui/Button";
 import { ProfilePicture } from "@/components/ui/ProfilePicture";
@@ -57,7 +59,7 @@ export function AccountScreen({ role, children }: AccountScreenProps) {
     <Screen scroll paddingHorizontal={14} paddingTop={spacing.sm}>
       <View style={styles.pageHeader}>
         <View style={styles.titleRow}>
-          <Text style={styles.pageTitle}>{t("tabs.profile")}</Text>
+          <AppText style={styles.pageTitle}>{t("tabs.profile")}</AppText>
           <Pressable
             onPress={() => router.push("/settings")}
             hitSlop={8}
