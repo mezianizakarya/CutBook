@@ -92,6 +92,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.xs,
     flexShrink: 0,
-    marginLeft: "auto",
+    marginStart: "auto",
   },
 });

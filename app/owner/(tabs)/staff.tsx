@@ -506,8 +506,7 @@ function memberRoleLabel(role: OwnerStaffRow["member_role"]): string {
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingBottom: 0,
   },
   list: {

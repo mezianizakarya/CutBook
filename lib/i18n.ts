@@ -4,20 +4,25 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import en from "@/locales/en.json";
 import fr from "@/locales/fr.json";
+import ar from "@/locales/ar.json";
 
 const STORAGE_KEY = "@cutbook_language";
 
-export const SUPPORTED_LOCALES = ["en", "fr"] as const;
+export const SUPPORTED_LOCALES = ["en", "fr", "ar"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
 const i18n = new I18n(
-  { en, fr },
+  { en, fr, ar },
   {
     defaultLocale: "en",
     enableFallback: true,
     locale: "en",
   }
 );
+
+export function isRTL(locale?: SupportedLocale): boolean {
+  return (locale ?? i18n.locale) === "ar";
+}
 
 export function getDeviceLocale(): SupportedLocale {
   const deviceLocale = Localization.getLocales()[0]?.languageCode ?? "en";

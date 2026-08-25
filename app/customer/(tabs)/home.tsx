@@ -1,5 +1,6 @@
 import { BottomTabBarHeightContext } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useUser } from "@clerk/expo";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -237,7 +238,7 @@ export default function HomeScreen() {
             >
               {locationLabel ?? t("home.set_location")}
             </Text>
-            <Ionicons name="chevron-forward" size={13} color={colors.muted} />
+            <RTLIcon name="chevron-forward" size={13} color={colors.muted} />
           </Pressable>
         </View>
         <Pressable
@@ -752,8 +753,7 @@ function BookAgainRowCard({ row, onPress }: { row: BookAgainRow; onPress: () => 
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingBottom: 0,
   },
   pressed: {
@@ -822,13 +822,13 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   railScroll: {
-    marginRight: -14,
+    marginEnd: -14,
   },
   servicesRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: spacing.md,
-    paddingRight: 4,
+    paddingEnd: 4,
   },
   serviceItem: {
     width: 64,
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
   },
   rail: {
     gap: spacing.md,
-    paddingRight: 4,
+    paddingEnd: 4,
   },
   nearbyCard: {
     width: NEARBY_CARD_WIDTH,

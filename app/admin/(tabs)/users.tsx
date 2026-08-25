@@ -1106,8 +1106,7 @@ function ActionModal({
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingBottom: 0,
   },
   header: {
@@ -1135,14 +1134,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
-    paddingRight: 44,
-    fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.surface,
+    paddingEnd: 44,
+  fontSize: 15,
+  color: colors.text,
+  backgroundColor: colors.surface,
   },
   clearButton: {
     position: "absolute",
-    right: spacing.xs,
+    end: spacing.xs,
     top: 0,
     bottom: 0,
     width: 40,
@@ -1152,8 +1151,8 @@ const styles = StyleSheet.create({
   chipsScroll: {
     flexGrow: 0,
     marginBottom: spacing.sm,
-    marginLeft: 0,
-    marginRight: -14,
+    marginStart: 0,
+    marginEnd: -14,
   },
   chipsScrollLast: {
     marginBottom: spacing.md,
@@ -1162,7 +1161,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    paddingRight: 6,
+    paddingEnd: 6,
   },
   chip: {
     paddingVertical: spacing.sm,
@@ -1296,12 +1295,11 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     backgroundColor: colors.background,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopStartRadius: 28,
+    borderTopEndRadius: 28,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingTop: spacing.lg,
     paddingBottom: spacing.xl,
     gap: spacing.md,
@@ -1428,7 +1426,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   roleChipsBleed: {
-    marginRight: -14,
+    marginEnd: -14,
   },
   roleChipsScroll: {
     flexGrow: 0,

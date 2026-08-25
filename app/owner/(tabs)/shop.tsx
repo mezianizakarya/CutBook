@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useUser } from "@clerk/expo";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
@@ -500,7 +501,7 @@ export default function OwnerShopScreen() {
                 : t("shop.request_verification_desc")}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+          <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
         </Pressable>
 
         {canEdit ? (
@@ -537,8 +538,7 @@ function InfoRow({ label, value }: { label: string; value: string | null }) {
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingBottom: 0,
   },
   scrollContent: {
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
   },
   chipsScroll: {
     flexGrow: 0,
-    marginRight: -14,
+    marginEnd: -14,
   },
   addShopChip: {
     width: 36,

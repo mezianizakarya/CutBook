@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
@@ -159,7 +159,7 @@ export default function AdminDashboardScreen() {
           <View style={styles.reviewCount}>
             <Text style={styles.reviewCountText}>{stats?.pendingShops ?? 0}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+          <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
         </Pressable>
 
         <Pressable
@@ -173,7 +173,7 @@ export default function AdminDashboardScreen() {
           <View style={styles.reviewCount}>
             <Text style={styles.reviewCountText}>{pendingVerificationCount}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+          <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
         </Pressable>
 
         <Pressable
@@ -187,7 +187,7 @@ export default function AdminDashboardScreen() {
           <View style={styles.reviewCount}>
             <Text style={styles.reviewCountText}>{pendingShopVerificationCount}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+          <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
         </Pressable>
 
         <SectionHeader title={t("admin.recent_signups")} />

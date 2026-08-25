@@ -431,8 +431,7 @@ function PressableDayButton({
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingBottom: 0,
   },
   pageHeader: {
@@ -467,13 +466,13 @@ const styles = StyleSheet.create({
   },
   weekScroll: {
     flexGrow: 0,
-    marginLeft: 0,
-    marginRight: -14,
+    marginStart: 0,
+    marginEnd: -14,
   },
   weekRow: {
     flexDirection: "row",
     gap: spacing.sm,
-    paddingRight: 4,
+    paddingEnd: 4,
   },
   dayPillButton: {
     width: 52,

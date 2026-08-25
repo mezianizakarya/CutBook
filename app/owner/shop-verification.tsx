@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
@@ -140,7 +140,7 @@ export default function ShopVerificationScreen() {
           style={styles.backButton}
           accessibilityRole="button"
         >
-          <Ionicons name="chevron-back" size={26} color={colors.text} />
+          <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>{t("verification.shop_verification_title")}</Text>
       </View>
@@ -308,8 +308,8 @@ const styles = StyleSheet.create({
   },
   quote: {
     backgroundColor: colors.background,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.border,
+    borderStartWidth: 3,
+    borderStartColor: colors.border,
     borderRadius: radius.sm,
     padding: spacing.sm,
   },

@@ -683,8 +683,7 @@ function LiveProgressCard({ live, error }: LiveProgressCardProps) {
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingBottom: 0,
   },
   header: {
@@ -706,14 +705,14 @@ const styles = StyleSheet.create({
   chipsScroll: {
     flexGrow: 0,
     marginBottom: spacing.md,
-    marginLeft: 0,
-    marginRight: -14,
+    marginStart: 0,
+    marginEnd: -14,
   },
   chipsRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    paddingRight: 4,
+    paddingEnd: 4,
   },
   chip: {
     paddingVertical: spacing.sm,
@@ -781,12 +780,11 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     backgroundColor: colors.background,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopStartRadius: 28,
+    borderTopEndRadius: 28,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingTop: spacing.lg,
     paddingBottom: spacing.xl,
     gap: spacing.md,
@@ -911,7 +909,7 @@ const styles = StyleSheet.create({
   liveBadge: {
     position: "absolute",
     top: spacing.md,
-    left: spacing.md,
+    start: spacing.md,
     width: 8,
     height: 8,
     borderRadius: radius.full,

@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
@@ -281,7 +282,7 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
                 {formatDateTime(booking.starts_at)}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+            <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
           </Pressable>
         ))}
       </BottomSheet>

@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
   },
   chipRow: {
     gap: spacing.sm,
-    paddingRight: 6,
+    paddingEnd: 6,
   },
   chip: {
     paddingVertical: spacing.sm,

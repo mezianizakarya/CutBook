@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { Image } from "expo-image";
 import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
@@ -252,7 +253,7 @@ export function LocationPickerModal({
           accessibilityLabel="Go back"
           style={[styles.backRow, { top: insets.top + spacing.md }]}
         >
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
+          <RTLIcon name="chevron-back" size={22} color={colors.text} />
           <Text style={styles.backLabel}>{t("common.back")}</Text>
         </Pressable>
 
@@ -378,7 +379,7 @@ const styles = StyleSheet.create({
   },
   backRow: {
     position: "absolute",
-    left: spacing.md,
+    start: spacing.md,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
@@ -400,14 +401,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
-    paddingRight: 44,
-    fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.surface,
+    paddingEnd: 44,
+  fontSize: 15,
+  color: colors.text,
+  backgroundColor: colors.surface,
   },
   clearButton: {
     position: "absolute",
-    right: spacing.xs,
+    end: spacing.xs,
     top: 0,
     bottom: 0,
     width: 40,
@@ -416,7 +417,7 @@ const styles = StyleSheet.create({
   },
   zoomControls: {
     position: "absolute",
-    right: spacing.md,
+    end: spacing.md,
     gap: spacing.sm,
   },
   zoomButton: {
@@ -434,8 +435,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopStartRadius: 28,
+    borderTopEndRadius: 28,
     backgroundColor: colors.background,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.lg,

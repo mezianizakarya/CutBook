@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -116,7 +116,7 @@ export default function PendingVerificationsScreen() {
             style={styles.backButton}
             accessibilityRole="button"
           >
-            <Ionicons name="chevron-back" size={26} color={colors.text} />
+            <RTLIcon name="chevron-back" size={26} color={colors.text} />
           </Pressable>
           <Text style={styles.title}>{t("admin.verification_requests")}</Text>
         </View>

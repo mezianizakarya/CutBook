@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { Image } from "expo-image";
 import { Animated, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -101,7 +102,7 @@ export function LocationSheet({
                 {t("location.search_description")}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+            <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
           </Pressable>
         </Animated.View>
       </View>
@@ -117,12 +118,11 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.background,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopStartRadius: 28,
+    borderTopEndRadius: 28,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingTop: spacing.lg,
     gap: spacing.md,
   },

@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -141,7 +142,7 @@ export default function BarberProfileScreen() {
             style={styles.backButton}
             accessibilityRole="button"
           >
-            <Ionicons name="chevron-back" size={26} color={colors.text} />
+            <RTLIcon name="chevron-back" size={26} color={colors.text} />
           </Pressable>
           <Text style={styles.title}>{t("barber.page_title")}</Text>
         </View>
@@ -320,8 +321,7 @@ export default function BarberProfileScreen() {
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingBottom: 0,
   },
   scrollContent: {
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   },
   portfolioRow: {
     gap: spacing.sm,
-    paddingRight: spacing.xs,
+    paddingEnd: spacing.xs,
   },
   portfolioImage: {
     width: 200,

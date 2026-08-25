@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useUser } from "@clerk/expo";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -120,7 +120,7 @@ export default function ShopServicesScreen() {
           style={styles.backButton}
           accessibilityRole="button"
         >
-          <Ionicons name="chevron-back" size={26} color={colors.text} />
+          <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>{t("shop.services")}</Text>
       </View>

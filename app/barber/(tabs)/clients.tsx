@@ -376,8 +376,7 @@ function ClientDetailSheet({ client, history, onClose }: ClientDetailSheetProps)
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingBottom: 0,
   },
   pageHeader: {
@@ -413,13 +412,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
-    paddingRight: 44,
-    fontSize: 15,
-    color: colors.text,
+    paddingEnd: 44,
+  fontSize: 15,
+  color: colors.text,
   },
   clear: {
     position: "absolute",
-    right: 14,
+    end: 14,
     top: 0,
     bottom: 0,
     justifyContent: "center",

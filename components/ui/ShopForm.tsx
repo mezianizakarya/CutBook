@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useMemo, useState } from "react";
@@ -236,7 +237,7 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
               <Text style={styles.locationSummary} numberOfLines={1}>
                 {formatLocationSummary(pickedLocation)}
               </Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+              <RTLIcon name="chevron-forward" size={16} color={colors.muted} />
             </View>
           </View>
         ) : (
@@ -545,7 +546,7 @@ const styles = StyleSheet.create({
   logoRemove: {
     position: "absolute",
     top: -6,
-    right: -6,
+    end: -6,
     width: 26,
     height: 26,
     borderRadius: radius.full,
@@ -572,7 +573,7 @@ const styles = StyleSheet.create({
   galleryRemove: {
     position: "absolute",
     top: 4,
-    right: 4,
+    end: 4,
     width: 22,
     height: 22,
     borderRadius: radius.full,

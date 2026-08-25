@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -316,7 +316,7 @@ export default function ShopHoursScreen() {
           style={styles.backButton}
           accessibilityRole="button"
         >
-          <Ionicons name="chevron-back" size={26} color={colors.text} />
+          <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>{t("shop.shop_hours")}</Text>
       </View>
@@ -696,8 +696,8 @@ const styles = StyleSheet.create({
   },
   timePickerCard: {
     backgroundColor: colors.background,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
+    borderTopStartRadius: radius.lg,
+    borderTopEndRadius: radius.lg,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
     paddingBottom: spacing.xl,

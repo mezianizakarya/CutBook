@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/expo";
-import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -172,7 +172,7 @@ export default function EditProfileScreen() {
           style={styles.backButton}
           accessibilityRole="button"
         >
-          <Ionicons name="chevron-back" size={26} color={colors.text} />
+          <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>{t("profile.edit_title")}</Text>
       </View>
@@ -334,15 +334,15 @@ const styles = StyleSheet.create({
   },
   chipsScroll: {
     flexGrow: 0,
-    marginLeft: 0,
-    marginRight: -14,
+    marginStart: 0,
+    marginEnd: -14,
   },
   chipsRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
     paddingVertical: spacing.xs,
-    paddingRight: spacing.xs,
+    paddingEnd: spacing.xs,
   },
   chip: {
     borderRadius: radius.full,

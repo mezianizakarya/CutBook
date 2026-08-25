@@ -387,8 +387,7 @@ export default function DiscoverScreen() {
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingBottom: 0,
   },
   header: {
@@ -413,14 +412,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
-    paddingRight: 44,
-    fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.surface,
+    paddingEnd: 44,
+  fontSize: 15,
+  color: colors.text,
+  backgroundColor: colors.surface,
   },
   clearButton: {
     position: "absolute",
-    right: spacing.xs,
+    end: spacing.xs,
     top: 0,
     bottom: 0,
     width: 40,
@@ -430,8 +429,8 @@ const styles = StyleSheet.create({
   chipsScroll: {
     flexGrow: 0,
     marginBottom: spacing.sm,
-    marginLeft: 0,
-    marginRight: -14,
+    marginStart: 0,
+    marginEnd: -14,
   },
   chipsScrollLast: {
     marginBottom: spacing.md,
@@ -440,7 +439,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    paddingRight: 4,
+    paddingEnd: 4,
   },
   chip: {
     paddingVertical: spacing.sm,

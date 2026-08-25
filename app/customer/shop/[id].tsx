@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { RTLIcon } from "@/components/ui/RTLIcon";
 import { useUser } from "@clerk/expo";
 import { Image } from "expo-image";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
@@ -216,7 +217,7 @@ export default function ShopDetailScreen() {
           style={styles.backButton}
           accessibilityRole="button"
         >
-          <Ionicons name="chevron-back" size={26} color={colors.text} />
+          <RTLIcon name="chevron-back" size={26} color={colors.text} />
         </Pressable>
         <Text style={styles.title}>{t("shop.page_title")}</Text>
       </View>
@@ -507,7 +508,7 @@ export default function ShopDetailScreen() {
                     .join(" · ")}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+              <RTLIcon name="chevron-forward" size={16} color={colors.muted} />
             </Pressable>
           ))}
         </View>
@@ -614,8 +615,7 @@ export default function ShopDetailScreen() {
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingBottom: 0,
   },
   scrollContent: {
@@ -696,7 +696,7 @@ const styles = StyleSheet.create({
   heroCount: {
     position: "absolute",
     top: spacing.sm,
-    right: spacing.sm,
+    end: spacing.sm,
     backgroundColor: "rgba(24, 24, 27, 0.55)",
     borderRadius: radius.full,
     paddingHorizontal: spacing.sm,
@@ -932,9 +932,9 @@ const styles = StyleSheet.create({
   reviewSummaryMain: {
     alignItems: "center",
     justifyContent: "center",
-    paddingRight: spacing.lg,
-    borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: colors.border,
+    paddingEnd: spacing.lg,
+    borderEndWidth: StyleSheet.hairlineWidth,
+    borderEndColor: colors.border,
   },
   reviewSummaryAvg: {
     fontSize: 34,
@@ -950,7 +950,7 @@ const styles = StyleSheet.create({
   reviewDistribution: {
     flex: 1,
     justifyContent: "center",
-    paddingLeft: spacing.lg,
+    paddingStart: spacing.lg,
   },
   distributionRow: {
     flexDirection: "row",

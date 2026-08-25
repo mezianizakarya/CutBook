@@ -308,8 +308,7 @@ export default function AdminShopsScreen() {
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingBottom: 0,
   },
   header: {
@@ -337,14 +336,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
-    paddingRight: 44,
-    fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.surface,
+    paddingEnd: 44,
+  fontSize: 15,
+  color: colors.text,
+  backgroundColor: colors.surface,
   },
   clearButton: {
     position: "absolute",
-    right: spacing.xs,
+    end: spacing.xs,
     top: 0,
     bottom: 0,
     width: 40,
@@ -354,13 +353,13 @@ const styles = StyleSheet.create({
   chipsScroll: {
     flexGrow: 0,
     marginBottom: spacing.md,
-    marginRight: -14,
+    marginEnd: -14,
   },
   chipsRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    paddingRight: 6,
+    paddingEnd: 6,
   },
   chip: {
     paddingVertical: spacing.sm,

@@ -258,8 +258,7 @@ export default function OwnerBookingsScreen() {
 const styles = StyleSheet.create({
   screenPadding: {
     paddingTop: spacing.sm,
-    paddingLeft: 14,
-    paddingRight: 14,
+    paddingHorizontal: 14,
     paddingBottom: 0,
   },
   list: {
@@ -296,14 +295,14 @@ const styles = StyleSheet.create({
     flexGrow: 0,
     marginTop: spacing.md,
     marginBottom: spacing.sm,
-    marginLeft: 0,
-    marginRight: -14,
+    marginStart: 0,
+    marginEnd: -14,
   },
   chipsRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    paddingRight: 6,
+    paddingEnd: 6,
   },
   chip: {
     paddingVertical: spacing.sm,

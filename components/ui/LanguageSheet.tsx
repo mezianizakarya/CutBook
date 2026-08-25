@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { useI18n } from "@/lib/I18nProvider";
+import { t } from "@/lib/i18n";
 import type { SupportedLocale } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -15,6 +15,7 @@ type Props = {
 const LANGUAGES: { value: SupportedLocale; label: string }[] = [
   { value: "en", label: "English" },
   { value: "fr", label: "Français" },
+  { value: "ar", label: "العربية" },
 ];
 
 export function LanguageSheet({ visible, onClose }: Props) {
@@ -22,7 +23,7 @@ export function LanguageSheet({ visible, onClose }: Props) {
 
   return (
     <BottomSheet visible={visible} onClose={onClose}>
-      <Text style={styles.title}>Language</Text>
+      <Text style={styles.title}>{t("settings.language")}</Text>
       {LANGUAGES.map((lang) => (
         <Pressable
           key={lang.value}

@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   },
   expandBadge: {
     position: "absolute",
-    right: spacing.sm,
+    end: spacing.sm,
     top: spacing.sm,
     flexDirection: "row",
     alignItems: "center",
