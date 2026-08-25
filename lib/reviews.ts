@@ -115,3 +115,41 @@ export async function deleteReview(reviewId: number): Promise<void> {
     throw error;
   }
 }
+
+export type PendingAdminReview = {
+  id: number;
+  shop_id: number;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  shops: { id: number; name: string } | null;
+  profiles: {
+    first_name: string | null;
+    last_name: string | null;
+    avatar_url: string | null;
+  } | null;
+};
+
+/** Every review waiting for moderation, newest first (admin-only via RLS). */
+export async function loadPendingReviews(): Promise<PendingAdminReview[]> {
+  return runList<PendingAdminReview>(
+    supabase
+      .from("reviews")
+      .select(
+        "id, shop_id, rating, comment, created_at, shops!reviews_shop_id_fkey(id, name), profiles!reviews_customer_id_fkey(first_name, last_name, avatar_url)"
+      )
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+  );
+}
+
+export async function countPendingReviews(): Promise<number> {
+  const { count, error } = await supabase
+    .from("reviews")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "pending");
+  if (error) {
+    throw error;
+  }
+  return count ?? 0;
+}

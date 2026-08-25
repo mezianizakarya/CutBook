@@ -37,6 +37,12 @@
 │  │ Shops that asked    │    │
 │  │ to verify.        (1)│   │
 │  ╰─────────────────────╯    │
+│  ╭─────────────────────╮    │
+│  │ Review moderation  ▸│    │
+│  │ Customer reviews    │    │
+│  │ waiting for       (1)│    │
+│  │ approval.           │    │
+│  ╰─────────────────────╯    │
 │                             │
 │  Recent signups             │
 │  [👤] Ahmed L.    @ahmed    │

@@ -955,7 +955,16 @@
     "no_shops_waiting": "No shops are waiting for approval right now.",
     "shop_verification_title": "Shop verification",
     "no_shop_verification_requests": "No shop verification requests are waiting right now.",
-    "requested_by": "Requested by"
+    "requested_by": "Requested by",
+    "review_moderation": "Review moderation",
+    "reviews_waiting_approval": "Customer reviews waiting for approval",
+    "pending_reviews_title": "Reviews awaiting approval",
+    "reviews": "Reviews",
+    "no_pending_reviews": "No reviews are waiting for approval right now.",
+    "publish": "Publish",
+    "remove_review": "Remove",
+    "review_published": "Review published",
+    "review_removed": "Review removed"
   },
   "favorites": {
     "title": "Favorites",

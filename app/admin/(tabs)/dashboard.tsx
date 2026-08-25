@@ -25,6 +25,7 @@ import { colors, radius, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
 import { countPendingShopVerificationRequests } from "@/lib/shop-verification";
 import { countPendingVerificationRequests } from "@/lib/verification";
+import { countPendingReviews } from "@/lib/reviews";
 
 export default function AdminDashboardScreen() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function AdminDashboardScreen() {
   const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
   const [pendingShopVerificationCount, setPendingShopVerificationCount] =
     useState(0);
+  const [pendingReviewsCount, setPendingReviewsCount] = useState(0);
   const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -41,16 +43,23 @@ export default function AdminDashboardScreen() {
 
   const load = useCallback(async () => {
     setError(null);
-    const [statsResult, verificationCount, shopVerificationCount, recentResult] =
-      await Promise.all([
-        loadAdminStats(),
-        countPendingVerificationRequests(),
-        countPendingShopVerificationRequests(),
-        loadRecentUsers(6),
-      ]);
+    const [
+      statsResult,
+      verificationCount,
+      shopVerificationCount,
+      reviewsCount,
+      recentResult,
+    ] = await Promise.all([
+      loadAdminStats(),
+      countPendingVerificationRequests(),
+      countPendingShopVerificationRequests(),
+      countPendingReviews(),
+      loadRecentUsers(6),
+    ]);
     setStats(statsResult);
     setPendingVerificationCount(verificationCount);
     setPendingShopVerificationCount(shopVerificationCount);
+    setPendingReviewsCount(reviewsCount);
     setRecentUsers(recentResult);
   }, []);
 
@@ -180,6 +189,20 @@ export default function AdminDashboardScreen() {
           </View>
           <View style={styles.reviewCount}>
             <AppText style={styles.reviewCountText}>{pendingShopVerificationCount}</AppText>
+          </View>
+          <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/admin/pending-reviews")}
+          style={({ pressed }) => [styles.reviewCard, pressed && styles.reviewCardPressed]}
+        >
+          <View style={styles.reviewInfo}>
+            <AppText style={styles.reviewTitle}>{t("admin.review_moderation")}</AppText>
+            <AppText style={styles.reviewSubtitle}>{t("admin.reviews_waiting_approval")}</AppText>
+          </View>
+          <View style={styles.reviewCount}>
+            <AppText style={styles.reviewCountText}>{pendingReviewsCount}</AppText>
           </View>
           <RTLIcon name="chevron-forward" size={18} color={colors.muted} />
         </Pressable>

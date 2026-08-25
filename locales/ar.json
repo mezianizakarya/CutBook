@@ -957,7 +957,16 @@
     "no_shops_waiting": "لا توجد محلات بانتظار الموافقة حالياً.",
     "shop_verification_title": "تحقق المحلات",
     "no_shop_verification_requests": "لا توجد طلبات تحقق محلات في الانتظار حالياً.",
-    "requested_by": "طلب بواسطة"
+    "requested_by": "طلب بواسطة",
+    "review_moderation": "مراجعة التقييمات",
+    "reviews_waiting_approval": "تقييمات العملاء بانتظار الموافقة",
+    "pending_reviews_title": "تقييمات بانتظار الموافقة",
+    "reviews": "التقييمات",
+    "no_pending_reviews": "لا توجد تقييمات بانتظار الموافقة حالياً.",
+    "publish": "نشر",
+    "remove_review": "حذف",
+    "review_published": "تم نشر التقييم",
+    "review_removed": "تم حذف التقييم"
   },
   "favorites": {
     "title": "المفضلة",

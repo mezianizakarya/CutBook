@@ -955,7 +955,16 @@
     "no_shops_waiting": "Aucun salon en attente d'approbation.",
     "shop_verification_title": "Vérification du salon",
     "no_shop_verification_requests": "Aucune demande de vérification de salon en attente.",
-    "requested_by": "Demandé par"
+    "requested_by": "Demandé par",
+    "review_moderation": "Modération des avis",
+    "reviews_waiting_approval": "Avis clients en attente d'approbation",
+    "pending_reviews_title": "Avis en attente d'approbation",
+    "reviews": "Avis",
+    "no_pending_reviews": "Aucun avis n'attend d'approbation pour le moment.",
+    "publish": "Publier",
+    "remove_review": "Retirer",
+    "review_published": "Avis publié",
+    "review_removed": "Avis retiré"
   },
   "favorites": {
     "title": "Favoris",

@@ -269,3 +269,17 @@ export async function adminReviewShopVerificationRequest(
     throw error;
   }
 }
+
+/** Publish/hide/remove a customer review (admin-only RPC). */
+export async function adminSetReviewStatus(
+  reviewId: number,
+  status: "published" | "hidden" | "removed"
+): Promise<void> {
+  const { error } = await supabase.rpc("admin_set_review_status", {
+    p_review_id: reviewId,
+    p_status: status,
+  });
+  if (error) {
+    throw error;
+  }
+}
