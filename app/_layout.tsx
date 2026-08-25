@@ -2,7 +2,7 @@ import { ClerkProvider } from "@clerk/expo";
 import { Stack } from "expo-router";
 
 import { CLERK_PUBLISHABLE_KEY, tokenCache } from "@/lib/clerk";
-import { I18nProvider } from "@/lib/I18nProvider";
+import { I18nProvider, useI18n } from "@/lib/I18nProvider";
 import { useSupabaseSession } from "@/lib/supabase-auth";
 import { colors } from "@/lib/theme";
 import { CountryProvider } from "@/lib/user-country";
@@ -18,19 +18,26 @@ function SupabaseSessionBridge() {
 
 const publishableKey = CLERK_PUBLISHABLE_KEY;
 
+function AppShell() {
+  const { locale } = useI18n();
+  return (
+    <CountryProvider key={locale}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      />
+    </CountryProvider>
+  );
+}
+
 export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <SupabaseSessionBridge />
       <I18nProvider>
-        <CountryProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.background },
-            }}
-          />
-        </CountryProvider>
+        <AppShell />
       </I18nProvider>
     </ClerkProvider>
   );
