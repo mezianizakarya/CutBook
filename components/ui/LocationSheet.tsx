@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import { Animated, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useSheetDrag } from "@/lib/useSheetDrag";
 
@@ -54,7 +55,7 @@ export function LocationSheet({
           <View style={styles.dragHandleArea} {...panResponder.panHandlers}>
             <View style={styles.dragHandle} />
           </View>
-          <Text style={styles.title}>Your location</Text>
+          <Text style={styles.title}>{t("location.your_location")}</Text>
           <Pressable
             onPress={onSelectCurrent}
             accessibilityRole="button"
@@ -74,7 +75,7 @@ export function LocationSheet({
               />
             </View>
             <View style={styles.rowInfo}>
-              <Text style={styles.rowTitle}>Current location</Text>
+              <Text style={styles.rowTitle}>{t("location.current_location")}</Text>
               {!!currentLabel && (
                 <Text style={styles.rowSubtitle} numberOfLines={1}>
                   {currentLabel}
@@ -95,9 +96,9 @@ export function LocationSheet({
               <Ionicons name="map-outline" size={20} color={colors.muted} />
             </View>
             <View style={styles.rowInfo}>
-              <Text style={styles.rowTitle}>Select another location</Text>
+              <Text style={styles.rowTitle}>{t("location.select_another")}</Text>
               <Text style={styles.rowSubtitle}>
-                Search an address, drop a pin, or paste a Maps link
+                {t("location.search_description")}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.muted} />

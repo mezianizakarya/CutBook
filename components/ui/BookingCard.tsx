@@ -4,6 +4,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { BookingStatusBadge } from "@/components/ui/BookingStatusBadge";
 import type { BookingCardRow } from "@/lib/booking";
 import { formatDateTime, useFormatCents } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 
 type BookingCardProps = {
@@ -43,7 +44,7 @@ export function BookingCard({ booking, onPress }: BookingCardProps) {
         {booking.applied_reward_title ? (
           <View style={styles.rewardBadge}>
             <Text style={styles.rewardBadgeText} numberOfLines={1}>
-              {booking.applied_reward_title} applied
+              {t("shop.applied", { title: booking.applied_reward_title })}
             </Text>
           </View>
         ) : null}

@@ -26,6 +26,7 @@ import {
 } from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDate } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
 
@@ -33,12 +34,14 @@ type StatusFilter = "all" | ShopStatus;
 
 const STATUS_FILTERS: StatusFilter[] = ["all", "pending", "approved", "suspended"];
 
-const STATUS_LABELS: Record<StatusFilter, string> = {
-  all: "All shops",
-  pending: "Pending",
-  approved: "Approved",
-  suspended: "Suspended",
-};
+function getStatusLabels(): Record<StatusFilter, string> {
+  return {
+    all: t("admin.all_shops"),
+    pending: t("owner.pending"),
+    approved: t("owner.approved"),
+    suspended: t("owner.suspended"),
+  };
+}
 
 function statusBadgeStyles(status: ShopStatus) {
   switch (status) {
@@ -137,9 +140,9 @@ export default function AdminShopsScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>Shops</Text>
+        <Text style={styles.title}>{t("tabs.shop")}</Text>
         <Text style={styles.subtitle}>
-          {shops ? `${shops.length} shops` : "Loading…"}
+          {shops ? t("admin.shops_count", { count: shops.length }) : t("common.loading")}
         </Text>
       </View>
 
@@ -151,7 +154,7 @@ export default function AdminShopsScreen() {
             style={styles.search}
             value={query}
             onChangeText={setQuery}
-            placeholder="Search shops"
+            placeholder={t("admin.search_shops")}
             placeholderTextColor={colors.muted}
             autoCapitalize="none"
             autoCorrect={false}
@@ -161,7 +164,7 @@ export default function AdminShopsScreen() {
               onPress={() => setQuery("")}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel="Clear search"
+              accessibilityLabel={t("admin.clear_search")}
               style={styles.clearButton}
             >
               <Ionicons name="close" size={18} color={colors.muted} />
@@ -185,7 +188,7 @@ export default function AdminShopsScreen() {
               style={[styles.chip, isActive && styles.chipActive]}
             >
               <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
-                {STATUS_LABELS[filter]}
+                {getStatusLabels()[filter]}
               </Text>
             </Pressable>
           );
@@ -204,7 +207,7 @@ export default function AdminShopsScreen() {
             style={[styles.chip, regionFilter === "all" && styles.chipActive]}
           >
             <Text style={[styles.chipLabel, regionFilter === "all" && styles.chipLabelActive]}>
-              All regions ({shops?.length ?? 0})
+              {t("admin.all_regions", { count: shops?.length ?? 0 })}
             </Text>
           </Pressable>
           {regionCounts.map(([region, count]) => {
@@ -247,13 +250,13 @@ export default function AdminShopsScreen() {
           }
           ListEmptyComponent={
             <EmptyState
-              title="No shops found"
+              title={t("admin.no_shops_found")}
               subtitle={
                 hasActiveFilters
-                  ? "Try a different search or filter."
-                  : "No shops have been created yet."
+                  ? t("admin.try_different_filter")
+                  : t("admin.no_shops_created")
               }
-              actionLabel={hasActiveFilters ? "Reset filters" : undefined}
+              actionLabel={hasActiveFilters ? t("admin.reset_filters") : undefined}
               onAction={hasActiveFilters ? resetFilters : undefined}
             />
           }
@@ -273,13 +276,13 @@ export default function AdminShopsScreen() {
                     {item.is_verified && <VerifiedIcon size={16} />}
                   </View>
                   <Text style={styles.rowSubtitle} numberOfLines={1}>
-                    {item.city ?? "No city"}{item.country ? `, ${item.country}` : ""} · {formatDate(item.created_at)}
+                    {item.city ?? t("owner.no_city")}{item.country ? `, ${item.country}` : ""} · {formatDate(item.created_at)}
                   </Text>
                 </View>
                 <View style={styles.rowBadges}>
                   <View style={statusStyles.badge}>
                     <Text style={statusStyles.text}>
-                      {item.status === "approved" ? "Approved" : item.status === "suspended" ? "Suspended" : "Pending"}
+                      {item.status === "approved" ? t("owner.approved") : item.status === "suspended" ? t("owner.suspended") : t("owner.pending")}
                     </Text>
                   </View>
                 </View>

@@ -23,6 +23,7 @@ import { FilterChip } from "@/components/ui/FilterChip";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import { dayName, formatTimeOfDay, parseTimeToMinutes } from "@/lib/format";
 import {
   loadUpcomingBookings,
@@ -36,7 +37,15 @@ import { useNotice } from "@/lib/useNotice";
 
 const todayDayOfWeek = new Date().getDay();
 
-const DAY_CHIP_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_CHIP_LABELS = [
+  t("days.sunday").slice(0, 3),
+  t("days.monday").slice(0, 3),
+  t("days.tuesday").slice(0, 3),
+  t("days.wednesday").slice(0, 3),
+  t("days.thursday").slice(0, 3),
+  t("days.friday").slice(0, 3),
+  t("days.saturday").slice(0, 3),
+];
 
 function dateFromTimeValue(value: string | null | undefined): Date {
   const date = new Date();
@@ -244,7 +253,7 @@ export default function ShopHoursScreen() {
     setConflicts(null);
     setApplySheet(false);
     showNotice(
-      `Copied ${dayName(source.day_of_week)}'s hours to ${applyTargets.length} days`,
+      t("hours.copied_hours", { day: dayName(source.day_of_week), count: applyTargets.length }),
       "success"
     );
   }
@@ -257,13 +266,13 @@ export default function ShopHoursScreen() {
         const close = parseTimeToMinutes(day.closes_at);
         if (open == null || close == null) {
           setError(
-            `${dayName(day.day_of_week)} needs an opening and closing time.`
+            t("hours.needs_open_close", { day: dayName(day.day_of_week) })
           );
           return;
         }
         if (close <= open) {
           setError(
-            `${dayName(day.day_of_week)} closes at or before it opens.`
+            t("hours.closes_before_open", { day: dayName(day.day_of_week) })
           );
           return;
         }
@@ -279,7 +288,7 @@ export default function ShopHoursScreen() {
           return;
         }
       } catch {
-        setError("Could not check for booking conflicts. Please try again.");
+        setError(t("hours.could_not_check_conflicts"));
         return;
       }
     }
@@ -287,10 +296,10 @@ export default function ShopHoursScreen() {
     setSaving(true);
     try {
       await saveWorkingHours(id, hours);
-      showNotice("Working hours saved", "success");
+      showNotice(t("shop.hours_saved"), "success");
       setTimeout(() => router.back(), 800);
     } catch (e) {
-      Alert.alert("Could not save", errorMessageFromUnknown(e));
+      Alert.alert(t("error.could_not_save"), errorMessageFromUnknown(e));
     } finally {
       setSaving(false);
     }
@@ -309,11 +318,10 @@ export default function ShopHoursScreen() {
         >
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Working hours</Text>
+        <Text style={styles.title}>{t("shop.shop_hours")}</Text>
       </View>
       <Text style={styles.subtitle}>
-        Set when your shop is open. Customers can only book during these
-        hours.
+        {t("hours.opening_hours_subtitle")}
       </Text>
 
       {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
@@ -326,7 +334,7 @@ export default function ShopHoursScreen() {
       ) : (
         <>
           <Button
-            title="Apply to multiple days"
+            title={t("hours.apply_to_multiple")}
             variant="outline"
             onPress={openApplySheet}
             style={styles.applyButton}
@@ -351,7 +359,7 @@ export default function ShopHoursScreen() {
                             isToday && styles.dayValueToday,
                           ]}
                         >
-                          Closed
+                          {t("shop.closed")}
                         </Text>
                       ) : (
                         <View style={styles.dayTimes}>
@@ -422,7 +430,7 @@ export default function ShopHoursScreen() {
           {conflicts && conflicts.length > 0 ? (
             <View style={styles.conflictCard}>
               <Text style={styles.conflictTitle}>
-                These bookings fall outside your new hours
+                {t("hours.conflict_title")}
               </Text>
               {conflicts.map((conflict) => (
                 <Text key={conflict.id} style={styles.conflictRow}>
@@ -431,7 +439,7 @@ export default function ShopHoursScreen() {
                 </Text>
               ))}
               <Text style={styles.conflictHint}>
-                Saving won&apos;t move or cancel them — they&apos;ll stay as scheduled.
+                {t("hours.conflict_hint")}
               </Text>
             </View>
           ) : null}
@@ -439,8 +447,8 @@ export default function ShopHoursScreen() {
           <Button
             title={
               conflicts && conflicts.length > 0
-                ? `Save anyway (${conflicts.length})`
-                : "Save hours"
+                ? t("hours.save_anyway", { count: conflicts.length })
+                : t("shop.save_hours")
             }
             onPress={() => void handleSave()}
             loading={saving}
@@ -474,7 +482,7 @@ export default function ShopHoursScreen() {
           />
           <View style={styles.timePickerCard}>
             <View style={styles.timePickerHandle} />
-            <Text style={styles.timePickerTitle}>Change time</Text>
+            <Text style={styles.timePickerTitle}>{t("hours.change_time")}</Text>
             {timePicker && (
               <DateTimePicker
                 value={dateFromTimeValue(hours[timePicker.index]?.[timePicker.field])}
@@ -484,7 +492,7 @@ export default function ShopHoursScreen() {
                 onChange={handleTimePickerChange}
               />
             )}
-            <Button title="Done" onPress={() => setTimePicker(null)} />
+            <Button title={t("common.done")} onPress={() => setTimePicker(null)} />
           </View>
         </View>
       </Modal>
@@ -493,12 +501,12 @@ export default function ShopHoursScreen() {
         visible={applySheet}
         onClose={() => setApplySheet(false)}
       >
-        <Text style={styles.sheetTitle}>Apply hours to days</Text>
+        <Text style={styles.sheetTitle}>{t("hours.apply_to_days_title")}</Text>
         <Text style={styles.sheetText}>
-          Copy one day&apos;s hours to the days you pick.
+          {t("hours.apply_to_days_desc")}
         </Text>
 
-        <Text style={styles.sheetLabel}>Copy from</Text>
+        <Text style={styles.sheetLabel}>{t("hours.copy_from")}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -514,7 +522,7 @@ export default function ShopHoursScreen() {
           ))}
         </ScrollView>
 
-        <Text style={styles.sheetLabel}>Apply to</Text>
+        <Text style={styles.sheetLabel}>{t("hours.apply_to")}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -534,16 +542,22 @@ export default function ShopHoursScreen() {
           <Text style={styles.applyPreviewLabel}>
             {applySourceDay
               ? applySourceDay.is_closed
-                ? `${dayName(applySource)} is closed`
-                : `${dayName(applySource)}: ${formatTimeOfDay(
-                    applySourceDay.opens_at
-                  )} – ${formatTimeOfDay(applySourceDay.closes_at)}`
+                ? t("hours.day_is_closed", { day: dayName(applySource) })
+                : t("hours.day_schedule", {
+                    day: dayName(applySource),
+                    open: formatTimeOfDay(applySourceDay.opens_at),
+                    close: formatTimeOfDay(applySourceDay.closes_at),
+                  })
               : ""}
           </Text>
         </View>
 
         <Button
-          title={`Apply to ${applyTargets.length} day${applyTargets.length === 1 ? "" : "s"}`}
+          title={
+            applyTargets.length === 1
+              ? t("hours.apply_to_count", { count: applyTargets.length })
+              : t("hours.apply_to_count_plural", { count: applyTargets.length })
+          }
           onPress={applyToDays}
           disabled={applyTargets.length === 0}
         />

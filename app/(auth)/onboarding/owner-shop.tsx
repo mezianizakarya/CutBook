@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { ShopForm, type ShopFormValues } from "@/components/ui/ShopForm";
 import { FullScreenLoader } from "@/lib/auth";
+import { t } from "@/lib/i18n";
 import { createShop, uploadShopGallery, uploadShopLogo } from "@/lib/owner";
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -81,19 +82,18 @@ export default function OwnerShopScreen() {
         >
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Create your shop</Text>
+        <Text style={styles.title}>{t("shop.create_your_shop")}</Text>
       </View>
       <Text style={styles.subtitle}>
-        Your shop goes live on KUTZ once it{"'"}s approved. You can add
-        services and working hours later.
+        {t("shop.shop_live_info")}
       </Text>
 
-      <ShopForm submitLabel="Create shop" onSubmit={handleCreate} />
+      <ShopForm submitLabel={t("shop.create_shop_button")} onSubmit={handleCreate} />
 
       {isOnboarding && (
         <View style={styles.skipWrap}>
           <Button
-            title="Skip for now"
+            title={t("barber.skip_for_now")}
             variant="ghost"
             onPress={() => router.replace("/loading")}
           />

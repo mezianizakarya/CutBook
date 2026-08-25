@@ -19,6 +19,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { adminReviewShopVerificationRequest } from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDate } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import {
   loadPendingShopVerificationRequests,
   type PendingShopVerificationRequest,
@@ -78,7 +79,7 @@ export default function PendingShopVerificationsScreen() {
     try {
       await adminReviewShopVerificationRequest(req.id, true);
       setRequests((previous) => previous.filter((row) => row.id !== req.id));
-      showNotice(`${req.shops?.name ?? "Shop"} verified`, "success");
+      showNotice(t("admin.shop_verified_named", { name: req.shops?.name ?? t("shop.barber") }), "success");
     } catch (e) {
       showNotice(errorMessageFromUnknown(e), "danger");
     } finally {
@@ -116,24 +117,24 @@ export default function PendingShopVerificationsScreen() {
           >
             <Ionicons name="chevron-back" size={26} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>Shop verification</Text>
+          <Text style={styles.title}>{t("admin.shop_verification_title")}</Text>
         </View>
         <Text style={styles.subtitle}>
-          Shop owners who asked to verify their business.
+          {t("admin.shops_waiting_verified")}
         </Text>
 
         {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
         {!!error && <Text style={styles.error}>{error}</Text>}
 
         <SectionHeader
-          title="Requests"
-          actionLabel={requests.length > 0 ? `${requests.length} waiting` : undefined}
+          title={t("admin.requests")}
+          actionLabel={requests.length > 0 ? t("admin.waiting_count", { count: requests.length }) : undefined}
         />
         {requests.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>Nothing to review</Text>
+            <Text style={styles.emptyTitle}>{t("admin.nothing_to_review")}</Text>
             <Text style={styles.emptySubtitle}>
-              No shop verification requests are waiting right now.
+              {t("admin.no_shop_verification_requests")}
             </Text>
           </View>
         ) : (
@@ -142,13 +143,13 @@ export default function PendingShopVerificationsScreen() {
             return (
               <View key={req.id} style={styles.row}>
                 <Avatar
-                  fullName={req.shops?.name ?? "Shop"}
+                  fullName={req.shops?.name ?? t("shop.page_title")}
                   imageUrl={req.shops?.logo_url ?? null}
                   size={44}
                 />
                 <View style={styles.rowInfo}>
                   <Text style={styles.rowName} numberOfLines={1}>
-                    {req.shops?.name ?? "Shop"}
+                    {req.shops?.name ?? t("shop.page_title")}
                   </Text>
                   <Text style={styles.rowSubtitle} numberOfLines={1}>
                     {[req.shops?.city, formatDate(req.created_at)]
@@ -157,7 +158,7 @@ export default function PendingShopVerificationsScreen() {
                   </Text>
                   {!!owner && (
                     <Text style={styles.rowOwner} numberOfLines={1}>
-                      Requested by {owner}
+                      {t("admin.requested_by")} {owner}
                     </Text>
                   )}
                   {!!req.note && (
@@ -167,7 +168,7 @@ export default function PendingShopVerificationsScreen() {
                   )}
                 </View>
                 <Button
-                  title="Approve"
+                  title={t("admin.approve")}
                   variant="successOutline"
                   loading={verifyingId === req.id}
                   disabled={verifyingId !== null}

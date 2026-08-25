@@ -11,6 +11,7 @@ import { UsernameField } from "@/components/ui/UsernameField";
 import { FullScreenLoader } from "@/lib/auth";
 import { validatePhoneNumber } from "@/lib/countries";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { colors, spacing } from "@/lib/theme";
 import {
@@ -59,7 +60,7 @@ export default function CompleteProfileScreen() {
     setUsernameError(null);
     setPhoneError(null);
     if (!firstName.trim() || !lastName.trim()) {
-      setError("Please enter your full name.");
+      setError(t("profile.enter_full_name"));
       return;
     }
     const phoneValidation = validatePhoneNumber(phone);
@@ -69,7 +70,7 @@ export default function CompleteProfileScreen() {
     }
     const chosenUsername = username.trim();
     if (!chosenUsername) {
-      setError("Please choose a username.");
+      setError(t("profile.choose_username"));
       return;
     }
     const validationErrors = validateUsername(chosenUsername);
@@ -80,7 +81,7 @@ export default function CompleteProfileScreen() {
     setSubmitting(true);
     try {
       if (await isUsernameTaken(chosenUsername)) {
-        setUsernameError("This username is already taken.");
+        setUsernameError(t("profile.username_taken"));
         return;
       }
       await currentUser.update({
@@ -108,7 +109,7 @@ export default function CompleteProfileScreen() {
       if (dbError) {
         const message = dbError.message.toLowerCase();
         if (message.includes("duplicate") || message.includes("unique")) {
-          setError("This username is already taken.");
+          setError(t("profile.username_taken"));
           return;
         }
         console.warn("Failed to sync profile to Supabase:", dbError.message);
@@ -130,17 +131,17 @@ export default function CompleteProfileScreen() {
   return (
     <Screen scroll centered paddingHorizontal={14}>
       <View style={styles.header}>
-        <Text style={styles.title}>Complete your profile</Text>
+        <Text style={styles.title}>{t("onboarding.complete_your_profile")}</Text>
         <Text style={styles.subtitle}>
-          A few details so barbers and shops know who you are.
+          {t("onboarding.profile_details_info")}
         </Text>
       </View>
 
       <View style={styles.form}>
         <View style={styles.nameRow}>
           <View style={styles.nameField}>
-            <TextField
-              label="First name"
+              <TextField
+                label={t("profile.first_name")}
               value={firstName}
               onChangeText={setFirstName}
               placeholder="Jane"
@@ -148,8 +149,8 @@ export default function CompleteProfileScreen() {
             />
           </View>
           <View style={styles.nameField}>
-            <TextField
-              label="Last name"
+              <TextField
+                label={t("profile.last_name")}
               value={lastName}
               onChangeText={setLastName}
               placeholder="Doe"
@@ -159,7 +160,7 @@ export default function CompleteProfileScreen() {
         </View>
 
         <UsernameField
-          label="Username"
+          label={t("profile.username")}
           value={username}
           onChangeText={(text) => {
             setUsernameEdited(true);
@@ -170,7 +171,7 @@ export default function CompleteProfileScreen() {
         />
 
         <PhoneInput
-          label="Phone"
+          label={t("shop.phone")}
           value={phone}
           onChangeValue={(text) => {
             setPhone(text);
@@ -181,7 +182,7 @@ export default function CompleteProfileScreen() {
 
         {error && <Text style={styles.errorText}>{error}</Text>}
 
-        <Button title="Finish" onPress={handleComplete} loading={submitting} />
+        <Button title={t("profile.finish")} onPress={handleComplete} loading={submitting} />
       </View>
     </Screen>
   );

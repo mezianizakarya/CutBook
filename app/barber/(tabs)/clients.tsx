@@ -33,6 +33,7 @@ import {
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents, formatDate, formatDateTime } from "@/lib/format";
 import { useUserCountry } from "@/lib/user-country";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 
 export default function BarberClientsScreen() {
@@ -150,11 +151,11 @@ export default function BarberClientsScreen() {
     return (
       <Screen scroll paddingHorizontal={14} paddingTop={spacing.sm}>
         <View style={styles.pageHeader}>
-          <Text style={styles.pageTitle}>Clients</Text>
+          <Text style={styles.pageTitle}>{t("tabs.clients")}</Text>
         </View>
         <EmptyState
-          title="Not assigned to a shop"
-          subtitle="You're not a member of any barbershop yet. Ask your shop owner to add you as staff."
+          title={t("barber.not_assigned_shop")}
+          subtitle={t("barber.not_member_yet")}
         />
       </Screen>
     );
@@ -163,9 +164,11 @@ export default function BarberClientsScreen() {
   return (
     <Screen paddingHorizontal={14} style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>Clients</Text>
+        <Text style={styles.title}>{t("tabs.clients")}</Text>
         <Text style={styles.subtitle}>
-          {clients.length} client{clients.length === 1 ? "" : "s"}
+          {clients.length === 1
+            ? t("barber.client_count", { count: clients.length })
+            : t("barber.client_count_plural", { count: clients.length })}
         </Text>
       </View>
 
@@ -174,7 +177,7 @@ export default function BarberClientsScreen() {
           style={styles.search}
           value={query}
           onChangeText={setQuery}
-          placeholder="Search clients"
+          placeholder={t("barber.search_clients")}
           placeholderTextColor={colors.muted}
           autoCapitalize="none"
           autoCorrect={false}
@@ -210,13 +213,13 @@ export default function BarberClientsScreen() {
         ListEmptyComponent={
           bookings && bookings.length === 0 ? (
             <EmptyState
-              title="No clients yet"
-              subtitle="Once customers book with you, they'll show up here."
+              title={t("barber.no_clients_yet")}
+              subtitle={t("barber.once_book_show")}
             />
           ) : (
             <EmptyState
-              title="No matches"
-              subtitle="Try a different name, email or phone number."
+              title={t("barber.no_matches")}
+              subtitle={t("barber.try_different_search")}
             />
           )
         }
@@ -248,10 +251,10 @@ function ClientRow({ client, onPress }: ClientRowProps) {
   const fullName = [client.first_name, client.last_name].filter(Boolean).join(" ");
   const subtitle =
     client.favorite_service && client.last_booking
-      ? `${client.booking_count} visits · ${client.favorite_service}`
+      ? t("barber.visits_with_service", { count: client.booking_count, service: client.favorite_service })
       : client.last_booking
-        ? `${client.booking_count} visits`
-        : "No visits yet";
+        ? t("barber.visit_count", { count: client.booking_count })
+        : t("barber.no_visits_yet");
 
   return (
     <Pressable
@@ -265,21 +268,21 @@ function ClientRow({ client, onPress }: ClientRowProps) {
       />
       <View style={styles.rowInfo}>
         <Text style={styles.rowName} numberOfLines={1}>
-          {fullName || "Customer"}
+          {fullName || t("staff.customer")}
         </Text>
         <Text style={styles.rowSubtitle} numberOfLines={1}>
           {subtitle}
         </Text>
         {!!client.last_booking && (
           <Text style={styles.rowDate} numberOfLines={1}>
-            Last visit {formatDate(client.last_booking)}
+            {t("staff.last_visit")} {formatDate(client.last_booking)}
           </Text>
         )}
       </View>
       {client.upcoming_count > 0 && (
         <View style={styles.upcomingBadge}>
           <Text style={styles.upcomingBadgeText}>
-            {client.upcoming_count} up
+            {t("barber.upcoming_count", { count: client.upcoming_count })}
           </Text>
         </View>
       )}
@@ -294,7 +297,7 @@ type ClientDetailSheetProps = {
 };
 
 function ClientDetailSheet({ client, history, onClose }: ClientDetailSheetProps) {
-  const fullName = [client.first_name, client.last_name].filter(Boolean).join(" ") || "Customer";
+  const fullName = [client.first_name, client.last_name].filter(Boolean).join(" ") || t("staff.customer");
   const userCountry = useUserCountry();
 
   return (
@@ -314,36 +317,36 @@ function ClientDetailSheet({ client, history, onClose }: ClientDetailSheetProps)
       <View style={styles.sheetStats}>
         <View style={styles.sheetStat}>
           <Text style={styles.sheetStatValue}>{client.booking_count}</Text>
-          <Text style={styles.sheetStatLabel}>Bookings</Text>
+          <Text style={styles.sheetStatLabel}>{t("staff.bookings")}</Text>
         </View>
         <View style={styles.sheetStat}>
           <Text style={styles.sheetStatValue}>{client.completed_count}</Text>
-          <Text style={styles.sheetStatLabel}>Completed</Text>
+          <Text style={styles.sheetStatLabel}>{t("status.completed")}</Text>
         </View>
         <View style={styles.sheetStat}>
           <Text style={styles.sheetStatValue}>{client.upcoming_count}</Text>
-          <Text style={styles.sheetStatLabel}>Upcoming</Text>
+          <Text style={styles.sheetStatLabel}>{t("staff.upcoming")}</Text>
         </View>
       </View>
 
       <DetailsCard>
         {!!client.phone && (
-          <DetailRow label="Phone" value={client.phone} />
+          <DetailRow label={t("staff.phone")} value={client.phone} />
         )}
         {!!client.email && (
-          <DetailRow label="Email" value={client.email} />
+          <DetailRow label={t("staff.email")} value={client.email} />
         )}
         {!!client.favorite_service && (
-          <DetailRow label="Favorite" value={client.favorite_service} />
+          <DetailRow label={t("barber.favorite")} value={client.favorite_service} />
         )}
         {!!client.last_booking && (
-          <DetailRow label="Last visit" value={formatDate(client.last_booking)} />
+          <DetailRow label={t("staff.last_visit")} value={formatDate(client.last_booking)} />
         )}
       </DetailsCard>
 
-      <Text style={styles.historyTitle}>Recent bookings</Text>
+      <Text style={styles.historyTitle}>{t("barber.recent_bookings")}</Text>
       {history.length === 0 ? (
-        <Text style={styles.historyEmpty}>No bookings on record.</Text>
+        <Text style={styles.historyEmpty}>{t("barber.no_bookings_record")}</Text>
       ) : (
         history.map((row) => (
           <View key={row.id} style={styles.historyRow}>
@@ -361,7 +364,7 @@ function ClientDetailSheet({ client, history, onClose }: ClientDetailSheetProps)
       )}
 
       <Button
-        title="Close"
+        title={t("common.close")}
         variant="outline"
         onPress={onClose}
         style={styles.sheetClose}

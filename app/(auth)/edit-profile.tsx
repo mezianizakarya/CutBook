@@ -10,6 +10,7 @@ import { TextField } from "@/components/ui/TextField";
 import { UsernameField } from "@/components/ui/UsernameField";
 import { FullScreenLoader } from "@/lib/auth";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import { fetchOwnProfile } from "@/lib/profile";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -97,12 +98,12 @@ export default function EditProfileScreen() {
     setError(null);
     setUsernameError(null);
     if (!firstName.trim() || !lastName.trim()) {
-      setError("Please enter your full name.");
+      setError(t("profile.enter_full_name"));
       return;
     }
     const chosenUsername = username.trim();
     if (!chosenUsername) {
-      setError("Please choose a username.");
+      setError(t("profile.choose_username"));
       return;
     }
     const validationErrors = validateUsername(chosenUsername);
@@ -113,7 +114,7 @@ export default function EditProfileScreen() {
     const parsedYears = years.trim() === "" ? null : Number(years);
     if (isBarber) {
       if (!specialty.trim()) {
-        setError("Add your specialty to complete your barber profile.");
+        setError(t("profile.add_specialty_error"));
         return;
       }
       if (
@@ -122,14 +123,14 @@ export default function EditProfileScreen() {
         parsedYears < 0 ||
         parsedYears > 100
       ) {
-        setError("Experience must be a whole number between 0 and 100 years.");
+        setError(t("profile.experience_range_error"));
         return;
       }
     }
     setSubmitting(true);
     try {
       if (await isUsernameTaken(chosenUsername)) {
-        setUsernameError("This username is already taken.");
+          setUsernameError(t("profile.username_taken"));
         return;
       }
       const updates: Record<string, unknown> = { username: chosenUsername };
@@ -145,7 +146,7 @@ export default function EditProfileScreen() {
       if (dbError) {
         const message = dbError.message.toLowerCase();
         if (message.includes("duplicate") || message.includes("unique")) {
-          setUsernameError("This username is already taken.");
+        setUsernameError(t("profile.username_taken"));
           return;
         }
         throw dbError;
@@ -173,10 +174,10 @@ export default function EditProfileScreen() {
         >
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Edit profile</Text>
+        <Text style={styles.title}>{t("profile.edit_title")}</Text>
       </View>
       <Text style={styles.subtitle}>
-        Update your name, username and professional details.
+        {t("profile.update_info")}
       </Text>
 
       {loaded ? (
@@ -184,7 +185,7 @@ export default function EditProfileScreen() {
           <View style={styles.nameRow}>
             <View style={styles.nameField}>
               <TextField
-                label="First name"
+                label={t("profile.first_name")}
                 value={firstName}
                 onChangeText={setFirstName}
                 placeholder="Jane"
@@ -193,7 +194,7 @@ export default function EditProfileScreen() {
             </View>
             <View style={styles.nameField}>
               <TextField
-                label="Last name"
+                label={t("profile.last_name")}
                 value={lastName}
                 onChangeText={setLastName}
                 placeholder="Doe"
@@ -203,7 +204,7 @@ export default function EditProfileScreen() {
           </View>
 
           <UsernameField
-            label="Username"
+            label={t("profile.username")}
             value={username}
             onChangeText={setUsername}
             placeholder="janedoe123"
@@ -213,13 +214,13 @@ export default function EditProfileScreen() {
           {isBarber && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Professional</Text>
+                <Text style={styles.sectionTitle}>{t("profile.professional_section_title")}</Text>
                 <Text style={styles.sectionSubtitle}>
-                  Tell clients about your craft, style and experience.
+                  {t("profile.professional_section_subtitle")}
                 </Text>
               </View>
               <TextField
-                label="Specialty"
+                label={t("barber.specialty")}
                 value={specialty}
                 onChangeText={setSpecialty}
                 placeholder="e.g. Fades, beard work"
@@ -251,14 +252,14 @@ export default function EditProfileScreen() {
                 })}
               </ScrollView>
               <TextField
-                label="Years of experience"
+                label={t("profile.years_experience")}
                 value={years}
                 onChangeText={setYears}
                 placeholder="e.g. 5"
                 keyboardType="numeric"
               />
               <TextField
-                label="Bio"
+                label={t("barber.bio")}
                 value={bio}
                 onChangeText={setBio}
                 placeholder="Tell clients about your craft, style and what to expect."
@@ -270,7 +271,7 @@ export default function EditProfileScreen() {
 
           {error && <Text style={styles.errorText}>{error}</Text>}
 
-          <Button title="Save changes" onPress={handleSave} loading={submitting} />
+          <Button title={t("profile.save_changes")} onPress={handleSave} loading={submitting} />
         </View>
       ) : null}
     </Screen>

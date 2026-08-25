@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import { colors, spacing } from "@/lib/theme";
 import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
 
@@ -50,7 +51,7 @@ export function DeleteAccountButton() {
     <View style={styles.container}>
       <Button
         title={
-          confirming ? `Confirm delete (${confirmCount})` : "Delete Account"
+          confirming ? t("account.confirm_delete", { count: confirmCount }) : t("account.delete_account")
         }
         onPress={handlePress}
         variant={confirming ? "danger" : "dangerOutline"}

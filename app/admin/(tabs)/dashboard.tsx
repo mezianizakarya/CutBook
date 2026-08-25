@@ -25,7 +25,8 @@ import {
 } from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { useFormatCents } from "@/lib/format";
-import { ROLE_LABELS } from "@/lib/roles";
+import { getRoleLabel } from "@/lib/roles";
+import { getLocale, t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
 import { countPendingShopVerificationRequests } from "@/lib/shop-verification";
@@ -93,7 +94,7 @@ export default function AdminDashboardScreen() {
 
   const dateLabel = useMemo(
     () =>
-      new Date().toLocaleDateString(undefined, {
+      new Date().toLocaleDateString(getLocale(), {
         weekday: "long",
         month: "long",
         day: "numeric",
@@ -123,7 +124,7 @@ export default function AdminDashboardScreen() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Dashboard</Text>
+          <Text style={styles.title}>{t("tabs.dashboard")}</Text>
           <Text style={styles.subtitle}>{dateLabel}</Text>
         </View>
 
@@ -134,15 +135,15 @@ export default function AdminDashboardScreen() {
         {!!stats && (
           <>
             <View style={styles.statsRow}>
-              <StatCard label="Users" value={String(stats.activeUsers)} />
-              <StatCard label="Barbers" value={String(stats.barbers)} />
-              <StatCard label="Owners" value={String(stats.owners)} />
-              <StatCard label="Shops" value={String(stats.shops)} />
+              <StatCard label={t("tabs.users")} value={String(stats.activeUsers)} />
+              <StatCard label={t("roles.barber")} value={String(stats.barbers)} />
+              <StatCard label={t("roles.owner")} value={String(stats.owners)} />
+              <StatCard label={t("tabs.shop")} value={String(stats.shops)} />
             </View>
             <View style={styles.statsRow}>
-              <StatCard label="Pending" value={String(stats.pendingShops)} />
-              <StatCard label="Today" value={String(stats.todayBookings)} />
-              <StatCard label="Revenue" value={formattedRevenue} />
+              <StatCard label={t("status.pending")} value={String(stats.pendingShops)} />
+              <StatCard label={t("staff.today")} value={String(stats.todayBookings)} />
+              <StatCard label={t("staff.revenue")} value={formattedRevenue} />
             </View>
           </>
         )}
@@ -152,8 +153,8 @@ export default function AdminDashboardScreen() {
           style={({ pressed }) => [styles.reviewCard, pressed && styles.reviewCardPressed]}
         >
           <View style={styles.reviewInfo}>
-            <Text style={styles.reviewTitle}>Pending approvals</Text>
-            <Text style={styles.reviewSubtitle}>Shops waiting for approval</Text>
+            <Text style={styles.reviewTitle}>{t("admin.pending_approvals")}</Text>
+            <Text style={styles.reviewSubtitle}>{t("admin.shops_waiting_approval")}</Text>
           </View>
           <View style={styles.reviewCount}>
             <Text style={styles.reviewCountText}>{stats?.pendingShops ?? 0}</Text>
@@ -166,8 +167,8 @@ export default function AdminDashboardScreen() {
           style={({ pressed }) => [styles.reviewCard, pressed && styles.reviewCardPressed]}
         >
           <View style={styles.reviewInfo}>
-            <Text style={styles.reviewTitle}>Barber verification</Text>
-            <Text style={styles.reviewSubtitle}>Barbers and owners to verify</Text>
+            <Text style={styles.reviewTitle}>{t("admin.barber_verification")}</Text>
+            <Text style={styles.reviewSubtitle}>{t("admin.barbers_owners_verify")}</Text>
           </View>
           <View style={styles.reviewCount}>
             <Text style={styles.reviewCountText}>{pendingVerificationCount}</Text>
@@ -180,8 +181,8 @@ export default function AdminDashboardScreen() {
           style={({ pressed }) => [styles.reviewCard, pressed && styles.reviewCardPressed]}
         >
           <View style={styles.reviewInfo}>
-            <Text style={styles.reviewTitle}>Shop verification</Text>
-            <Text style={styles.reviewSubtitle}>Shops waiting to be verified</Text>
+            <Text style={styles.reviewTitle}>{t("admin.shop_verification")}</Text>
+            <Text style={styles.reviewSubtitle}>{t("admin.shops_waiting_verified")}</Text>
           </View>
           <View style={styles.reviewCount}>
             <Text style={styles.reviewCountText}>{pendingShopVerificationCount}</Text>
@@ -189,10 +190,10 @@ export default function AdminDashboardScreen() {
           <Ionicons name="chevron-forward" size={18} color={colors.muted} />
         </Pressable>
 
-        <SectionHeader title="Recent signups" />
+        <SectionHeader title={t("admin.recent_signups")} />
         {recentUsers.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>No recent signups</Text>
+            <Text style={styles.emptyTitle}>{t("admin.no_recent_signups")}</Text>
           </View>
         ) : (
           recentUsers.map((user) => (
@@ -206,12 +207,12 @@ export default function AdminDashboardScreen() {
                   {user.is_verified && <VerifiedIcon size={16} />}
                 </View>
                 <Text style={styles.rowSubtitle} numberOfLines={1}>
-                  {user.email ?? "No email"}
+                  {user.email ?? t("admin.no_email")}
                 </Text>
               </View>
               <View style={styles.roleBadge}>
                 <Text style={styles.roleBadgeText}>
-                  {user.role ? ROLE_LABELS[user.role] : "—"}
+                  {user.role ? getRoleLabel(user.role) : "—"}
                 </Text>
               </View>
             </View>

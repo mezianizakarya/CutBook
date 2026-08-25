@@ -36,11 +36,10 @@ import {
   type TimeOffRow,
 } from "@/lib/barber";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { formatOpenRange, isSameDay, startOfDay } from "@/lib/format";
+import { dayLetter, formatOpenRange, isSameDay, startOfDay } from "@/lib/format";
+import { getLocale, t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
-
-const DAY_LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
 
 type ScheduleContext = {
   memberships: BarberMember[];
@@ -189,12 +188,12 @@ export default function BarberScheduleScreen() {
       return;
     }
     Alert.alert(
-      "Mark as unavailable",
-      "Customers won't be able to book you for this day.",
+      t("barber.mark_unavailable"),
+      t("barber.wont_be_able_book"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Take day off",
+          text: t("barber.take_day_off"),
           style: "destructive",
           onPress: async () => {
             setChanging(true);
@@ -202,7 +201,7 @@ export default function BarberScheduleScreen() {
               await addDayOff(primaryMember.id, selectedDay);
               await load();
             } catch (e) {
-              Alert.alert("Couldn't update availability", errorMessageFromUnknown(e));
+              Alert.alert(t("barber.could_not_update_availability"), errorMessageFromUnknown(e));
             } finally {
               setChanging(false);
             }
@@ -221,7 +220,7 @@ export default function BarberScheduleScreen() {
       await removeDayOff(dayOff.id);
       await load();
     } catch (e) {
-      Alert.alert("Couldn't update availability", errorMessageFromUnknown(e));
+      Alert.alert(t("barber.could_not_update_availability"), errorMessageFromUnknown(e));
     } finally {
       setChanging(false);
     }
@@ -239,17 +238,17 @@ export default function BarberScheduleScreen() {
     return (
       <Screen scroll paddingHorizontal={14} paddingTop={spacing.sm}>
         <View style={styles.pageHeader}>
-          <Text style={styles.pageTitle}>Schedule</Text>
+          <Text style={styles.pageTitle}>{t("tabs.schedule")}</Text>
         </View>
         <EmptyState
-          title="Not assigned to a shop"
-          subtitle="You're not a member of any barbershop yet. Ask your shop owner to add you as staff."
+          title={t("barber.not_assigned_shop")}
+          subtitle={t("barber.not_member_yet")}
         />
       </Screen>
     );
   }
 
-  const selectedLabel = selectedDay.toLocaleDateString(undefined, {
+  const selectedLabel = selectedDay.toLocaleDateString(getLocale(), {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -269,7 +268,7 @@ export default function BarberScheduleScreen() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Schedule</Text>
+          <Text style={styles.title}>{t("tabs.schedule")}</Text>
           <Text style={styles.subtitle}>
             {shop?.name ?? "—"} · {selectedLabel}
           </Text>
@@ -303,27 +302,26 @@ export default function BarberScheduleScreen() {
         {dayOff ? (
           <View style={[styles.dayPill, styles.dayPillLeave]}>
             <Text style={styles.dayPillLeaveText}>
-              On leave — {dayOff.reason ?? "Unavailable"}
+              {t("barber.on_leave", { reason: dayOff.reason ?? t("barber.unavailable") })}
             </Text>
           </View>
         ) : dayAvailability.length > 0 ? (
           <View style={[styles.dayPill, styles.dayPillAvailable]}>
             <Text style={styles.dayPillAvailableText}>
-              Available{" "}
-              {dayAvailability
+              {t("barber.available", { ranges: dayAvailability
                 .map((window) => formatOpenRange(window.starts_at, window.ends_at))
-                .join(" · ")}
+                .join(" · ") })}
             </Text>
           </View>
         ) : (
           <View style={[styles.dayPill, styles.dayPillOff]}>
-            <Text style={styles.dayPillOffText}>Not available this day</Text>
+            <Text style={styles.dayPillOffText}>{t("barber.not_available_day")}</Text>
           </View>
         )}
 
         {canTakeDayOff && (
           <Button
-            title="Mark as day off"
+            title={t("barber.mark_day_off")}
             variant="dangerOutline"
             loading={changing}
             disabled={changing}
@@ -332,7 +330,7 @@ export default function BarberScheduleScreen() {
         )}
         {!!dayOff && !isPastDay && (
           <Button
-            title="Remove day off"
+            title={t("barber.remove_day_off")}
             variant="outline"
             loading={changing}
             disabled={changing}
@@ -343,14 +341,16 @@ export default function BarberScheduleScreen() {
 
         <Text style={styles.dayBookingsTitle}>
           {dayBookings.length > 0
-            ? `${dayBookings.length} booking${dayBookings.length === 1 ? "" : "s"}`
-            : "No bookings this day"}
+            ? dayBookings.length === 1
+              ? t("barber.booking_count", { count: dayBookings.length })
+              : t("barber.booking_count_plural", { count: dayBookings.length })
+            : t("barber.no_bookings_day")}
         </Text>
         {dayBookings.length === 0 ? (
           <View style={styles.emptyDay}>
-            <Text style={styles.emptyDayTitle}>Nothing scheduled</Text>
+            <Text style={styles.emptyDayTitle}>{t("barber.nothing_scheduled")}</Text>
             <Text style={styles.emptyDaySubtitle}>
-              Bookings for this day will show up here.
+              {t("barber.bookings_show_here")}
             </Text>
           </View>
         ) : (
@@ -394,7 +394,7 @@ function PressableDay({ day, active, today, onPress }: PressableDayProps) {
   return (
     <PressableDayButton active={active} today={today} onPress={onPress}>
       <Text style={[styles.dayLetter, active && styles.dayLetterActive]}>
-        {DAY_LETTERS[day.getDay()]}
+        {dayLetter(day.getDay())}
       </Text>
       <Text style={[styles.dayNumber, active && styles.dayNumberActive]}>
         {day.getDate()}

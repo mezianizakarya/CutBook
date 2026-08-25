@@ -1,12 +1,20 @@
 import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { DeleteAccountButton } from "@/components/ui/DeleteAccountButton";
+import { LanguageSheet } from "@/components/ui/LanguageSheet";
 import { Screen } from "@/components/ui/Screen";
 import { SignOutButton } from "@/components/ui/SignOutButton";
 import { FullScreenLoader } from "@/lib/auth";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useUserCountry } from "@/lib/user-country";
 import { useRegionSheet } from "@/lib/useRegionSheet";
@@ -33,6 +41,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const userCountry = useUserCountry();
   const { openSheet, sheetContent } = useRegionSheet(userCountry);
+  const [showLanguage, setShowLanguage] = useState(false);
 
   if (!isLoaded) {
     return <FullScreenLoader />;
@@ -55,32 +64,37 @@ export default function SettingsScreen() {
         >
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Settings</Text>
+        <Text style={styles.title}>{t("tabs.settings")}</Text>
       </View>
       <Text style={styles.subtitle}>
-        Manage your account and app preferences.
+        {t("settings.subtitle")}
       </Text>
 
       <View style={styles.group}>
         <SettingsRow
-          label="Edit profile"
+          label={t("profile.edit_profile")}
           onPress={() => router.push("/edit-profile")}
         />
         <View style={styles.divider} />
         <SettingsRow
-          label="Account info"
+          label={t("account.info_title")}
           onPress={() => router.push("/account-info")}
         />
         <View style={styles.divider} />
         <SettingsRow
-          label="Account region"
+          label={t("settings.account_region")}
           onPress={openSheet}
+        />
+        <View style={styles.divider} />
+        <SettingsRow
+          label={t("settings.language")}
+          onPress={() => setShowLanguage(true)}
         />
         {!isAdmin && (
           <>
             <View style={styles.divider} />
             <SettingsRow
-              label="Request verification"
+              label={t("shop.request_verification")}
               onPress={() => router.push("/verification")}
             />
           </>
@@ -93,6 +107,11 @@ export default function SettingsScreen() {
       </View>
 
       {sheetContent}
+
+      <LanguageSheet
+        visible={showLanguage}
+        onClose={() => setShowLanguage(false)}
+      />
     </Screen>
   );
 }

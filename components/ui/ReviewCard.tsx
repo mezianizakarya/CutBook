@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Avatar } from "@/components/ui/Avatar";
 import { StarRating } from "@/components/ui/StarRating";
 import { formatDate } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import type { ReviewRow } from "@/lib/reviews";
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -18,7 +19,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
         <Avatar fullName={review.author_name} size={36} />
         <View style={styles.headerInfo}>
           <Text style={styles.author} numberOfLines={1}>
-            {review.author_name || "Customer"}
+            {review.author_name || t("review.customer")}
           </Text>
           <Text style={styles.date}>{formatDate(review.created_at)}</Text>
         </View>
@@ -31,8 +32,8 @@ export function ReviewCard({ review }: ReviewCardProps) {
         <View style={styles.response}>
           <Text style={styles.responseLabel}>
             {review.responded_at
-              ? `Shop's response · ${formatDate(review.responded_at)}`
-              : "Shop's response"}
+              ? t("review.shop_response_date", { date: formatDate(review.responded_at) })
+              : t("review.shop_response")}
           </Text>
           <Text style={styles.responseText}>{review.owner_response}</Text>
         </View>

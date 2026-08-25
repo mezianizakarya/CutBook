@@ -18,6 +18,7 @@ import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StaffBookingSheet } from "@/components/ui/StaffBookingSheet";
 import { StatCard } from "@/components/ui/StatCard";
+import { getLocale, t } from "@/lib/i18n";
 import { computeDashboardStats } from "@/lib/barber";
 import {
   fetchBookingCustomers,
@@ -162,17 +163,17 @@ export default function OwnerDashboardScreen() {
     return (
       <Screen scroll paddingHorizontal={14} style={styles.screenPadding}>
         <EmptyState
-          title="You don't manage a shop yet"
-          subtitle="Create your first shop to start taking bookings. It appears on KUTZ once approved."
-          actionLabel="Create your first shop"
+          title={t("owner.no_shop_title")}
+          subtitle={t("owner.create_first_shop_hint")}
+          actionLabel={t("owner.create_first_shop")}
           onAction={() => router.push("/onboarding/owner-shop")}
         />
       </Screen>
     );
   }
 
-  const shopName = shops.length === 1 ? shops[0].name : `${shops.length} shops`;
-  const dateLabel = new Date().toLocaleDateString(undefined, {
+  const shopName = shops.length === 1 ? shops[0].name : t("owner.shops_count", { count: shops.length });
+  const dateLabel = new Date().toLocaleDateString(getLocale(), {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -193,7 +194,7 @@ export default function OwnerDashboardScreen() {
       >
         <View style={styles.header}>
           <Text style={styles.title}>
-            {greetingFor(new Date())}, {user?.firstName ?? "there"}
+            {greetingFor(new Date())}, {user?.firstName ?? t("common.there")}
           </Text>
           <Text style={styles.subtitle}>{dateLabel}</Text>
           <Text style={styles.shopName}>{shopName}</Text>
@@ -204,8 +205,8 @@ export default function OwnerDashboardScreen() {
             notice={{
               message:
                 pendingShops.length === 1
-                  ? "Your shop is pending approval by KUTZ."
-                  : "Some of your shops are pending approval by KUTZ.",
+                  ? t("owner.shop_pending_single")
+                  : t("owner.shop_pending_plural"),
               tone: "role",
             }}
             variant="soft"
@@ -217,18 +218,18 @@ export default function OwnerDashboardScreen() {
         {!!error && <Text style={styles.errorText}>{error}</Text>}
 
         <View style={styles.statsRow}>
-          <StatCard label="Today" value={String(stats.todayCount)} />
-          <StatCard label="Pending" value={String(stats.pendingCount)} />
-          <StatCard label="Completed" value={String(stats.completedCount)} />
-          <StatCard label="Revenue" value={formattedRevenue} />
+          <StatCard label={t("staff.today")} value={String(stats.todayCount)} />
+          <StatCard label={t("bookings.pending")} value={String(stats.pendingCount)} />
+          <StatCard label={t("bookings.completed")} value={String(stats.completedCount)} />
+          <StatCard label={t("staff.revenue")} value={formattedRevenue} />
         </View>
 
-        <SectionHeader title="Today's schedule" />
+        <SectionHeader title={t("dashboard.today_schedule")} />
         {todayBookings.length === 0 ? (
           <View style={styles.emptyDay}>
-            <Text style={styles.emptyDayTitle}>Nothing scheduled today</Text>
+            <Text style={styles.emptyDayTitle}>{t("barber.nothing_scheduled_today")}</Text>
             <Text style={styles.emptyDaySubtitle}>
-              Bookings across your shops will show up here.
+              {t("dashboard.bookings_will_show")}
             </Text>
           </View>
         ) : (

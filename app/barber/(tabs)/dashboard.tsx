@@ -53,6 +53,7 @@ import {
   startOfDay,
 } from "@/lib/format";
 import { fetchOwnProfile, isBarberProfessionalComplete } from "@/lib/profile";
+import { getLocale, t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
 import { useNotice } from "@/lib/useNotice";
@@ -224,7 +225,7 @@ export default function BarberDashboardScreen() {
     disarmLeave();
     try {
       await leaveShop(primaryMember.id);
-      showNotice("You left the shop", "success");
+      showNotice(t("barber.left_shop"), "success");
       void load();
     } catch (e) {
       showNotice(errorMessageFromUnknown(e), "danger");
@@ -278,12 +279,12 @@ export default function BarberDashboardScreen() {
     return (
       <Screen scroll paddingHorizontal={14} paddingTop={spacing.sm}>
         <View style={styles.pageHeader}>
-          <Text style={styles.pageTitle}>Dashboard</Text>
+          <Text style={styles.pageTitle}>{t("tabs.dashboard")}</Text>
         </View>
         <EmptyState
-          title="Not assigned to a shop"
-          subtitle="You're not a member of any barbershop yet. Ask your shop owner to add you as staff."
-          actionLabel="Join a shop with a code"
+          title={t("barber.not_assigned_shop")}
+          subtitle={t("barber.not_member_yet")}
+          actionLabel={t("shop.join_with_code")}
           onAction={() => {
             if (profileComplete) {
               setJoinVisible(true);
@@ -319,9 +320,9 @@ export default function BarberDashboardScreen() {
     );
   }
 
-  const greetingName = user?.firstName || primaryMember?.display_name || "there";
+  const greetingName = user?.firstName || primaryMember?.display_name || t("common.there");
   const today = new Date();
-  const dateLabel = today.toLocaleDateString(undefined, {
+  const dateLabel = today.toLocaleDateString(getLocale(), {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -368,7 +369,7 @@ export default function BarberDashboardScreen() {
                     leaveArmed && styles.leaveButtonTextArmed,
                   ]}
                 >
-                  {leaveArmed ? `Confirm leave (${leaveCountdown})` : "Leave shop"}
+                  {leaveArmed ? t("barber.confirm_leave", { count: leaveCountdown }) : t("barber.leave_shop")}
                 </Text>
               </Pressable>
             </View>
@@ -382,65 +383,65 @@ export default function BarberDashboardScreen() {
         {joinedShop ? (
           <View style={[styles.pill, styles.pillAvailable]}>
             <Text style={styles.pillAvailableText}>
-              You joined {joinedShop}
+              {t("shop.you_joined", { shopName: joinedShop })}
             </Text>
           </View>
         ) : leaveToday ? (
           <View style={[styles.pill, styles.pillLeave]}>
             <Text style={styles.pillLeaveText}>
-              On leave today — {leaveToday.reason ?? "Unavailable"}
+              {t("barber.on_leave_today", { reason: leaveToday.reason ?? t("barber.unavailable") })}
             </Text>
           </View>
         ) : availabilityToday.length > 0 ? (
           <View style={[styles.pill, styles.pillAvailable]}>
             <Text style={styles.pillAvailableText}>
-              Available today{" "}
-              {availabilityToday
+              {t("barber.available_today", { ranges: availabilityToday
                 .map((window) =>
                   formatOpenRange(window.starts_at, window.ends_at)
                 )
-                .join(" · ")}
+                .join(" · ") })}
             </Text>
           </View>
         ) : (
           <View style={[styles.pill, styles.pillOff]}>
-            <Text style={styles.pillOffText}>Not scheduled today</Text>
+            <Text style={styles.pillOffText}>{t("barber.not_scheduled_today")}</Text>
           </View>
         )}
 
         <View style={styles.statsRow}>
-          <StatCard label="Today" value={String(stats.todayCount)} />
-          <StatCard label="Pending" value={String(stats.pendingCount)} />
-          <StatCard label="Completed" value={String(stats.completedCount)} />
-          <StatCard label="Revenue" value={formattedRevenue} />
+          <StatCard label={t("staff.today")} value={String(stats.todayCount)} />
+          <StatCard label={t("status.pending")} value={String(stats.pendingCount)} />
+          <StatCard label={t("status.completed")} value={String(stats.completedCount)} />
+          <StatCard label={t("staff.revenue")} value={formattedRevenue} />
         </View>
 
-        <SectionHeader title="Today's schedule" />
+        <SectionHeader title={t("barber.todays_schedule")} />
         {workSchedule.length === 0 ? (
           <EmptyState
-            title="Nothing scheduled today"
-            subtitle="Enjoy the breather — bookings will show up here."
+            title={t("barber.nothing_scheduled_today")}
+            subtitle={t("barber.enjoy_breather")}
           />
         ) : (
           <>
             <View style={styles.workdayRow}>
               <View style={styles.workdayInfo}>
                 <Text style={styles.workdayTitle}>
-                  {workSchedule.length} appointment
-                  {workSchedule.length === 1 ? "" : "s"}
+                  {workSchedule.length === 1
+                    ? t("barber.appointment_count", { count: workSchedule.length })
+                    : t("barber.appointment_count_plural", { count: workSchedule.length })}
                 </Text>
                 <Text style={styles.workdaySubtitle}>
                   {workActive
-                    ? `Serving ${customerDisplayName(customerById.get(workActive.row.id))} now`
+                    ? t("barber.serving_now", { name: customerDisplayName(customerById.get(workActive.row.id)) })
                     : workNext
-                      ? `Next up at ${formatTime(new Date(workNext.expectedStartMs).toISOString())}`
-                      : "All appointments completed"}
+                      ? t("barber.next_up_at", { time: formatTime(new Date(workNext.expectedStartMs).toISOString()) })
+                      : t("barber.all_completed")}
                 </Text>
               </View>
               {(workActive || workNext) && (
                 <Button
                   title={
-                    workActive ? "Continue Work Session" : "Start Workday"
+                    workActive ? t("barber.continue_work_session") : t("barber.start_workday")
                   }
                   onPress={() => router.push("/barber/work-session")}
                   style={styles.workdayButton}

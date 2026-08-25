@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 
+import { t } from "@/lib/i18n";
 import { BookingCard } from "@/components/ui/BookingCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { NoticeBanner } from "@/components/ui/NoticeBanner";
@@ -31,13 +32,13 @@ import { useNotice } from "@/lib/useNotice";
 
 type StatusFilter = "all" | BookingStatus;
 
-const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "pending", label: "Pending" },
-  { key: "confirmed", label: "Confirmed" },
-  { key: "completed", label: "Completed" },
-  { key: "cancelled", label: "Cancelled" },
-  { key: "no_show", label: "No-show" },
+const STATUS_FILTERS: { key: StatusFilter; labelKey: string }[] = [
+  { key: "all", labelKey: "bookings.filter_all" },
+  { key: "pending", labelKey: "bookings.pending" },
+  { key: "confirmed", labelKey: "bookings.confirmed" },
+  { key: "completed", labelKey: "bookings.completed" },
+  { key: "cancelled", labelKey: "bookings.cancelled" },
+  { key: "no_show", labelKey: "bookings.no_show" },
 ];
 
 export default function OwnerBookingsScreen() {
@@ -165,8 +166,8 @@ export default function OwnerBookingsScreen() {
     return (
       <Screen scroll style={styles.screenPadding}>
         <EmptyState
-          title="You don't manage a shop yet"
-          subtitle="Bookings across your shops will appear here."
+          title={t("owner.no_shop_title")}
+          subtitle={t("bookings.will_appear_here")}
         />
       </Screen>
     );
@@ -175,8 +176,8 @@ export default function OwnerBookingsScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>Bookings</Text>
-        <Text style={styles.subtitle}>All appointments across your shops.</Text>
+        <Text style={styles.title}>{t("bookings.title")}</Text>
+        <Text style={styles.subtitle}>{t("bookings.all_appointments")}</Text>
       </View>
 
       {notice ? <NoticeBanner notice={notice} variant="soft" /> : null}
@@ -198,7 +199,7 @@ export default function OwnerBookingsScreen() {
               style={[styles.chip, isActive && styles.chipActive]}
             >
               <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
-                {filter.label} (
+                {t(filter.labelKey as string)} (
                 {filter.key === "all"
                   ? bookings?.length ?? 0
                   : counts.get(filter.key) ?? 0}
@@ -224,8 +225,8 @@ export default function OwnerBookingsScreen() {
         }
         ListEmptyComponent={
           <EmptyState
-            title="No bookings"
-            subtitle="Try a different filter or check back later."
+            title={t("bookings.no_bookings_filter")}
+            subtitle={t("bookings.try_different_filter")}
           />
         }
         renderItem={({ item }) => (

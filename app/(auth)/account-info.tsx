@@ -7,8 +7,9 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Screen } from "@/components/ui/Screen";
 import { FullScreenLoader } from "@/lib/auth";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { getLocale, t } from "@/lib/i18n";
 import { fetchOwnProfile, type OwnProfile } from "@/lib/profile";
-import { ACCOUNT_TYPE_LABELS } from "@/lib/roles";
+import { getAccountTypeLabel } from "@/lib/roles";
 import { colors, radius, spacing } from "@/lib/theme";
 import { formatUsername } from "@/lib/username";
 
@@ -78,7 +79,7 @@ export default function AccountInfoScreen() {
     null;
   const email = user.primaryEmailAddress?.emailAddress;
   const joinedAt = user.createdAt
-    ? new Date(user.createdAt).toLocaleDateString(undefined, {
+    ? new Date(user.createdAt).toLocaleDateString(getLocale(), {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -96,29 +97,29 @@ export default function AccountInfoScreen() {
         >
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Account info</Text>
+        <Text style={styles.title}>{t("account.info_title")}</Text>
       </View>
       <Text style={styles.subtitle}>
-        Your personal details and account settings.
+        {t("account.info_subtitle")}
       </Text>
 
       {!!error && <Text style={styles.error}>{error}</Text>}
 
       {loaded ? (
         <View style={styles.card}>
-          <InfoRow label="Full name" value={fullName} />
+          <InfoRow label={t("account.full_name")} value={fullName} />
           <View style={styles.divider} />
-          <InfoRow label="Username" value={formatUsername(profile?.username)} />
+          <InfoRow label={t("account.username")} value={formatUsername(profile?.username)} />
           <View style={styles.divider} />
-          <InfoRow label="Email" value={email} />
+          <InfoRow label={t("account.email")} value={email} />
           <View style={styles.divider} />
-          <InfoRow label="Phone" value={profile?.phone} />
+          <InfoRow label={t("account.phone")} value={profile?.phone} />
           <View style={styles.divider} />
-          <InfoRow label="City" value={profile?.city} />
+          <InfoRow label={t("account.city")} value={profile?.city} />
           <View style={styles.divider} />
-          <InfoRow label="Role" value={profile?.role ? ACCOUNT_TYPE_LABELS[profile.role] : null} />
+          <InfoRow label={t("account.role")} value={profile?.role ? getAccountTypeLabel(profile.role) : null} />
           <View style={styles.divider} />
-          <InfoRow label="Member since" value={joinedAt} />
+          <InfoRow label={t("account.member_since")} value={joinedAt} />
         </View>
       ) : null}
     </Screen>

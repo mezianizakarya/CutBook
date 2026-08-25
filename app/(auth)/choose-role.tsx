@@ -5,7 +5,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Screen } from "@/components/ui/Screen";
 import { FullScreenLoader } from "@/lib/auth";
-import { SELF_SELECTABLE_ROLES, ROLE_DESCRIPTIONS, ROLE_LABELS, type Role } from "@/lib/roles";
+import { t } from "@/lib/i18n";
+import { SELF_SELECTABLE_ROLES, getRoleDescription, getRoleLabel, type Role } from "@/lib/roles";
 import { colors, radius, spacing } from "@/lib/theme";
 
 export default function ChooseRoleScreen() {
@@ -43,9 +44,9 @@ export default function ChooseRoleScreen() {
   return (
     <Screen scroll centered>
       <View style={styles.header}>
-        <Text style={styles.title}>How will you use KUTZ?</Text>
+        <Text style={styles.title}>{t("roles.how_will_you_use")}</Text>
         <Text style={styles.subtitle}>
-          Pick the role that best fits you. You can only choose one.
+          {t("roles.pick_role_info")}
         </Text>
       </View>
 
@@ -64,10 +65,10 @@ export default function ChooseRoleScreen() {
               ]}
             >
               <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>{ROLE_LABELS[role]}</Text>
-                {isSelected && <Text style={styles.savingText}>Saving…</Text>}
+                <Text style={styles.cardTitle}>{getRoleLabel(role)}</Text>
+                {isSelected && <Text style={styles.savingText}>{t("roles.saving")}</Text>}
               </View>
-              <Text style={styles.cardDescription}>{ROLE_DESCRIPTIONS[role]}</Text>
+              <Text style={styles.cardDescription}>{getRoleDescription(role)}</Text>
             </Pressable>
           );
         })}

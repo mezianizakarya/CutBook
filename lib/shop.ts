@@ -1,5 +1,6 @@
 import { runList, runMaybe } from "@/lib/db";
 import { parseTimeToMinutes } from "@/lib/format";
+import { getLocale } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 
 export type ShopSummary = {
@@ -193,7 +194,7 @@ function nextSlotsToday(
     slots.push({
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
-      label: startsAt.toLocaleTimeString(undefined, {
+      label: startsAt.toLocaleTimeString(getLocale(), {
         hour: "numeric",
         minute: "2-digit",
       }),

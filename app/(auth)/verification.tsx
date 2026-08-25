@@ -18,6 +18,7 @@ import { TextField } from "@/components/ui/TextField";
 import { FullScreenLoader } from "@/lib/auth";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDate } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
 import { useNotice } from "@/lib/useNotice";
@@ -72,7 +73,7 @@ export default function VerificationScreen() {
   async function handleSubmit() {
     setError(null);
     if (!note.trim()) {
-      setError("Add a short note so we know why you want to be verified.");
+      setError(t("verification.add_note_error"));
       return;
     }
     setSubmitting(true);
@@ -84,7 +85,7 @@ export default function VerificationScreen() {
       }));
       setShowForm(false);
       setNote("");
-      showNotice("Verification request sent", "success");
+      showNotice(t("verification.request_sent"), "success");
     } catch (e) {
       setError(errorMessageFromUnknown(e));
     } finally {
@@ -102,7 +103,7 @@ export default function VerificationScreen() {
     try {
       await withdrawVerificationRequest(request.id);
       await load();
-      showNotice("Verification request withdrawn", "success");
+      showNotice(t("verification.request_withdrawn"), "success");
     } catch (e) {
       setError(errorMessageFromUnknown(e));
     } finally {
@@ -145,11 +146,10 @@ export default function VerificationScreen() {
         >
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Request verification</Text>
+        <Text style={styles.title}>{t("verification.request_verification")}</Text>
       </View>
       <Text style={styles.subtitle}>
-        Get a verified badge on your account so clients know they can trust
-        you.
+        {t("verification.get_badge_info")}
       </Text>
 
       {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
@@ -163,21 +163,19 @@ export default function VerificationScreen() {
         <>
           {isVerified ? (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>You&apos;re verified</Text>
+              <Text style={styles.cardTitle}>{t("verification.youre_verified")}</Text>
               <Text style={styles.cardText}>
-                Your verified badge is now shown next to your name on your
-                profile.
+                {t("verification.badge_shown")}
               </Text>
             </View>
           ) : pending ? (
             <View style={styles.card}>
               <View style={styles.cardBadge}>
-                <StatusBadge label="Pending review" tone="warning" />
+                <StatusBadge label={t("verification.pending_review")} tone="warning" />
               </View>
-              <Text style={styles.cardTitle}>Request under review</Text>
+              <Text style={styles.cardTitle}>{t("verification.request_under_review")}</Text>
               <Text style={styles.cardText}>
-                You requested verification on {formatDate(request.created_at)}.
-                An admin will review it shortly.
+                {t("verification.requested_on", { date: formatDate(request.created_at) })}
               </Text>
               {!!request.note && (
                 <View style={styles.quote}>
@@ -187,8 +185,8 @@ export default function VerificationScreen() {
               <Button
                 title={
                   confirmingWithdraw
-                    ? `Confirm withdraw (${count})`
-                    : "Withdraw request"
+                    ? t("verification.confirm_withdraw", { count })
+                    : t("verification.withdraw_request")
                 }
                 onPress={handleWithdrawPress}
                 variant={confirmingWithdraw ? "danger" : "dangerOutline"}
@@ -200,12 +198,11 @@ export default function VerificationScreen() {
             rejected && !showForm ? (
               <View style={styles.card}>
                 <View style={styles.cardBadge}>
-                  <StatusBadge label="Rejected" tone="danger" />
+                  <StatusBadge label={t("verification.rejected")} tone="danger" />
                 </View>
-                <Text style={styles.cardTitle}>Request was rejected</Text>
+                <Text style={styles.cardTitle}>{t("verification.request_rejected")}</Text>
                 <Text style={styles.cardText}>
-                  Your verification request was not approved. You can submit a
-                  new request.
+                  {t("verification.request_not_approved")}
                 </Text>
                 {!!request?.review_note && (
                   <View style={styles.quote}>
@@ -213,19 +210,18 @@ export default function VerificationScreen() {
                   </View>
                 )}
                 <Button
-                  title="Request again"
+                  title={t("verification.request_again")}
                   onPress={() => setShowForm(true)}
                 />
               </View>
             ) : (
               <View style={styles.card}>
-                <Text style={styles.cardTitle}>Request verification</Text>
+                <Text style={styles.cardTitle}>{t("verification.request_verification")}</Text>
                 <Text style={styles.cardText}>
-                  Tell us a bit about yourself so the team can review your
-                  request.
+                  {t("verification.tell_about_self")}
                 </Text>
                 <TextField
-                  label="Why do you want to be verified?"
+                  label={t("verification.why_verified")}
                   value={note}
                   onChangeText={setNote}
                   placeholder="e.g. I'm a licensed barber with 5 years of experience"
@@ -233,7 +229,7 @@ export default function VerificationScreen() {
                   autoCapitalize="sentences"
                 />
                 <Button
-                  title="Request verification"
+                  title={t("verification.request_verification_button")}
                   onPress={handleSubmit}
                   loading={submitting}
                 />
@@ -241,12 +237,11 @@ export default function VerificationScreen() {
             )
           ) : (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Get verified</Text>
+              <Text style={styles.cardTitle}>{t("verification.get_verified")}</Text>
               <Text style={styles.cardText}>
-                A verified badge lets clients know your account is legitimate.
-                Requests are reviewed by our team.
+                {t("verification.verified_badge_info")}
               </Text>
-              <Button title="Request verification" onPress={() => setShowForm(true)} />
+              <Button title={t("verification.request_verification_button")} onPress={() => setShowForm(true)} />
             </View>
           )}
         </>

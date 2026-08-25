@@ -7,6 +7,7 @@ import { StarRating } from "@/components/ui/StarRating";
 import { TextField } from "@/components/ui/TextField";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { createReview, deleteReview, updateReview, type ReviewRow } from "@/lib/reviews";
+import { t } from "@/lib/i18n";
 import { colors, spacing } from "@/lib/theme";
 import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
 
@@ -61,7 +62,7 @@ export function ReviewSheet({
 
   async function handleSubmit() {
     if (rating < 1) {
-      setError("Select a star rating first.");
+      setError(t("review.select_rating_first"));
       return;
     }
     setSubmitting(true);
@@ -109,17 +110,17 @@ export function ReviewSheet({
 
   return (
     <BottomSheet visible={visible} onClose={onClose}>
-      <Text style={styles.title}>{existing ? "Edit your review" : "Leave a review"}</Text>
+      <Text style={styles.title}>{existing ? t("review.edit_review") : t("review.leave_review")}</Text>
       <Text style={styles.subtitle}>{shopName}</Text>
 
-      <Text style={styles.step}>Your rating</Text>
+      <Text style={styles.step}>{t("review.your_rating")}</Text>
       <StarRating value={rating} onChange={setRating} size={36} />
 
       <TextField
-        label="Your review"
+        label={t("review.your_review")}
         value={comment}
         onChangeText={setComment}
-        placeholder="Tell others about your visit…"
+        placeholder={t("review.tell_others")}
         autoCapitalize="sentences"
         multiline
         style={styles.commentField}
@@ -128,21 +129,21 @@ export function ReviewSheet({
       {!!error && <Text style={styles.error}>{error}</Text>}
 
       <Button
-        title={existing ? "Save changes" : "Submit review"}
+        title={existing ? t("review.save_changes") : t("review.submit_review")}
         onPress={handleSubmit}
         loading={submitting}
         disabled={rating < 1}
       />
       {!!existing && (
         <Button
-          title={confirmingDelete ? `Confirm delete (${deleteCount})` : "Delete review"}
+          title={confirmingDelete ? t("review.confirm_delete", { count: deleteCount }) : t("review.delete_review")}
           variant="dangerOutline"
           onPress={handleDeletePress}
           loading={deleting}
           disabled={deleting}
         />
       )}
-      <Button title="Cancel" variant="outline" onPress={onClose} style={styles.cancel} />
+      <Button title={t("common.cancel")} variant="outline" onPress={onClose} style={styles.cancel} />
     </BottomSheet>
   );
 }

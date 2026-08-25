@@ -17,6 +17,7 @@ import {
 } from "@/lib/loyalty";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
+import { t } from "@/lib/i18n";
 
 type RedeemBooking = {
   id: number;
@@ -37,7 +38,7 @@ function rewardLabel(milestone: LoyaltyMilestone, countryCode?: string | null): 
     return `${formatCents(Math.round((milestone.reward_value ?? 0) * 100), countryCode)} off`;
   }
   if (milestone.reward_type === "free_service") {
-    return "Free service";
+    return t("loyalty.free_service");
   }
   return milestone.reward_title;
 }
@@ -128,8 +129,8 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
   async function handleRedeem(reward: CustomerReward) {
     if (upcoming.length === 0) {
       Alert.alert(
-        "No upcoming booking",
-        "You can apply this reward when you have an upcoming booking at this shop."
+        t("loyalty.no_upcoming_booking"),
+        t("loyalty.apply_when_upcoming")
       );
       return;
     }
@@ -145,10 +146,10 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
     setRedeemTarget(null);
     try {
       await redeemReward(reward.id, bookingId);
-      Alert.alert("Reward applied", "Your reward has been applied to this booking.");
+      Alert.alert(t("loyalty.reward_applied"), t("loyalty.reward_applied_message"));
       await load();
     } catch (e) {
-      Alert.alert("Couldn't apply reward", errorMessageFromUnknown(e));
+      Alert.alert(t("loyalty.could_not_apply"), errorMessageFromUnknown(e));
     } finally {
       setRedeemingId(null);
     }
@@ -159,18 +160,18 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
       <View style={styles.card}>
         <View style={styles.headerRow}>
           <View style={styles.headerText}>
-            <Text style={styles.title}>Loyalty</Text>
-            <Text style={styles.subtitle}>Earn a visit with every completed cut.</Text>
+            <Text style={styles.title}>{t("loyalty.title")}</Text>
+            <Text style={styles.subtitle}>{t("loyalty.subtitle")}</Text>
           </View>
           <Ionicons name="pricetags" size={22} color={colors.primaryDark} />
         </View>
 
         <View style={styles.statsRow}>
-          <Stat value={total} label="Visits" />
+          <Stat value={total} label={t("loyalty.visits")} />
           <View style={styles.statDivider} />
-          <Stat value={card?.current_streak ?? 0} label="Streak" />
+          <Stat value={card?.current_streak ?? 0} label={t("loyalty.streak")} />
           <View style={styles.statDivider} />
-          <Stat value={card?.best_streak ?? 0} label="Best" />
+          <Stat value={card?.best_streak ?? 0} label={t("loyalty.best")} />
         </View>
 
         {nextMilestone ? (
@@ -181,12 +182,11 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
               />
             </View>
             <Text style={styles.progressText}>
-              {total} of {nextMilestone.visit_count} visits ·{" "}
-              {rewardLabel(nextMilestone, userCountry)}
+              {t("loyalty.progress", { total, milestone: nextMilestone.visit_count, rewardLabel: rewardLabel(nextMilestone, userCountry) })}
             </Text>
           </View>
         ) : activeMilestones.length > 0 ? (
-          <Text style={styles.progressText}>All rewards unlocked — thank you!</Text>
+          <Text style={styles.progressText}>{t("loyalty.all_rewards_unlocked")}</Text>
         ) : null}
 
         {activeMilestones.length > 0 ? (
@@ -231,7 +231,7 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
 
         {unlockedRewards.length > 0 ? (
           <View style={styles.availableWrap}>
-            <Text style={styles.availableTitle}>Ready to use</Text>
+            <Text style={styles.availableTitle}>{t("loyalty.ready_to_use")}</Text>
             {unlockedRewards.map((reward) => {
               const milestone = milestoneById.get(reward.milestone_id);
               if (!milestone) {
@@ -240,7 +240,7 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
               return (
                 <Button
                   key={reward.id}
-                  title={`Apply ${milestone.reward_title}`}
+                  title={t("loyalty.apply_to_booking", { rewardTitle: milestone.reward_title })}
                   variant="primary"
                   loading={redeemingId === reward.id}
                   disabled={redeemingId !== null}
@@ -256,9 +256,9 @@ export function ShopLoyaltyCard({ shopId, customerId }: ShopLoyaltyCardProps) {
         visible={redeemTarget !== null}
         onClose={() => setRedeemTarget(null)}
       >
-        <Text style={styles.sheetTitle}>Apply reward</Text>
+        <Text style={styles.sheetTitle}>{t("loyalty.apply_reward")}</Text>
         <Text style={styles.sheetText}>
-          Choose the booking to apply this reward to.
+          {t("loyalty.choose_booking")}
         </Text>
         {upcoming.map((booking) => (
           <Pressable
@@ -298,6 +298,13 @@ function Stat({ value, label }: { value: number; label: string }) {
   );
 }
 
+const statusKeyMap = {
+  unlocked: "loyalty.unlocked" as const,
+  redeemed: "loyalty.redeemed" as const,
+  expired: "loyalty.expired" as const,
+  locked: "loyalty.locked" as const,
+};
+
 function StatusBadge({
   status,
 }: {
@@ -306,7 +313,7 @@ function StatusBadge({
   if (status === "locked") {
     return (
       <View style={[styles.badge, styles.badgeLocked]}>
-        <Text style={[styles.badgeText, styles.badgeTextLocked]}>Locked</Text>
+        <Text style={[styles.badgeText, styles.badgeTextLocked]}>{t(statusKeyMap.locked)}</Text>
       </View>
     );
   }
@@ -319,7 +326,7 @@ function StatusBadge({
   return (
     <View style={[styles.badge, { backgroundColor: tone.bg }]}>
       <Text style={[styles.badgeText, { color: tone.text }]}>
-        {status[0].toUpperCase() + status.slice(1)}
+        {t(statusKeyMap[status])}
       </Text>
     </View>
   );

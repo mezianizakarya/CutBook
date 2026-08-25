@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import { colors, spacing } from "@/lib/theme";
 import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
 
@@ -49,7 +50,7 @@ export function SignOutButton() {
   return (
     <View style={styles.container}>
       <Button
-        title={confirming ? `Confirm sign out (${confirmCount})` : "Sign Out"}
+        title={confirming ? t("account.confirm_sign_out", { count: confirmCount }) : t("account.sign_out")}
         onPress={handlePress}
         variant={confirming ? "danger" : "dangerOutline"}
         loading={signingOut}

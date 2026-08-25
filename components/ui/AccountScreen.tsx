@@ -9,6 +9,7 @@ import { ProfilePicture } from "@/components/ui/ProfilePicture";
 import { ProfileSummary } from "@/components/ui/ProfileSummary";
 import { Screen } from "@/components/ui/Screen";
 import { emailIsVerified } from "@/lib/auth";
+import { t } from "@/lib/i18n";
 import type { Role } from "@/lib/roles";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -56,7 +57,7 @@ export function AccountScreen({ role, children }: AccountScreenProps) {
     <Screen scroll paddingHorizontal={14} paddingTop={spacing.sm}>
       <View style={styles.pageHeader}>
         <View style={styles.titleRow}>
-          <Text style={styles.pageTitle}>Profile</Text>
+          <Text style={styles.pageTitle}>{t("tabs.profile")}</Text>
           <Pressable
             onPress={() => router.push("/settings")}
             hitSlop={8}
@@ -88,13 +89,13 @@ export function AccountScreen({ role, children }: AccountScreenProps) {
         </View>
         <View style={styles.buttonRow}>
           <Button
-            title="Edit profile"
+            title={t("profile.edit_profile")}
             variant="outline"
             onPress={() => router.push("/edit-profile")}
             style={styles.flexButton}
           />
           <Button
-            title="Account info"
+            title={t("profile.account_info")}
             variant="outline"
             onPress={() => router.push("/account-info")}
             style={styles.flexButton}

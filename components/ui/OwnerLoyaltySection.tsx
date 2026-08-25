@@ -9,6 +9,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { TextField } from "@/components/ui/TextField";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { useUserCountry } from "@/lib/user-country";
 import {
   deleteLoyaltyMilestone,
@@ -23,24 +24,26 @@ import { colors, radius, spacing } from "@/lib/theme";
 import { useConfirmAction } from "@/lib/useConfirmAction";
 import type { NoticeTone } from "@/lib/useNotice";
 
-const REWARD_TYPE_LABELS: Record<LoyaltyRewardType, string> = {
-  percentage_discount: "% off",
-  fixed_discount: "$ off",
-  free_service: "Free",
-  custom: "Custom",
-};
+function getRewardTypeLabels(): Record<LoyaltyRewardType, string> {
+  return {
+    percentage_discount: t("loyalty.percentage_off"),
+    fixed_discount: t("loyalty.fixed_off"),
+    free_service: t("loyalty.free"),
+    custom: t("loyalty.custom"),
+  };
+}
 
 function rewardMeta(milestone: LoyaltyMilestone, countryCode?: string | null): string {
   if (milestone.reward_type === "percentage_discount") {
-    return `${milestone.reward_value}% off`;
+    return `${milestone.reward_value}${t("loyalty.percentage_off")}`;
   }
   if (milestone.reward_type === "fixed_discount") {
-    return `${formatCents(Math.round((milestone.reward_value ?? 0) * 100), countryCode)} off`;
+    return `${formatCents(Math.round((milestone.reward_value ?? 0) * 100), countryCode)} ${t("loyalty.fixed_off_suffix")}`;
   }
   if (milestone.reward_type === "free_service") {
-    return "Free service";
+    return t("loyalty.free_service");
   }
-  return milestone.reward_description || "Custom reward";
+  return milestone.reward_description || t("loyalty.custom_reward");
 }
 
 type OwnerLoyaltySectionProps = {
@@ -94,7 +97,7 @@ export function OwnerLoyaltySection({ shopId, onNotice }: OwnerLoyaltySectionPro
       const updated = await setLoyaltyProgram(shopId, value);
       setLoyalty((prev) => (prev ? { ...prev, program: updated } : prev));
       onNotice(
-        value ? "Loyalty program turned on" : "Loyalty program turned off"
+        value ? t("notice.program_turned_on") : t("notice.program_turned_off")
       );
     } catch (e) {
       setLoyalty((prev) =>
@@ -102,7 +105,7 @@ export function OwnerLoyaltySection({ shopId, onNotice }: OwnerLoyaltySectionPro
           ? { ...prev, program: { ...prev.program, enabled: previous.enabled } }
           : prev
       );
-      Alert.alert("Couldn't update program", errorMessageFromUnknown(e));
+      Alert.alert(t("loyalty.could_not_update_program"), errorMessageFromUnknown(e));
     } finally {
       setToggling(false);
     }
@@ -113,9 +116,9 @@ export function OwnerLoyaltySection({ shopId, onNotice }: OwnerLoyaltySectionPro
     try {
       const updated = await setLoyaltyProgram(shopId, true);
       setLoyalty((prev) => (prev ? { ...prev, program: updated } : { program: updated, milestones: [] }));
-      onNotice("Loyalty program turned on");
+      onNotice(t("notice.program_turned_on"));
     } catch (e) {
-      Alert.alert("Couldn't turn on program", errorMessageFromUnknown(e));
+      Alert.alert(t("loyalty.could_not_turn_on"), errorMessageFromUnknown(e));
     } finally {
       setToggling(false);
     }
@@ -148,7 +151,7 @@ export function OwnerLoyaltySection({ shopId, onNotice }: OwnerLoyaltySectionPro
           },
           sheet.milestone.id
         );
-        onNotice("Reward updated");
+        onNotice(t("notice.reward_updated"));
       } else {
         await saveLoyaltyMilestone(loyalty.program.id, visitCount, {
           reward_type: input.reward_type,
@@ -157,22 +160,22 @@ export function OwnerLoyaltySection({ shopId, onNotice }: OwnerLoyaltySectionPro
           reward_value: input.reward_value,
           active: input.active,
         });
-        onNotice("Reward added");
+        onNotice(t("notice.reward_added"));
       }
       setSheet(null);
       await load();
     } catch (e) {
-      Alert.alert("Couldn't save reward", errorMessageFromUnknown(e));
+      Alert.alert(t("loyalty.could_not_save_reward"), errorMessageFromUnknown(e));
     }
   }
 
   async function handleDelete(milestone: LoyaltyMilestone) {
     try {
       await deleteLoyaltyMilestone(milestone.id);
-      onNotice("Reward removed");
+      onNotice(t("notice.reward_removed"));
       await load();
     } catch (e) {
-      Alert.alert("Couldn't delete reward", errorMessageFromUnknown(e));
+      Alert.alert(t("loyalty.could_not_delete_reward"), errorMessageFromUnknown(e));
     }
   }
 
@@ -190,19 +193,19 @@ export function OwnerLoyaltySection({ shopId, onNotice }: OwnerLoyaltySectionPro
   return (
     <>
       <SectionHeader
-        title="Loyalty program"
-        actionLabel={program ? "Add reward" : undefined}
+        title={t("loyalty.loyalty_program")}
+        actionLabel={program ? t("loyalty.add_reward") : undefined}
         onAction={program ? () => setSheet({ mode: "create" }) : undefined}
       />
 
       {!program ? (
         <View style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>No loyalty program yet</Text>
+          <Text style={styles.emptyTitle}>{t("loyalty.no_program_yet")}</Text>
           <Text style={styles.emptySubtitle}>
-            Customers earn a visit for every completed cut and unlock rewards.
+            {t("loyalty.program_description")}
           </Text>
           <Button
-            title="Turn on loyalty program"
+            title={t("loyalty.turn_on_program")}
             onPress={() => void handleEnable()}
             loading={toggling}
             disabled={toggling}
@@ -212,11 +215,11 @@ export function OwnerLoyaltySection({ shopId, onNotice }: OwnerLoyaltySectionPro
         <>
           <View style={styles.toggleRow}>
             <View style={styles.toggleInfo}>
-              <Text style={styles.toggleTitle}>Program active</Text>
+              <Text style={styles.toggleTitle}>{t("loyalty.program_active")}</Text>
               <Text style={styles.toggleSubtitle}>
                 {program.enabled
-                  ? "Customers see rewards and can unlock them."
-                  : "Off — history still counts, unlocks are paused."}
+                  ? t("loyalty.program_active_description")
+                  : t("loyalty.program_off")}
               </Text>
             </View>
             <Switch
@@ -230,9 +233,9 @@ export function OwnerLoyaltySection({ shopId, onNotice }: OwnerLoyaltySectionPro
 
           {milestones.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyTitle}>No rewards yet</Text>
+              <Text style={styles.emptyTitle}>{t("loyalty.no_rewards_yet")}</Text>
               <Text style={styles.emptySubtitle}>
-                Add rewards for visit milestones, e.g. a free cut at 5 visits.
+                {t("loyalty.add_rewards_description")}
               </Text>
             </View>
           ) : (
@@ -285,7 +288,7 @@ function MilestoneRow({
           </Text>
           <Text style={styles.milestoneMeta} numberOfLines={1}>
             {milestone.reward_type === "custom"
-              ? milestone.reward_description || "Custom reward"
+              ? milestone.reward_description || t("loyalty.custom_reward")
               : rewardMeta(milestone, userCountry)}
           </Text>
         </View>
@@ -295,7 +298,7 @@ function MilestoneRow({
             milestone.active ? styles.activeText : styles.inactiveText,
           ]}
         >
-          {milestone.active ? "Active" : "Hidden"}
+          {milestone.active ? t("loyalty.active") : t("loyalty.hidden")}
         </Text>
       </Pressable>
       <Pressable
@@ -312,7 +315,7 @@ function MilestoneRow({
             confirming && styles.deleteButtonTextConfirming,
           ]}
         >
-          {confirming ? `Confirm (${count})` : "Delete"}
+          {confirming ? t("loyalty.confirm_delete", { count }) : t("loyalty.delete")}
         </Text>
       </Pressable>
     </View>
@@ -365,23 +368,23 @@ function MilestoneSheet({
   function handleSave() {
     const visits = Number(visitCount);
     if (!Number.isInteger(visits) || visits <= 0) {
-      setError("Enter the visit count (a whole number greater than 0).");
+      setError(t("loyalty.enter_visit_count"));
       return;
     }
     const title = rewardTitle.trim();
     if (!title) {
-      setError("Give the reward a title.");
+      setError(t("loyalty.give_title"));
       return;
     }
     let value: number | null = null;
     if (rewardType === "percentage_discount" || rewardType === "fixed_discount") {
       const parsed = Number(rewardValue);
       if (!Number.isFinite(parsed) || parsed < 0) {
-        setError("Enter a valid reward value.");
+        setError(t("loyalty.enter_valid_value"));
         return;
       }
       if (rewardType === "percentage_discount" && parsed > 100) {
-        setError("Percentage discount can't exceed 100%.");
+        setError(t("loyalty.percentage_exceeds"));
         return;
       }
       value = parsed;
@@ -398,17 +401,17 @@ function MilestoneSheet({
   return (
     <BottomSheet visible={visible} onClose={onClose}>
       <Text style={styles.sheetTitle}>
-        {isEditing ? "Edit reward" : "Add reward"}
+        {isEditing ? t("loyalty.edit_reward") : t("loyalty.add_reward_title")}
       </Text>
       <TextField
-        label="Visit count"
+        label={t("loyalty.visit_count")}
         value={visitCount}
         onChangeText={setVisitCount}
         placeholder="5"
         keyboardType="numeric"
       />
       <View style={styles.typeWrap}>
-        {Object.entries(REWARD_TYPE_LABELS).map(([type, label]) => (
+        {Object.entries(getRewardTypeLabels()).map(([type, label]) => (
           <FilterChip
             key={type}
             label={label}
@@ -418,15 +421,15 @@ function MilestoneSheet({
         ))}
       </View>
       <TextField
-        label="Reward title"
+        label={t("loyalty.reward_title")}
         value={rewardTitle}
         onChangeText={setRewardTitle}
-        placeholder="Free haircut"
+        placeholder={t("loyalty.free_service")}
         autoCapitalize="sentences"
       />
       {rewardType === "percentage_discount" || rewardType === "fixed_discount" ? (
         <TextField
-          label={rewardType === "percentage_discount" ? "Value (%)" : "Value ($)"}
+          label={rewardType === "percentage_discount" ? t("loyalty.value_percent") : t("loyalty.value_dollar")}
           value={rewardValue}
           onChangeText={setRewardValue}
           placeholder={rewardType === "percentage_discount" ? "10" : "5"}
@@ -434,17 +437,17 @@ function MilestoneSheet({
         />
       ) : null}
       <TextField
-        label="Description (optional)"
+        label={t("loyalty.description_optional")}
         value={rewardDescription}
         onChangeText={setRewardDescription}
-        placeholder="What's included?"
+        placeholder={t("loyalty.whats_included")}
         autoCapitalize="sentences"
       />
       <View style={styles.activeRow}>
         <View style={styles.toggleInfo}>
-          <Text style={styles.toggleTitle}>Active</Text>
+          <Text style={styles.toggleTitle}>{t("loyalty.active_toggle")}</Text>
           <Text style={styles.toggleSubtitle}>
-            Inactive rewards stay hidden from the customer card.
+            {t("loyalty.inactive_description")}
           </Text>
         </View>
         <Switch
@@ -456,7 +459,7 @@ function MilestoneSheet({
       </View>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
       <Button
-        title={isEditing ? "Save changes" : "Add reward"}
+        title={isEditing ? t("common.save") : t("loyalty.add_reward")}
         onPress={handleSave}
       />
     </BottomSheet>

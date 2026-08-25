@@ -8,6 +8,7 @@ import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
 import { FullScreenLoader } from "@/lib/auth";
 import { errorMessage } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import { colors, spacing } from "@/lib/theme";
 
 export default function ForgotPasswordScreen() {
@@ -49,15 +50,15 @@ export default function ForgotPasswordScreen() {
   return (
     <Screen scroll centered>
       <View style={styles.header}>
-        <Text style={styles.title}>Forgot your password?</Text>
+        <Text style={styles.title}>{t("auth.forgot_your_password")}</Text>
         <Text style={styles.subtitle}>
-          Enter your email and we&apos;ll send you a code to reset your password.
+          {t("auth.forgot_password_info")}
         </Text>
       </View>
 
       <View style={styles.form}>
         <TextField
-          label="Email"
+          label={t("auth.email")}
           value={emailAddress}
           onChangeText={setEmailAddress}
           placeholder="you@example.com"
@@ -72,7 +73,7 @@ export default function ForgotPasswordScreen() {
         ))}
 
         <Button
-          title="Send Reset Code"
+          title={t("auth.send_reset_code")}
           onPress={handleSendCode}
           loading={submitting}
           disabled={fetchStatus === "fetching"}
@@ -80,9 +81,9 @@ export default function ForgotPasswordScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Remembered your password?</Text>
+        <Text style={styles.footerText}>{t("auth.remembered_password")}</Text>
         <Pressable onPress={() => router.push("/sign-in")}>
-          <Text style={styles.link}>Sign in</Text>
+          <Text style={styles.link}>{t("auth.sign_in")}</Text>
         </Pressable>
       </View>
     </Screen>

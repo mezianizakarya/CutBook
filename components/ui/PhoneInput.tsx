@@ -20,6 +20,7 @@ import {
   findCountryByDialCode,
   type Country,
 } from "@/lib/countries";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useKeyboardHeight } from "@/lib/useKeyboardHeight";
 
@@ -32,7 +33,7 @@ type PhoneInputProps = {
 };
 
 export function PhoneInput({
-  label = "Phone",
+  label = t("phone.phone"),
   value,
   onChangeValue,
   error,
@@ -88,7 +89,7 @@ export function PhoneInput({
         <Pressable
           onPress={() => setPickerVisible(true)}
           accessibilityRole="button"
-          accessibilityLabel="Country code"
+          accessibilityLabel={t("phone.country_code")}
           style={({ pressed }) => [
             styles.codeButton,
             pressed && styles.codeButtonPressed,
@@ -136,12 +137,12 @@ export function PhoneInput({
             ]}
           >
             <View style={styles.dragHandle} />
-            <Text style={styles.sheetTitle}>Select country</Text>
+            <Text style={styles.sheetTitle}>{t("phone.select_country")}</Text>
             <TextInput
               style={styles.search}
               value={query}
               onChangeText={setQuery}
-              placeholder="Search country or code"
+              placeholder={t("phone.search_country")}
               placeholderTextColor={colors.muted}
               autoCapitalize="none"
               autoCorrect={false}
@@ -157,7 +158,7 @@ export function PhoneInput({
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
-                <Text style={styles.empty}>No countries found</Text>
+                <Text style={styles.empty}>{t("phone.no_countries")}</Text>
               }
               renderItem={({ item }) => (
                 <Pressable

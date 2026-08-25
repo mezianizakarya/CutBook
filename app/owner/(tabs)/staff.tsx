@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 
+import { t } from "@/lib/i18n";
 import { Avatar } from "@/components/ui/Avatar";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
@@ -142,7 +143,7 @@ export default function OwnerStaffScreen() {
       setInvitations((prev) => [invitation, ...prev]);
       setGenerated(invitation);
     } catch (e) {
-      Alert.alert("Could not create invitation", errorMessageFromUnknown(e));
+      Alert.alert(t("staff.could_not_create_invitation"), errorMessageFromUnknown(e));
     } finally {
       setGenerating(false);
     }
@@ -158,17 +159,17 @@ export default function OwnerStaffScreen() {
 
   async function handleCopy(code: string) {
     await Clipboard.setStringAsync(code);
-    showNotice(`Code ${code} copied`, "success");
+    showNotice(t("staff.code_copied", { code }), "success");
   }
 
   function handleRevoke(invitation: ShopInvitation) {
     Alert.alert(
-      "Revoke invitation?",
-      `"${invitation.code}" will stop working immediately.`,
+      t("staff.revoke_title"),
+      t("staff.revoke_message", { code: invitation.code }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Revoke",
+          text: t("staff.revoke"),
           style: "destructive",
           onPress: async () => {
             try {
@@ -176,9 +177,9 @@ export default function OwnerStaffScreen() {
               setInvitations((prev) =>
                 prev.map((item) => (item.id === updated.id ? updated : item))
               );
-              showNotice("Invitation revoked", "danger");
+              showNotice(t("staff.invitation_revoked"), "danger");
             } catch (e) {
-              Alert.alert("Could not revoke", errorMessageFromUnknown(e));
+              Alert.alert(t("staff.could_not_revoke"), errorMessageFromUnknown(e));
             }
           },
         },
@@ -188,21 +189,21 @@ export default function OwnerStaffScreen() {
 
   function handleRemove(member: OwnerStaffRow) {
     Alert.alert(
-      "Remove from shop?",
-      `${member.display_name || "This barber"} will lose access to ${shopName(member.shop_id)} and its schedule.`,
+      t("staff.remove_title"),
+      t("staff.remove_message", { name: member.display_name || t("roles.barber"), shopName: shopName(member.shop_id) }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Remove",
+          text: t("staff.remove"),
           style: "destructive",
           onPress: async () => {
             try {
               await removeStaffMember(member.id);
               setStaff((prev) => prev.filter((row) => row.id !== member.id));
               setSelectedStaff(null);
-              showNotice("Barber removed", "danger");
+              showNotice(t("staff.barber_removed"), "danger");
             } catch (e) {
-              Alert.alert("Could not remove", errorMessageFromUnknown(e));
+              Alert.alert(t("staff.could_not_remove"), errorMessageFromUnknown(e));
             }
           },
         },
@@ -232,8 +233,8 @@ export default function OwnerStaffScreen() {
     return (
       <Screen scroll style={styles.screenPadding}>
         <EmptyState
-          title="You don't manage a shop yet"
-          subtitle="Staff and invitations will appear here once you own or manage a shop."
+          title={t("owner.no_shop_title")}
+          subtitle={t("staff.shop_empty_description")}
         />
       </Screen>
     );
@@ -242,9 +243,9 @@ export default function OwnerStaffScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>Staff</Text>
+        <Text style={styles.title}>{t("tabs.staff")}</Text>
         <Text style={styles.subtitle}>
-          Invite barbers with one-time codes and manage your team.
+          {t("staff.owner_subtitle")}
         </Text>
       </View>
 
@@ -274,7 +275,7 @@ export default function OwnerStaffScreen() {
             >
               {shops.length > 1 && (
                 <FilterChip
-                  label="All shops"
+                  label={t("staff.all_shops")}
                   selected={shopFilter === "all"}
                   onPress={() => setShopFilter("all")}
                 />
@@ -289,13 +290,12 @@ export default function OwnerStaffScreen() {
               ))}
             </ScrollView>
 
-            <SectionHeader title="Invitations" />
+            <SectionHeader title={t("staff.invitations")} />
             {visibleInvitations.length === 0 ? (
               <View style={styles.inviteEmpty}>
-                <Text style={styles.inviteEmptyTitle}>No invitations yet</Text>
+                <Text style={styles.inviteEmptyTitle}>{t("staff.no_invitations")}</Text>
                 <Text style={styles.inviteEmptySubtitle}>
-                  Generate a code and share it privately with a barber. Each code
-                  works once and expires in 7 days.
+                  {t("staff.invite_description")}
                 </Text>
               </View>
             ) : (
@@ -317,7 +317,7 @@ export default function OwnerStaffScreen() {
                           style={styles.iconButton}
                           accessibilityRole="button"
                         >
-                          <Text style={styles.iconButtonText}>Copy</Text>
+                          <Text style={styles.iconButtonText}>{t("common.copy")}</Text>
                         </Pressable>
                         <Pressable
                           onPress={() => handleRevoke(invite)}
@@ -325,7 +325,7 @@ export default function OwnerStaffScreen() {
                           style={styles.revokeButton}
                           accessibilityRole="button"
                         >
-                          <Text style={styles.revokeButtonText}>Revoke</Text>
+                          <Text style={styles.revokeButtonText}>{t("staff.revoke")}</Text>
                         </Pressable>
                       </View>
                     ) : (
@@ -346,21 +346,21 @@ export default function OwnerStaffScreen() {
             )}
 
             <Button
-              title={generating ? "Creating…" : "Invite barber"}
+              title={generating ? t("staff.creating") : t("staff.invite_barber")}
               onPress={handleInvitePress}
               variant="outline"
               loading={generating}
               disabled={generating}
             />
 
-            <SectionHeader title="Staff" />
+            <SectionHeader title={t("tabs.staff")} />
           </View>
         }
         ListEmptyComponent={
           <View style={styles.inviteEmpty}>
-            <Text style={styles.inviteEmptyTitle}>No staff yet</Text>
+            <Text style={styles.inviteEmptyTitle}>{t("staff.no_staff")}</Text>
             <Text style={styles.inviteEmptySubtitle}>
-              Once a barber redeems an invitation, they&apos;ll appear here.
+              {t("staff.staff_empty_description")}
             </Text>
           </View>
         }
@@ -372,7 +372,7 @@ export default function OwnerStaffScreen() {
             <Avatar fullName={item.display_name} imageUrl={item.avatar_url} size={44} />
             <View style={styles.staffInfo}>
               <Text style={styles.staffName} numberOfLines={1}>
-                {item.display_name || "Unnamed"}
+                {item.display_name || t("staff.unnamed")}
               </Text>
               <Text style={styles.staffMeta} numberOfLines={1}>
                 {memberRoleLabel(item.member_role)} · {shopName(item.shop_id)}
@@ -387,8 +387,8 @@ export default function OwnerStaffScreen() {
         visible={pickShop}
         onClose={() => setPickShop(false)}
       >
-        <Text style={styles.sheetTitle}>Invite a barber</Text>
-        <Text style={styles.sheetText}>Which shop is the barber joining?</Text>
+        <Text style={styles.sheetTitle}>{t("staff.invite_a_barber")}</Text>
+        <Text style={styles.sheetText}>{t("staff.which_shop")}</Text>
         {shops.map((shop) => (
           <Pressable
             key={shop.id}
@@ -408,12 +408,11 @@ export default function OwnerStaffScreen() {
         visible={generated !== null}
         onClose={() => setGenerated(null)}
       >
-        <Text style={styles.sheetTitle}>Barber invitation</Text>
+        <Text style={styles.sheetTitle}>{t("staff.barber_invitation")}</Text>
         {generated ? (
           <>
             <Text style={styles.sheetText}>
-              Share this code privately with the barber. It works once and
-              expires on {formatDate(generated.expires_at)}.
+              {t("staff.share_code_description", { date: formatDate(generated.expires_at) })}
             </Text>
             <Pressable
               onPress={() => void handleCopy(generated.code)}
@@ -422,11 +421,11 @@ export default function OwnerStaffScreen() {
               <Text style={styles.codeText}>{generated.code}</Text>
             </Pressable>
             <Button
-              title="Copy code"
+              title={t("staff.copy_code")}
               onPress={() => void handleCopy(generated.code)}
               variant="outline"
             />
-            <Button title="Done" onPress={() => setGenerated(null)} />
+            <Button title={t("common.done")} onPress={() => setGenerated(null)} />
           </>
         ) : (
           <ActivityIndicator color={colors.primary} style={styles.generating} />
@@ -447,7 +446,7 @@ export default function OwnerStaffScreen() {
               />
               <View style={styles.staffSheetInfo}>
                 <Text style={styles.staffName} numberOfLines={1}>
-                  {selectedStaff.display_name || "Unnamed"}
+                  {selectedStaff.display_name || t("staff.unnamed")}
                 </Text>
                 <Text style={styles.staffMeta} numberOfLines={1}>
                   {memberRoleLabel(selectedStaff.member_role)} ·{" "}
@@ -455,20 +454,20 @@ export default function OwnerStaffScreen() {
                 </Text>
                 {!!selectedStaff.joined_at && (
                   <Text style={styles.staffMeta}>
-                    Joined {formatDate(selectedStaff.joined_at)}
+                    {t("staff.joined_date", { date: formatDate(selectedStaff.joined_at) })}
                   </Text>
                 )}
               </View>
             </View>
             {selectedStaff.member_role === "barber" ? (
               <Button
-                title="Remove from shop"
+                title={t("staff.remove_from_shop")}
                 variant="dangerOutline"
                 onPress={() => handleRemove(selectedStaff)}
               />
             ) : (
               <Text style={styles.sheetText}>
-                Owners and managers can only be removed by a KUTZ admin.
+                {t("staff.owners_managers_removal")}
               </Text>
             )}
           </>
@@ -484,24 +483,24 @@ function inviteStatusLabel(
 ): string {
   switch (status) {
     case "active":
-      return "Active";
+      return t("staff.status_active");
     case "used":
-      return "Used";
+      return t("staff.status_used");
     case "expired":
-      return `Expired ${formatDate(invite.expires_at)}`;
+      return t("staff.status_expired", { date: formatDate(invite.expires_at) });
     case "revoked":
-      return "Revoked";
+      return t("staff.status_revoked");
   }
 }
 
 function memberRoleLabel(role: OwnerStaffRow["member_role"]): string {
   if (role === "owner") {
-    return "Owner";
+    return t("owner.owner");
   }
   if (role === "manager") {
-    return "Manager";
+    return t("owner.manager");
   }
-  return "Barber";
+  return t("roles.barber");
 }
 
 const styles = StyleSheet.create({

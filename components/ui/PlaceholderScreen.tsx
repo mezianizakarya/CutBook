@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { t } from "@/lib/i18n";
 import { colors, spacing } from "@/lib/theme";
 
 type PlaceholderScreenProps = {
@@ -17,7 +18,7 @@ export function PlaceholderScreen({ title, subtitle, footer }: PlaceholderScreen
         <View style={styles.body}>
           <Text style={styles.title}>{title}</Text>
           {!!subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-          <Text style={styles.hint}>This screen is ready for you to build.</Text>
+          <Text style={styles.hint}>{t("placeholder.ready_to_build")}</Text>
         </View>
         {!!footer && <View style={styles.footer}>{footer}</View>}
       </View>

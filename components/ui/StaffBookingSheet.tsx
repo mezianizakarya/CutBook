@@ -18,6 +18,7 @@ import {
 } from "@/lib/booking";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDateTime, useFormatCents } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { colors, spacing } from "@/lib/theme";
 import { useConfirmAction } from "@/lib/useConfirmAction";
 import type { NoticeTone } from "@/lib/useNotice";
@@ -72,13 +73,13 @@ export function StaffBookingSheet({
       onUpdated(updated);
       const message =
         status === "confirmed"
-          ? "Booking confirmed"
+          ? t("staff.booking_confirmed")
           : status === "completed"
-            ? "Booking marked complete"
-            : "Booking marked as no-show";
+            ? t("staff.booking_completed")
+            : t("staff.booking_no_show");
       onNotice(message, status === "no_show" ? "danger" : "success");
     } catch (e) {
-      Alert.alert("Couldn't update booking", errorMessageFromUnknown(e));
+      Alert.alert(t("staff.could_not_update"), errorMessageFromUnknown(e));
     } finally {
       setBusy(false);
     }
@@ -90,10 +91,10 @@ export function StaffBookingSheet({
       const updated = await cancelBooking(current.id);
       setCurrent(updated);
       onUpdated(updated);
-      onNotice("Booking cancelled", "danger");
+      onNotice(t("staff.booking_cancelled"), "danger");
       onClose();
     } catch (e) {
-      Alert.alert("Couldn't cancel booking", errorMessageFromUnknown(e));
+      Alert.alert(t("staff.could_not_cancel"), errorMessageFromUnknown(e));
       setCancelling(false);
     }
   }
@@ -122,27 +123,27 @@ export function StaffBookingSheet({
       </View>
 
       <DetailsCard>
-        <DetailRow label="Service" value={current.service_name || "—"} labelWidth={62} />
-        <DetailRow label="When" value={formatDateTime(current.starts_at)} labelWidth={62} />
+        <DetailRow label={t("staff.service")} value={current.service_name || "—"} labelWidth={62} />
+        <DetailRow label={t("staff.when")} value={formatDateTime(current.starts_at)} labelWidth={62} />
         <DetailRow
-          label="Duration"
-          value={`${current.service_duration_minutes} min`}
+          label={t("staff.duration")}
+          value={`${current.service_duration_minutes} ${t("common.min")}`}
           labelWidth={62}
         />
-        <DetailRow label="Shop" value={current.shop?.name ?? "—"} labelWidth={62} />
-        <DetailRow label="Price" value={formattedPrice} labelWidth={62} />
+        <DetailRow label={t("staff.shop")} value={current.shop?.name ?? "—"} labelWidth={62} />
+        <DetailRow label={t("staff.price")} value={formattedPrice} labelWidth={62} />
         {!!customer?.phone && (
-          <DetailRow label="Phone" value={customer.phone} labelWidth={62} />
+          <DetailRow label={t("staff.phone")} value={customer.phone} labelWidth={62} />
         )}
         {!!customer?.email && (
-          <DetailRow label="Email" value={customer.email} labelWidth={62} />
+          <DetailRow label={t("staff.email")} value={customer.email} labelWidth={62} />
         )}
         {!!current.note && (
-          <DetailRow label="Note" value={current.note} numberOfLines={2} labelWidth={62} />
+          <DetailRow label={t("staff.note")} value={current.note} numberOfLines={2} labelWidth={62} />
         )}
         {!!current.cancel_reason && (
           <DetailRow
-            label="Reason"
+            label={t("staff.reason")}
             value={current.cancel_reason}
             numberOfLines={2}
             labelWidth={62}
@@ -152,7 +153,7 @@ export function StaffBookingSheet({
 
       {primary === "confirmed" && (
         <Button
-          title="Confirm booking"
+          title={t("staff.confirm_booking")}
           variant="primary"
           loading={busy}
           disabled={busy}
@@ -161,7 +162,7 @@ export function StaffBookingSheet({
       )}
       {primary === "completed" && (
         <Button
-          title="Mark complete"
+          title={t("staff.mark_complete")}
           variant="successOutline"
           loading={busy}
           disabled={busy}
@@ -170,7 +171,7 @@ export function StaffBookingSheet({
       )}
       {showNoShow && (
         <Button
-          title="Mark as no-show"
+          title={t("staff.mark_no_show")}
           variant="dangerOutline"
           loading={busy}
           disabled={busy}
@@ -180,7 +181,7 @@ export function StaffBookingSheet({
       {cancellable && (
         <Button
           title={
-            confirmingCancel ? `Confirm cancel (${confirmCount})` : "Cancel booking"
+            confirmingCancel ? t("staff.confirm_cancel", { count: confirmCount }) : t("staff.cancel_booking")
           }
           onPress={cancelPress}
           variant={confirmingCancel ? "danger" : "dangerOutline"}
@@ -189,7 +190,7 @@ export function StaffBookingSheet({
         />
       )}
       <Button
-        title="Close"
+        title={t("common.close")}
         variant="outline"
         onPress={() => {
           if (confirmingCancel) {

@@ -36,8 +36,9 @@ import {
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDate } from "@/lib/format";
 import { COUNTRIES } from "@/lib/countries";
-import { ROLES, ROLE_LABELS, type Role } from "@/lib/roles";
+import { ROLES, getRoleLabel, type Role } from "@/lib/roles";
 import { supabase } from "@/lib/supabase";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { stripAtPrefix } from "@/lib/username";
 import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
@@ -284,9 +285,9 @@ export default function UsersScreen() {
         previous && previous.id === row.id ? { ...previous, role } : previous
       );
       await load();
-      showNotice(`${fullName(row)} is now ${ROLE_LABELS[role]}`, "role");
+      showNotice(t("admin.is_now_role", { name: fullName(row), role: getRoleLabel(role) }), "role");
     } catch (e) {
-      Alert.alert("Couldn't change role", errorMessageFromUnknown(e));
+      Alert.alert(t("admin.could_not_change_role"), errorMessageFromUnknown(e));
     }
   }
 
@@ -296,15 +297,15 @@ export default function UsersScreen() {
     }
     if (row.id === currentUserId) {
       Alert.alert(
-        "Can't change your own role",
-        "Ask another admin to change your role so you don't lock yourself out."
+        t("admin.cant_change_own_role"),
+        t("admin.ask_another_admin")
       );
       return;
     }
     if (isLastActiveAdmin(row)) {
       Alert.alert(
-        "Last active admin",
-        "Promote another user to admin before changing this role."
+        t("admin.last_active_admin_alert"),
+        t("admin.promote_before_role")
       );
       return;
     }
@@ -318,12 +319,12 @@ export default function UsersScreen() {
       setSelected(null);
       await load();
       showNotice(
-        deleted ? `${fullName(row)} deleted` : `${fullName(row)} restored`,
+        deleted ? t("admin.user_deleted", { name: fullName(row) }) : t("admin.user_restored", { name: fullName(row) }),
         deleted ? "danger" : "success"
       );
     } catch (e) {
       Alert.alert(
-        deleted ? "Couldn't delete account" : "Couldn't restore account",
+        deleted ? t("admin.could_not_delete_account") : t("admin.could_not_restore_account"),
         errorMessageFromUnknown(e)
       );
     } finally {
@@ -334,15 +335,15 @@ export default function UsersScreen() {
   function handleDelete(row: ProfileRow) {
     if (row.id === currentUserId) {
       Alert.alert(
-        "Can't delete yourself",
-        "Use the Delete Account button on your profile screen instead."
+        t("admin.cant_delete_self"),
+        t("admin.use_delete_profile")
       );
       return;
     }
     if (isLastActiveAdmin(row)) {
       Alert.alert(
-        "Last active admin",
-        "Promote another user to admin before deleting this account."
+        t("admin.last_active_admin_alert"),
+        t("admin.promote_before_delete")
       );
       return;
     }
@@ -360,7 +361,7 @@ export default function UsersScreen() {
         : previous
     );
     void load();
-    showNotice(`Verified badge removed from ${fullName(row)}`, "role");
+    showNotice(t("admin.verified_badge_removed_from", { name: fullName(row) }), "role");
   }
 
   if (loading && !profiles) {
@@ -374,9 +375,9 @@ export default function UsersScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>Users</Text>
+        <Text style={styles.title}>{t("tabs.users")}</Text>
         <Text style={styles.subtitle}>
-          {counts.active} active · {counts.deleted} deleted
+          {t("admin.active_deleted", { active: counts.active, deleted: counts.deleted })}
         </Text>
       </View>
 
@@ -388,7 +389,7 @@ export default function UsersScreen() {
             style={styles.search}
             value={query}
             onChangeText={setQuery}
-            placeholder="Search name, username, or email"
+            placeholder={t("admin.search_users")}
             placeholderTextColor={colors.muted}
             autoCapitalize="none"
             autoCorrect={false}
@@ -398,7 +399,7 @@ export default function UsersScreen() {
               onPress={() => setQuery("")}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel="Clear search"
+              accessibilityLabel={t("admin.clear_search")}
               style={styles.clearButton}
             >
               <Ionicons name="close" size={18} color={colors.muted} />
@@ -422,7 +423,7 @@ export default function UsersScreen() {
               style={[styles.chip, isActive && styles.chipActive]}
             >
               <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
-                {filter === "all" ? "All users" : filter === "active" ? "Active" : "Deleted"} (
+                {filter === "all" ? t("admin.all_users") : filter === "active" ? t("admin.active") : t("admin.deleted")} (
                 {counts[filter]})
               </Text>
             </Pressable>
@@ -446,8 +447,8 @@ export default function UsersScreen() {
             >
               <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
                 {role === "all"
-                  ? "All roles"
-                  : `${ROLE_LABELS[role]} (${roleCounts[role]})`}
+                  ? t("admin.all_roles")
+                  : `${getRoleLabel(role)} (${roleCounts[role]})`}
               </Text>
             </Pressable>
           );
@@ -466,7 +467,7 @@ export default function UsersScreen() {
             style={[styles.chip, regionFilter === "all" && styles.chipActive]}
           >
             <Text style={[styles.chipLabel, regionFilter === "all" && styles.chipLabelActive]}>
-              All regions ({profiles?.length ?? 0})
+              {t("admin.all_regions", { count: profiles?.length ?? 0 })}
             </Text>
           </Pressable>
           {regionCounts.map(([region, count]) => {
@@ -504,13 +505,13 @@ export default function UsersScreen() {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No users found</Text>
+            <Text style={styles.emptyTitle}>{t("admin.no_users_found")}</Text>
             <Text style={styles.emptySubtitle}>
-              Try a different search or filter.
+              {t("admin.try_different_filter")}
             </Text>
             {hasActiveFilters && (
               <Button
-                title="Reset filters"
+                title={t("admin.reset_filters")}
                 variant="outline"
                 onPress={resetFilters}
                 style={styles.resetButton}
@@ -525,7 +526,7 @@ export default function UsersScreen() {
                 <ActivityIndicator color={colors.primary} />
               ) : (
                 <Button
-                  title="Load more"
+                  title={t("admin.load_more")}
                   variant="outline"
                   onPress={loadMore}
                   style={styles.loadMoreButton}
@@ -550,13 +551,13 @@ export default function UsersScreen() {
                 {item.is_verified && <VerifiedIcon size={16} />}
               </View>
               <Text style={styles.rowUsername} numberOfLines={1}>
-                {item.username ?? "No username"}
+                {item.username ?? t("admin.no_username")}
               </Text>
             </View>
             <View style={styles.rowBadges}>
               <View style={styles.roleBadge}>
                 <Text style={styles.roleBadgeText}>
-                  {item.role ? ROLE_LABELS[item.role] : "—"}
+                    {item.role ? getRoleLabel(item.role) : "—"}
                 </Text>
               </View>
               <View
@@ -575,7 +576,7 @@ export default function UsersScreen() {
                       : styles.statusBadgeTextActive,
                   ]}
                 >
-                  {item.account_status === "deleted" ? "Deleted" : "Active"}
+                  {item.account_status === "deleted" ? t("admin.deleted") : t("admin.active")}
                 </Text>
               </View>
             </View>
@@ -706,8 +707,8 @@ function ActionModal({
     }
     if (isSelf) {
       Alert.alert(
-        "Can't change your own role",
-        "Ask another admin to change your role so you don't lock yourself out."
+        t("admin.cant_change_own_role"),
+        t("admin.ask_another_admin")
       );
       return;
     }
@@ -743,8 +744,8 @@ function ActionModal({
       setShowingVerification(false);
       onRemoveVerification(row);
     } catch (e) {
-      Alert.alert(
-        "Couldn't remove verification",
+        Alert.alert(
+        t("admin.could_not_remove_verification"),
         errorMessageFromUnknown(e)
       );
     } finally {
@@ -822,7 +823,7 @@ function ActionModal({
                   ]}
                 >
                   <Text style={styles.roleBadgeText}>
-                    {row.role ? ROLE_LABELS[row.role] : "—"}
+                    {row.role ? getRoleLabel(row.role) : "—"}
                   </Text>
                 </Pressable>
                 <View
@@ -837,25 +838,25 @@ function ActionModal({
                       deleted ? styles.statusBadgeTextDeleted : styles.statusBadgeTextActive,
                     ]}
                   >
-                    {deleted ? "Deleted" : "Active"}
+                    {deleted ? t("admin.deleted") : t("admin.active")}
                   </Text>
                 </View>
                 {(row.role === "barber" || row.role === "owner") &&
                   (request?.status === "pending" ? (
-                    <StatusBadge label="Pending review" tone="warning" />
+                    <StatusBadge label={t("admin.pending_review")} tone="warning" />
                   ) : request?.status === "rejected" ? (
-                    <StatusBadge label="Rejected" tone="danger" />
+                    <StatusBadge label={t("admin.rejected")} tone="danger" />
                   ) : null)}
               </View>
               <Text style={styles.modalUsername} numberOfLines={1}>
-                {row.username ?? "No username"}
+                {row.username ?? t("admin.no_username")}
               </Text>
             </View>
           </View>
 
           {showingRoles ? (
             <>
-              <Text style={styles.rolePickerTitle}>Change role</Text>
+              <Text style={styles.rolePickerTitle}>{t("admin.change_role")}</Text>
               <View style={styles.roleChipsBleed}>
               <ScrollView
                 horizontal
@@ -891,7 +892,7 @@ function ActionModal({
                           isSelected && styles.chipSelectedLabel,
                         ]}
                       >
-                        {ROLE_LABELS[role]}
+                        {getRoleLabel(role)}
                       </Text>
                     </Pressable>
                   );
@@ -900,7 +901,7 @@ function ActionModal({
               </View>
               {confirmingRole ? (
                 <Button
-                  title={`Change role to ${ROLE_LABELS[confirmingRole]}`}
+                  title={t("admin.change_role_to", { role: getRoleLabel(confirmingRole) })}
                   onPress={() => {
                     onChangeRole(row, confirmingRole);
                     setConfirmingRole(null);
@@ -909,7 +910,7 @@ function ActionModal({
                 />
               ) : deleted ? (
                 <Button
-                  title={confirmingRestore ? `Confirm restore (${confirmCount})` : "Restore account"}
+                  title={confirmingRestore ? t("admin.confirm_restore", { count: confirmCount }) : t("admin.restore_account")}
                   onPress={handleRestorePress}
                   variant={confirmingRestore ? "primary" : "successOutline"}
                   loading={removing}
@@ -921,7 +922,7 @@ function ActionModal({
                 />
               ) : (
                 <Button
-                  title={confirmingDelete ? `Confirm delete (${confirmCount})` : "Delete account"}
+                  title={confirmingDelete ? t("admin.confirm_delete_count", { count: confirmCount }) : t("admin.delete_account")}
                   onPress={handleDeletePress}
                   variant={confirmingDelete ? "danger" : "dangerOutline"}
                   loading={removing}
@@ -930,7 +931,7 @@ function ActionModal({
                 />
               )}
               <Button
-                title="Cancel"
+                title={t("common.cancel")}
                 onPress={() => {
                   if (confirmingRestore) {
                     setConfirmingRestore(false);
@@ -954,16 +955,14 @@ function ActionModal({
             </>
           ) : showingVerification ? (
             <>
-              <Text style={styles.verificationRemoveTitle}>Remove verification</Text>
+              <Text style={styles.verificationRemoveTitle}>{t("admin.verification_remove_title")}</Text>
               <View style={styles.verificationRemoveCard}>
                 <Text style={styles.verificationRemoveText}>
-                  {fullName(row)} is currently verified. Removing the badge
-                  clears their verified status and lets them request
-                  verification again.
+                  {t("admin.verification_remove_desc", { name: fullName(row) })}
                 </Text>
               </View>
               <Button
-                title="Remove verification"
+                title={t("admin.remove_verification")}
                 onPress={handleRemoveVerification}
                 variant="dangerOutline"
                 loading={removingVerification}
@@ -971,7 +970,7 @@ function ActionModal({
                 style={styles.modalActionSpacer}
               />
               <Button
-                title="Cancel"
+                title={t("common.cancel")}
                 onPress={() => setShowingVerification(false)}
                 variant="outline"
                 style={styles.cancelButton}
@@ -981,7 +980,7 @@ function ActionModal({
             <>
           {isLastActiveAdmin && !deleted && (
             <Text style={styles.modalHint}>
-              This is the only active admin account on the platform.
+              {t("admin.only_active_admin")}
             </Text>
           )}
 
@@ -991,14 +990,14 @@ function ActionModal({
                 onPress={() => copyToClipboard(row.username ?? "", "username")}
                 style={styles.detailRow}
               >
-                <Text style={styles.detailLabel}>Username</Text>
+                <Text style={styles.detailLabel}>{t("admin.username")}</Text>
                 <Text style={styles.detailValue} numberOfLines={1}>
                   {row.username}
                 </Text>
                 {copiedField === "username" ? (
-                  <Text style={styles.copiedText}>Copied</Text>
+                  <Text style={styles.copiedText}>{t("common.copied")}</Text>
                 ) : (
-                  <Text style={styles.copyHint}>Copy</Text>
+                  <Text style={styles.copyHint}>{t("common.copy")}</Text>
                 )}
               </Pressable>
             ) : null}
@@ -1006,9 +1005,9 @@ function ActionModal({
               onPress={() => copyToClipboard(row.email ?? "", "email")}
               style={styles.detailRow}
             >
-              <Text style={styles.detailLabel}>Email</Text>
+              <Text style={styles.detailLabel}>{t("staff.email")}</Text>
               <Text style={styles.detailValue} numberOfLines={1}>
-                {row.email ?? "No email"}
+                {row.email ?? t("admin.no_email")}
               </Text>
               {copiedField === "email" ? (
                 <Text style={styles.copiedText}>Copied</Text>
@@ -1021,32 +1020,32 @@ function ActionModal({
                 onPress={() => copyToClipboard(row.phone ?? "", "phone")}
                 style={styles.detailRow}
               >
-                <Text style={styles.detailLabel}>Phone</Text>
+                <Text style={styles.detailLabel}>{t("staff.phone")}</Text>
                 <Text style={styles.detailValue} numberOfLines={1}>
                   {row.phone}
                 </Text>
                 {copiedField === "phone" ? (
-                  <Text style={styles.copiedText}>Copied</Text>
+                  <Text style={styles.copiedText}>{t("common.copied")}</Text>
                 ) : (
-                  <Text style={styles.copyHint}>Copy</Text>
+                  <Text style={styles.copyHint}>{t("common.copy")}</Text>
                 )}
               </Pressable>
             ) : null}
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Member since</Text>
+              <Text style={styles.detailLabel}>{t("admin.member_since")}</Text>
               <Text style={styles.detailValue}>
                 {formatDate(row.created_at)}
               </Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Last active</Text>
+              <Text style={styles.detailLabel}>{t("admin.last_active")}</Text>
               <Text style={styles.detailValue}>
                 {formatDate(row.last_active_at)}
               </Text>
             </View>
             {row.country && (
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Region</Text>
+                <Text style={styles.detailLabel}>{t("admin.region")}</Text>
                 <Text style={styles.detailValue}>
                   {COUNTRIES.find((c) => c.code === row.country)?.flag}{" "}
                   {COUNTRIES.find((c) => c.code === row.country)?.name ?? row.country}
@@ -1057,7 +1056,7 @@ function ActionModal({
 
           {deleted ? (
             <Button
-              title={confirmingRestore ? `Confirm restore (${confirmCount})` : "Restore account"}
+              title={confirmingRestore ? t("admin.confirm_restore", { count: confirmCount }) : t("admin.restore_account")}
               onPress={handleRestorePress}
               variant={confirmingRestore ? "primary" : "successOutline"}
               loading={removing}
@@ -1069,7 +1068,7 @@ function ActionModal({
             />
           ) : (
             <Button
-              title={confirmingDelete ? `Confirm delete (${confirmCount})` : "Delete account"}
+              title={confirmingDelete ? t("admin.confirm_delete_count", { count: confirmCount }) : t("admin.delete_account")}
               onPress={handleDeletePress}
               variant={confirmingDelete ? "danger" : "dangerOutline"}
               loading={removing}
@@ -1079,7 +1078,7 @@ function ActionModal({
           )}
 
           <Button
-            title="Cancel"
+            title={t("common.cancel")}
             onPress={() => {
               if (confirmingRestore) {
                 setConfirmingRestore(false);

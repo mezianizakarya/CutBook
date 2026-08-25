@@ -5,6 +5,7 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { FullScreenLoader } from "@/lib/auth";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 
 export default function WelcomeScreen() {
@@ -31,14 +32,14 @@ export default function WelcomeScreen() {
           </View>
           <Text style={styles.title}>KUTZ</Text>
           <Text style={styles.tagline}>
-            Book your next haircut with the best barbers in town.
+            {t("auth.tagline")}
           </Text>
         </View>
 
         <View style={styles.actions}>
-          <Button title="Sign In" onPress={() => router.push("/sign-in")} />
+          <Button title={t("auth.sign_in")} onPress={() => router.push("/sign-in")} />
           <Button
-            title="Create Account"
+            title={t("auth.create_account")}
             onPress={() => router.push("/sign-up")}
             variant="outline"
           />

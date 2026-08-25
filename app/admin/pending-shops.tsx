@@ -24,6 +24,7 @@ import {
 } from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDate } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
 
@@ -85,7 +86,7 @@ export default function PendingShopsScreen() {
           ? { ...previous, status: "approved" }
           : previous
       );
-      showNotice(`${shop.name} approved`, "success");
+      showNotice(t("admin.shop_approved_named", { name: shop.name }), "success");
     } catch (e) {
       showNotice(errorMessageFromUnknown(e), "danger");
     } finally {
@@ -130,24 +131,24 @@ export default function PendingShopsScreen() {
           >
             <Ionicons name="chevron-back" size={26} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>Pending approvals</Text>
+          <Text style={styles.title}>{t("admin.pending_approvals")}</Text>
         </View>
         <Text style={styles.subtitle}>
-          Shops waiting for your approval.
+          {t("admin.shops_waiting_approval")}
         </Text>
 
         {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
         {!!error && <Text style={styles.error}>{error}</Text>}
 
         <SectionHeader
-          title="Shops"
-          actionLabel={shops.length > 0 ? `${shops.length} waiting` : undefined}
+          title={t("admin.shops_title")}
+          actionLabel={shops.length > 0 ? t("admin.waiting_count", { count: shops.length }) : undefined}
         />
         {shops.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>Nothing to review</Text>
+            <Text style={styles.emptyTitle}>{t("admin.nothing_to_review")}</Text>
             <Text style={styles.emptySubtitle}>
-              No shops are waiting for approval right now.
+              {t("admin.no_shops_waiting")}
             </Text>
           </View>
         ) : (
@@ -163,11 +164,11 @@ export default function PendingShopsScreen() {
                   {shop.name}
                 </Text>
                 <Text style={styles.rowSubtitle} numberOfLines={1}>
-                  {shop.city ?? "No city"} · {formatDate(shop.created_at)}
+                  {shop.city ?? t("owner.no_city")} · {formatDate(shop.created_at)}
                 </Text>
               </View>
               <Button
-                title="Approve"
+                title={t("admin.approve")}
                 variant="successOutline"
                 loading={approvingId === shop.id}
                 disabled={approvingId !== null}

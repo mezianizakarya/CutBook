@@ -2,6 +2,7 @@ import type { BookingCustomer, BookingRow } from "@/lib/booking";
 import { BOOKING_SELECT, fetchBookingCustomers } from "@/lib/booking";
 import { runList, runQuery, uniqueIds } from "@/lib/db";
 import { startOfDay } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 
 export type BarberMember = {
@@ -255,7 +256,7 @@ export async function loadMyBookings(
 export async function addDayOff(
   memberId: number,
   date: Date,
-  reason = "Unavailable"
+  reason?: string
 ): Promise<TimeOffRow> {
   const start = startOfDay(date);
   const end = new Date(start.getTime() + 86_400_000);
@@ -266,7 +267,7 @@ export async function addDayOff(
         shop_member_id: memberId,
         starts_at: start.toISOString(),
         ends_at: end.toISOString(),
-        reason,
+        reason: reason ?? t("barber.unavailable"),
       })
       .select("id, shop_member_id, starts_at, ends_at, reason")
       .single()

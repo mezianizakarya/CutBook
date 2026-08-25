@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
 import { FullScreenLoader } from "@/lib/auth";
+import { t } from "@/lib/i18n";
 import { colors, spacing } from "@/lib/theme";
 
 export default function SignUpScreen() {
@@ -49,15 +50,15 @@ export default function SignUpScreen() {
   return (
     <Screen scroll centered>
       <View style={styles.header}>
-        <Text style={styles.title}>Create your account</Text>
+        <Text style={styles.title}>{t("auth.create_your_account")}</Text>
         <Text style={styles.subtitle}>
-          We&apos;ll email you a verification code to confirm your address.
+          {t("auth.verification_email_info")}
         </Text>
       </View>
 
       <View style={styles.form}>
         <TextField
-          label="Email"
+          label={t("auth.email")}
           value={emailAddress}
           onChangeText={setEmailAddress}
           placeholder="you@example.com"
@@ -65,10 +66,10 @@ export default function SignUpScreen() {
           error={errors?.fields.emailAddress?.message}
         />
         <TextField
-          label="Password"
+          label={t("auth.password")}
           value={password}
           onChangeText={setPassword}
-          placeholder="Create a password"
+          placeholder={t("auth.create_password_placeholder")}
           secureTextEntry
           error={errors?.fields.password?.message}
         />
@@ -80,7 +81,7 @@ export default function SignUpScreen() {
         ))}
 
         <Button
-          title="Create Account"
+          title={t("auth.create_account")}
           onPress={handleSignUp}
           loading={submitting}
           disabled={fetchStatus === "fetching"}
@@ -91,9 +92,9 @@ export default function SignUpScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Already have an account?</Text>
+        <Text style={styles.footerText}>{t("auth.already_have_account")}</Text>
         <Pressable onPress={() => router.push("/sign-in")}>
-          <Text style={styles.link}>Sign in</Text>
+          <Text style={styles.link}>{t("auth.sign_in")}</Text>
         </Pressable>
       </View>
     </Screen>

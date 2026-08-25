@@ -7,13 +7,14 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
 import { avatarColor } from "@/lib/avatar";
 import { loadOwnerShops, type OwnerShop } from "@/lib/owner";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useFocusLoad } from "@/lib/useFocusLoad";
 
 const STATUS_LABELS: Record<OwnerShop["status"], string> = {
-  pending: "Pending",
-  approved: "Approved",
-  suspended: "Suspended",
+  pending: t("owner.pending"),
+  approved: t("owner.approved"),
+  suspended: t("owner.suspended"),
 };
 
 const STATUS_TONES: Record<OwnerShop["status"], StatusTone> = {
@@ -39,8 +40,8 @@ export function OwnerProfileSection() {
   return (
     <View style={styles.section}>
       <SectionHeader
-        title="My shops"
-        actionLabel={shops && shops.length > 0 ? "Add" : undefined}
+        title={t("owner.my_shops")}
+        actionLabel={shops && shops.length > 0 ? t("owner.add") : undefined}
         onAction={() => router.push("/onboarding/owner-shop")}
       />
       {loading ? (
@@ -50,7 +51,7 @@ export function OwnerProfileSection() {
       ) : shops && shops.length === 0 ? (
         <View style={styles.card}>
           <Text style={styles.emptyText}>
-            You don{"'"}t manage a shop yet. Create one to start taking bookings.
+            {t("owner.no_shop_yet")}
           </Text>
         </View>
       ) : (
@@ -80,8 +81,8 @@ export function OwnerProfileSection() {
                 {shop.name}
               </Text>
               <Text style={styles.shopMeta}>
-                {shop.city ?? "No city"} ·{" "}
-                {shop.myRole === "owner" ? "Owner" : "Manager"}
+                {shop.city ?? t("owner.no_city")} ·{" "}
+                {shop.myRole === "owner" ? t("owner.owner") : t("owner.manager")}
               </Text>
             </View>
             <StatusBadge

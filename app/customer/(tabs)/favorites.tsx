@@ -19,6 +19,7 @@ import { Screen } from "@/components/ui/Screen";
 import { VerifiedIcon } from "@/components/ui/VerifiedIcon";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatRating } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import {
   loadFavoriteShops,
   removeFavorite,
@@ -84,7 +85,7 @@ export default function FavoritesScreen() {
         (previous ?? []).filter((row) => row.id !== shop.id)
       );
     } catch (e) {
-      Alert.alert("Couldn't remove from favorites", errorMessageFromUnknown(e));
+      Alert.alert(t("favorites.could_not_remove"), errorMessageFromUnknown(e));
     } finally {
       setRemovingIds((previous) => {
         const next = new Set(previous);
@@ -107,9 +108,9 @@ export default function FavoritesScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>Favorites</Text>
+        <Text style={styles.title}>{t("favorites.title")}</Text>
         <Text style={styles.subtitle}>
-          {count === 1 ? "1 saved shop" : `${count} saved shops`}
+          {count === 1 ? t("favorites.one_saved_shop") : t("favorites.shop_count", { count })}
         </Text>
       </View>
 
@@ -130,9 +131,9 @@ export default function FavoritesScreen() {
         }
         ListEmptyComponent={
           <EmptyState
-            title="No favorites yet"
-            subtitle="Tap the heart on any shop to save it here."
-            actionLabel="Discover shops"
+            title={t("favorites.no_favorites")}
+            subtitle={t("favorites.tap_heart")}
+            actionLabel={t("favorites.discover_shops")}
             onAction={() => router.push("/customer/discover")}
           />
         }

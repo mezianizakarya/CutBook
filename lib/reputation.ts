@@ -1,5 +1,6 @@
 import type { StatusTone } from "@/components/ui/StatusBadge";
 import { supabase } from "@/lib/supabase";
+import { t } from "@/lib/i18n";
 
 export const REPUTATION_LEVELS = ["new", "regular", "reliable", "trusted", "elite"] as const;
 
@@ -9,13 +10,9 @@ export function isReputationLevel(value: string | null | undefined): value is Re
   return value != null && (REPUTATION_LEVELS as readonly string[]).includes(value);
 }
 
-export const REPUTATION_LABELS: Record<ReputationLevel, string> = {
-  new: "New",
-  regular: "Regular",
-  reliable: "Reliable",
-  trusted: "Trusted",
-  elite: "Elite",
-};
+export function getReputationLabel(level: ReputationLevel): string {
+  return t(`reputation.${level}` as any);
+}
 
 export const REPUTATION_TONES: Record<ReputationLevel, StatusTone> = {
   new: "slate",
@@ -80,3 +77,12 @@ export function emptyReputation(): CustomerReputation {
     reliabilityRate: null,
   };
 }
+
+/** @deprecated Use getReputationLabel() instead */
+export const REPUTATION_LABELS: Record<ReputationLevel, string> = {
+  new: "New",
+  regular: "Regular",
+  reliable: "Reliable",
+  trusted: "Trusted",
+  elite: "Elite",
+};

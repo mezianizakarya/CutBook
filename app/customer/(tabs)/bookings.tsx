@@ -33,6 +33,7 @@ import {
 } from "@/lib/booking";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDateTime, useFormatCents } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { loadMyShopReview, type ReviewRow } from "@/lib/reviews";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -188,9 +189,9 @@ export default function BookingsScreen() {
       setSelected((previous) =>
         previous && previous.id === updated.id ? updated : previous
       );
-      showNotice("Booking cancelled", "success");
+      showNotice(t("bookings.booking_cancelled"), "success");
     } catch (e) {
-      Alert.alert("Couldn't cancel booking", errorMessageFromUnknown(e));
+      Alert.alert(t("bookings.could_not_cancel"), errorMessageFromUnknown(e));
     }
   }
 
@@ -212,9 +213,9 @@ export default function BookingsScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>Bookings</Text>
+        <Text style={styles.title}>{t("bookings.title")}</Text>
         <Text style={styles.subtitle}>
-          {counts.upcoming} upcoming · {counts.past} past
+          {t("bookings.subtitle", { upcoming: counts.upcoming, past: counts.past })}
         </Text>
       </View>
 
@@ -237,7 +238,7 @@ export default function BookingsScreen() {
               style={[styles.chip, isActive && styles.chipActive]}
             >
               <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
-                {value === "all" ? "All" : value === "upcoming" ? "Upcoming" : "Past"} (
+                {value === "all" ? t("bookings.filter_all") : value === "upcoming" ? t("bookings.upcoming") : t("bookings.past")} (
                 {counts[value]})
               </Text>
             </Pressable>
@@ -263,16 +264,16 @@ export default function BookingsScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyTitle}>
-              {filter === "all" ? "No bookings yet" : "Nothing here"}
+              {filter === "all" ? t("bookings.no_bookings") : t("bookings.nothing_here")}
             </Text>
             <Text style={styles.emptySubtitle}>
               {filter === "all"
                 ? "Discover a barbershop and book your first appointment."
-                : "Try a different filter."}
+                : t("bookings.try_filter")}
             </Text>
             {filter === "all" && (
               <Button
-                title="Discover shops"
+                title={t("bookings.discover_shops")}
                 variant="outline"
                 onPress={() => router.push("/customer/discover")}
                 style={styles.resetButton}
@@ -287,7 +288,7 @@ export default function BookingsScreen() {
                 <ActivityIndicator color={colors.primary} />
               ) : (
                 <Button
-                  title="Load more"
+                  title={t("home.load_more")}
                   variant="outline"
                   onPress={loadMore}
                   style={styles.loadMoreButton}
@@ -396,12 +397,12 @@ function BookingDetailSheet({
   function handleReviewSaved(review: ReviewRow) {
     const editing = myReview !== null;
     setMyReview(review);
-    showNotice(editing ? "Review updated" : "Review submitted", "success");
+    showNotice(editing ? t("bookings.review_updated") : t("bookings.review_submitted"), "success");
   }
 
   function handleReviewDeleted() {
     setMyReview(null);
-    showNotice("Review removed", "success");
+    showNotice(t("bookings.review_removed"), "success");
   }
 
   const loadSchedule = useCallback(async () => {
@@ -517,36 +518,36 @@ function BookingDetailSheet({
 
           <View style={styles.detailsCard}>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>When</Text>
+              <Text style={styles.detailLabel}>{t("bookings.when")}</Text>
               <Text style={styles.detailValue}>{formatDateTime(row.starts_at)}</Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Barber</Text>
+              <Text style={styles.detailLabel}>{t("bookings.barber_label")}</Text>
               <Text style={styles.detailValue} numberOfLines={1}>
                 {staffName}
               </Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Shop</Text>
+              <Text style={styles.detailLabel}>{t("bookings.shop_label")}</Text>
               <Text style={styles.detailValue} numberOfLines={1}>
                 {shopName}
               </Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Price</Text>
+              <Text style={styles.detailLabel}>{t("bookings.price")}</Text>
               <Text style={styles.detailValue}>
                 {formattedPrice}
               </Text>
             </View>
             {!!row.note && (
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Note</Text>
+                <Text style={styles.detailLabel}>{t("bookings.note")}</Text>
                 <Text style={styles.detailValue}>{row.note}</Text>
               </View>
             )}
             {!!row.cancel_reason && (
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Reason</Text>
+                <Text style={styles.detailLabel}>{t("bookings.reason")}</Text>
                 <Text style={styles.detailValue}>{row.cancel_reason}</Text>
               </View>
             )}
@@ -559,24 +560,24 @@ function BookingDetailSheet({
           {row.status === "completed" && !!row.shop?.id && !!customerId && (
             <View style={styles.reviewSection}>
               <View style={styles.reviewHeader}>
-                <Text style={styles.reviewLabel}>Your review</Text>
+                <Text style={styles.reviewLabel}>{t("bookings.your_review")}</Text>
                 {!!myReview && (
                   <Pressable
                     onPress={() => setReviewVisible(true)}
                     hitSlop={8}
                     accessibilityRole="button"
                   >
-                    <Text style={styles.reviewEditLabel}>Edit</Text>
+                    <Text style={styles.reviewEditLabel}>{t("common.edit")}</Text>
                   </Pressable>
                 )}
               </View>
               {reviewLoading ? (
-                <Text style={styles.reviewHint}>Loading…</Text>
+                <Text style={styles.reviewHint}>{t("common.loading")}</Text>
               ) : myReview ? (
                 <View style={styles.yourReviewCard}>
                   <StarRating value={myReview.rating} />
                   {myReview.status === "pending" && (
-                    <Text style={styles.reviewPending}>Awaiting approval</Text>
+                    <Text style={styles.reviewPending}>{t("bookings.awaiting_approval")}</Text>
                   )}
                   {!!myReview.comment && (
                     <Text style={styles.reviewComment} numberOfLines={2}>
@@ -586,7 +587,7 @@ function BookingDetailSheet({
                 </View>
               ) : (
                 <Button
-                  title="Leave a review"
+                  title={t("bookings.leave_review")}
                   variant="outline"
                   onPress={() => setReviewVisible(true)}
                   style={styles.reviewButton}
@@ -598,7 +599,7 @@ function BookingDetailSheet({
           {cancellable && (
             <Button
               title={
-                confirmingCancel ? `Confirm cancel (${confirmCount})` : "Cancel booking"
+                confirmingCancel ? t("bookings.confirm_cancel_count", { count: confirmCount }) : t("bookings.cancel_booking")
               }
               onPress={handleCancelPress}
               variant={confirmingCancel ? "danger" : "dangerOutline"}
@@ -608,7 +609,7 @@ function BookingDetailSheet({
             />
           )}
           <Button
-            title="Close"
+            title={t("common.close")}
             variant="outline"
             onPress={() => {
               if (confirmingCancel) {
@@ -650,25 +651,25 @@ function LiveProgressCard({ live, error }: LiveProgressCardProps) {
   if (!live) {
     return (
       <View style={styles.liveCard}>
-        <Text style={styles.liveLabel}>Live status</Text>
-        <Text style={styles.liveSubtitle}>Checking your barber schedule…</Text>
+        <Text style={styles.liveLabel}>{t("bookings.live_status")}</Text>
+        <Text style={styles.liveSubtitle}>{t("bookings.checking_schedule")}</Text>
       </View>
     );
   }
   let tone: string = colors.primaryDark;
-  let title = `You're up next`;
-  let subtitle = `Appointment ${live.position} of ${live.total} today`;
+  let title = t("bookings.youre_up_next");
+  let subtitle = t("bookings.appointment_position", { position: live.position, total: live.total });
   if (live.beingServed) {
     tone = colors.success;
-    title = "You're being served now";
+    title = t("bookings.being_served");
     subtitle =
       live.activeRemainingMs >= 0
-        ? `Roughly ${formatCountdown(live.activeRemainingMs)} left`
-        : "Running over the estimated time";
+        ? t("bookings.roughly_left", { time: formatCountdown(live.activeRemainingMs) })
+        : t("bookings.running_over");
   } else if (live.delayed) {
     tone = colors.warning;
-    title = "Running a bit late";
-    subtitle = `Appointment ${live.position} of ${live.total} today`;
+    title = t("bookings.running_late");
+    subtitle = t("bookings.appointment_position", { position: live.position, total: live.total });
   }
   return (
     <View style={styles.liveCard}>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { redeemShopInvitation } from "@/lib/invitations";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 
 type JoinShopFormProps = {
@@ -35,7 +36,7 @@ export function JoinShopForm({ visible, onClose, onJoined }: JoinShopFormProps) 
   async function handleRedeem() {
     const trimmed = code.trim();
     if (!trimmed) {
-      setError("Enter the invitation code from your shop owner.");
+      setError(t("shop.enter_code_from_owner"));
       return;
     }
     setBusy(true);
@@ -63,33 +64,31 @@ export function JoinShopForm({ visible, onClose, onJoined }: JoinShopFormProps) 
     <BottomSheet visible={visible} onClose={handleClose}>
       {joined ? (
         <View style={styles.success}>
-          <Text style={styles.successTitle}>You&apos;re in!</Text>
+          <Text style={styles.successTitle}>{t("shop.youre_in")}</Text>
           <Text style={styles.successText}>
-            Welcome to {joined}. Your schedule and clients will appear on your
-            dashboard.
+            {t("shop.welcome_to_shop", { shopName: joined })}
           </Text>
-          <Button title="Done" onPress={handleClose} style={styles.doneButton} />
+          <Button title={t("common.done")} onPress={handleClose} style={styles.doneButton} />
         </View>
       ) : (
         <>
-          <Text style={styles.title}>Join a shop</Text>
+          <Text style={styles.title}>{t("shop.join_shop")}</Text>
           <Text style={styles.subtitle}>
-            Enter the invitation code your shop owner shared with you. Each code
-            can only be used once.
+            {t("shop.enter_invitation")}
           </Text>
           <TextField
-            label="Invitation code"
+            label={t("shop.invitation_code")}
             value={code}
             onChangeText={(text) => {
               setCode(text.toUpperCase());
               setError(null);
             }}
-            placeholder="CUT-XXXXXX"
+            placeholder={t("shop.cut_xxxx")}
             autoCapitalize="characters"
             error={error}
           />
           <Button
-            title={busy ? "Joining…" : "Join shop"}
+            title={busy ? t("shop.joining") : t("shop.join_shop_button")}
             onPress={() => void handleRedeem()}
             loading={busy}
             disabled={busy}

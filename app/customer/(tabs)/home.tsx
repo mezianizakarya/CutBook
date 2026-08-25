@@ -57,6 +57,7 @@ import {
   type NearbyShop,
   type ShopOpenToday,
 } from "@/lib/shop";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useUserCountry } from "@/lib/user-country";
 
@@ -77,12 +78,12 @@ type ServiceCategory = {
 };
 
 const SERVICE_CATEGORIES: ServiceCategory[] = [
-  { key: "haircut", label: "Haircut", icon: "cut-outline" },
-  { key: "beard", label: "Beard", icon: "man-outline" },
-  { key: "fade", label: "Fade", icon: "flash-outline" },
-  { key: "styling", label: "Styling", icon: "sparkles-outline" },
-  { key: "kids", label: "Kids", icon: "happy-outline" },
-  { key: "more", label: "More", icon: "grid-outline" },
+  { key: "haircut", label: "home.category_haircut", icon: "cut-outline" },
+  { key: "beard", label: "home.category_beard", icon: "man-outline" },
+  { key: "fade", label: "home.category_fade", icon: "flash-outline" },
+  { key: "styling", label: "home.category_styling", icon: "sparkles-outline" },
+  { key: "kids", label: "home.category_kids", icon: "happy-outline" },
+  { key: "more", label: "home.category_more", icon: "grid-outline" },
 ];
 
 export default function HomeScreen() {
@@ -234,7 +235,7 @@ export default function HomeScreen() {
               ]}
               numberOfLines={1}
             >
-              {locationLabel ?? "Set your location"}
+              {locationLabel ?? t("home.set_location")}
             </Text>
             <Ionicons name="chevron-forward" size={13} color={colors.muted} />
           </Pressable>
@@ -260,7 +261,7 @@ export default function HomeScreen() {
       >
         <Ionicons name="search" size={18} color={colors.muted} />
         <Text style={styles.searchText} numberOfLines={1}>
-          Search barbers, shops, or services
+          {t("home.search_hint")}
         </Text>
       </Pressable>
 
@@ -284,7 +285,7 @@ export default function HomeScreen() {
           />
         )}
 
-        <Text style={styles.sectionHeading}>Browse by service</Text>
+        <Text style={styles.sectionHeading}>{t("home.browse_by_service")}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -301,7 +302,7 @@ export default function HomeScreen() {
               <View style={styles.serviceIcon}>
                 <Ionicons name={category.icon} size={22} color={colors.primaryDark} />
               </View>
-              <Text style={styles.serviceLabel}>{category.label}</Text>
+              <Text style={styles.serviceLabel}>{t(category.label as Parameters<typeof t>[0])}</Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -309,8 +310,8 @@ export default function HomeScreen() {
         {loyaltySummary !== null && loyaltySummary.length > 0 && (
           <>
             <SectionHeader
-              title="Your loyalty cards"
-              actionLabel="See all"
+              title={t("home.your_loyalty_cards")}
+              actionLabel={t("common.see_all")}
               onAction={() => router.push("/customer/bookings")}
             />
             <ScrollView
@@ -336,8 +337,8 @@ export default function HomeScreen() {
         )}
 
         <SectionHeader
-          title="Nearby barbers"
-          actionLabel="See all"
+          title={t("home.nearby_barbers")}
+          actionLabel={t("common.see_all")}
           onAction={() => router.push("/customer/discover")}
         />
         {nearby === null ? (
@@ -363,8 +364,8 @@ export default function HomeScreen() {
           openToday.length > 0 && (
             <>
               <SectionHeader
-                title="Available today"
-                actionLabel="See all"
+                title={t("home.open_today")}
+                actionLabel={t("common.see_all")}
                 onAction={() => router.push("/customer/discover")}
               />
               <View style={styles.openTodayList}>
@@ -380,8 +381,8 @@ export default function HomeScreen() {
           bookAgain.length > 0 && (
             <>
               <SectionHeader
-                title="Book again"
-                actionLabel="See all"
+                title={t("bookings.book_again")}
+                actionLabel={t("common.see_all")}
                 onAction={() => router.push("/customer/bookings")}
               />
               <View style={styles.bookAgainList}>
@@ -487,11 +488,11 @@ function SkeletonOpenToday() {
 function EmptyNearby({ onExplore }: { onExplore: () => void }) {
   return (
     <View style={styles.emptyCard}>
-      <Text style={styles.emptyTitle}>No barbers nearby</Text>
+      <Text style={styles.emptyTitle}>{t("home.no_barbers_nearby")}</Text>
       <Text style={styles.emptySubtitle}>
-        Try changing your location or exploring all barbers.
+        {t("home.try_location")}
       </Text>
-      <Button title="Explore all barbers" variant="outline" onPress={onExplore} style={styles.emptyButton} />
+      <Button title={t("home.explore_all")} variant="outline" onPress={onExplore} style={styles.emptyButton} />
     </View>
   );
 }
@@ -512,7 +513,7 @@ function UpcomingBookingCard({
         <View style={styles.upcomingIcon}>
           <Ionicons name="calendar" size={20} color={colors.primaryDark} />
         </View>
-        <Text style={styles.upcomingLabel}>Upcoming Appointment</Text>
+        <Text style={styles.upcomingLabel}>{t("home.upcoming_appointment")}</Text>
       </View>
       <View style={styles.upcomingContent}>
         <Avatar
@@ -522,21 +523,21 @@ function UpcomingBookingCard({
         />
         <View style={styles.upcomingInfo}>
           <Text style={styles.upcomingShop} numberOfLines={1}>
-            {booking.service_name} at {booking.shop?.name ?? "—"}
+            {t("home.service_at_shop", { service: booking.service_name, shop: booking.shop?.name ?? "—" })}
           </Text>
           <Text style={styles.upcomingTime} numberOfLines={1}>
             {formatDateTime(booking.starts_at)}
           </Text>
           {!!booking.staff && (
             <Text style={styles.upcomingStaff} numberOfLines={1}>
-              with {booking.staff.display_name}
+              {t("home.with_staff", { name: booking.staff.display_name })}
             </Text>
           )}
         </View>
       </View>
       <View style={styles.upcomingBadge}>
         <Text style={styles.upcomingBadgeText}>
-          {booking.status === "confirmed" ? "Confirmed" : "Pending"}
+          {booking.status === "confirmed" ? t("bookings.confirmed") : t("bookings.pending")}
         </Text>
       </View>
     </Pressable>
@@ -562,7 +563,7 @@ function LoyaltyCard({
             {card.shop_name}
           </Text>
           <Text style={styles.loyaltyVisits}>
-            {card.total_completed_visits} visit{card.total_completed_visits !== 1 ? "s" : ""}
+            {card.total_completed_visits} {card.total_completed_visits !== 1 ? t("home.visits") : t("home.visit")}
           </Text>
         </View>
       </View>
@@ -577,8 +578,7 @@ function LoyaltyCard({
             />
           </View>
           <Text style={styles.loyaltyProgressText}>
-            {card.total_completed_visits}/{card.next_milestone.visit_count} to{" "}
-            {card.next_milestone.reward_title}
+            {t("loyalty.progress", { total: card.total_completed_visits, milestone: card.next_milestone.visit_count, rewardLabel: card.next_milestone.reward_title })}
           </Text>
         </View>
       )}
@@ -640,12 +640,12 @@ function NearbyCard({ shop, onPress }: { shop: NearbyShop; onPress: () => void }
           <Text style={styles.ratingText}>
             {formatRating(shop.rating_avg, shop.rating_count, {
               showCount: false,
-              fallback: "New",
+              fallback: t("common.new"),
             })}
           </Text>
           {shop.rating_count != null && shop.rating_count > 0 && (
             <Text style={styles.ratingCount} numberOfLines={1}>
-              {`· ${shop.rating_count} ${shop.rating_count === 1 ? "review" : "reviews"}`}
+              {`· ${shop.rating_count} ${shop.rating_count === 1 ? t("home.review") : t("home.reviews")}`}
             </Text>
           )}
         </View>
@@ -674,7 +674,7 @@ function NearbyCard({ shop, onPress }: { shop: NearbyShop; onPress: () => void }
               </>
             )}
             {minPrice != null && (
-              <Text style={styles.nearbyPrice}>{`From ${formattedMinPrice}`}</Text>
+              <Text style={styles.nearbyPrice}>{t("home.from_price", { price: formattedMinPrice })}</Text>
             )}
           </View>
         )}
@@ -703,7 +703,7 @@ function OpenTodayCard({ shop, onPress }: { shop: ShopOpenToday; onPress: () => 
             <Text style={styles.ratingText}>
               {formatRating(shop.rating_avg, shop.rating_count, {
                 showCount: false,
-                fallback: "New",
+                fallback: t("common.new"),
               })}
             </Text>
             {!!shop.city && (
@@ -743,7 +743,7 @@ function BookAgainRowCard({ row, onPress }: { row: BookAgainRow; onPress: () => 
         </Text>
       </View>
       <View style={styles.bookAgainChip}>
-        <Text style={styles.bookAgainChipText}>Book again</Text>
+        <Text style={styles.bookAgainChipText}>{t("bookings.book_again")}</Text>
       </View>
     </Pressable>
   );

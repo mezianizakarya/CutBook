@@ -3,7 +3,7 @@ import { useUser } from "@clerk/expo";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
   fetchMyReputation,
-  REPUTATION_LABELS,
+  getReputationLabel,
   REPUTATION_TONES,
   type CustomerReputation,
 } from "@/lib/reputation";
@@ -31,7 +31,7 @@ export function ReputationBadge() {
 
   return (
     <StatusBadge
-      label={REPUTATION_LABELS[level]}
+      label={getReputationLabel(level)}
       tone={REPUTATION_TONES[level]}
     />
   );

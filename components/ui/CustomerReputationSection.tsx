@@ -3,10 +3,11 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatCard } from "@/components/ui/StatCard";
+import { t } from "@/lib/i18n";
 import {
   emptyReputation,
   fetchMyReputation,
-  REPUTATION_LABELS,
+  getReputationLabel,
   type CustomerReputation,
 } from "@/lib/reputation";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -29,7 +30,7 @@ export function CustomerReputationSection() {
 
   return (
     <View style={styles.section}>
-      <SectionHeader title="Trust Level" />
+      <SectionHeader title={t("customer.trust_level")} />
       {loading ? (
         <View style={styles.loading}>
           <ActivityIndicator color={colors.primary} />
@@ -38,19 +39,19 @@ export function CustomerReputationSection() {
         <>
           <View style={styles.levelCard}>
             <View style={styles.levelRow}>
-              <Text style={styles.levelLabel}>Trust Level</Text>
+              <Text style={styles.levelLabel}>{t("customer.trust_level")}</Text>
               <Text style={styles.levelValue}>
-                {REPUTATION_LABELS[reputation.level]}
+                {getReputationLabel(reputation.level)}
               </Text>
             </View>
           </View>
           <View style={styles.statsRow}>
             <StatCard
-              label="Completed bookings"
+              label={t("customer.completed_bookings")}
               value={String(reputation.completedCount)}
             />
             <StatCard
-              label="No-shows"
+              label={t("customer.no_shows")}
               value={String(reputation.noShowCount)}
             />
           </View>

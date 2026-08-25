@@ -35,6 +35,7 @@ import {
   formatRating,
   shopStatusInfo,
 } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { useUserCountry } from "@/lib/user-country";
 import {
   loadCompletedBookingId,
@@ -77,7 +78,7 @@ export default function ShopDetailScreen() {
 
   const load = useCallback(async () => {
     if (!Number.isFinite(shopId)) {
-      setError("Shop not found.");
+      setError(t("shop.could_not_load"));
       setLoading(false);
       return;
     }
@@ -94,7 +95,7 @@ export default function ShopDetailScreen() {
       setMyReview(ownReview);
       setCompletedBookingId(completedBooking);
       if (detail === null) {
-        setError("This shop is not available right now.");
+        setError(t("shop.not_available"));
       }
       if (user?.id) {
         setFavoriteIds(await fetchFavoriteShopIds(user.id));
@@ -108,8 +109,8 @@ export default function ShopDetailScreen() {
     setMyReview(review);
     showNotice(
       review.status === "pending"
-        ? "Review submitted — pending approval"
-        : "Review updated",
+        ? t("shop.review_submitted_pending")
+        : t("shop.review_updated"),
       "success"
     );
     void load().catch(() => undefined);
@@ -117,7 +118,7 @@ export default function ShopDetailScreen() {
 
   function handleReviewDeleted() {
     setMyReview(null);
-    showNotice("Review removed", "success");
+    showNotice(t("shop.review_removed"), "success");
     void load().catch(() => undefined);
   }
 
@@ -154,7 +155,7 @@ export default function ShopDetailScreen() {
         setFavoriteIds((previous) => new Set(previous).add(shop.id));
       }
     } catch (e) {
-      Alert.alert("Couldn't update favorite", errorMessageFromUnknown(e));
+      Alert.alert(t("shop.could_not_update_favorite"), errorMessageFromUnknown(e));
     } finally {
       setTogglingFavorite(false);
     }
@@ -171,10 +172,10 @@ export default function ShopDetailScreen() {
   if (error || !shop) {
     return (
       <Screen centered>
-        <Text style={styles.errorTitle}>{"Couldn't load this shop"}</Text>
-        <Text style={styles.errorText}>{error ?? "Something went wrong."}</Text>
+        <Text style={styles.errorTitle}>{t("shop.could_not_load")}</Text>
+        <Text style={styles.errorText}>{error ?? t("common.error")}</Text>
         <Button
-          title="Go back"
+          title={t("shop.go_back")}
           variant="outline"
           onPress={() => router.back()}
           style={styles.backButton}
@@ -217,7 +218,7 @@ export default function ShopDetailScreen() {
         >
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Shop</Text>
+        <Text style={styles.title}>{t("shop.page_title")}</Text>
       </View>
 
       <View style={styles.hero}>
@@ -328,7 +329,7 @@ export default function ShopDetailScreen() {
           disabled={togglingFavorite}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          accessibilityLabel={isFavorite ? t("shop.remove_from_favorites") : t("shop.add_to_favorites")}
           style={({ pressed }) => [
             styles.favoriteButton,
             pressed && styles.favoriteButtonPressed,
@@ -405,26 +406,26 @@ export default function ShopDetailScreen() {
         </View>
       )}
 
-      <SectionHeader title="Hours" />
+      <SectionHeader title={t("shop.hours")} />
       <View style={styles.detailsCard}>
         {sortedHours.map((hours) => {
           const isToday = hours.day_of_week === today;
           return (
             <View key={hours.id} style={styles.detailRow}>
               <Text style={[styles.hoursDay, isToday && styles.hoursDayToday]}>
-                {isToday ? "Today" : dayName(hours.day_of_week)}
+                {isToday ? t("shop.today") : dayName(hours.day_of_week)}
               </Text>
               <Text style={[styles.detailValue, isToday && styles.hoursValueToday]}>
-                {hours.is_closed ? "Closed" : formatOpenRange(hours.opens_at, hours.closes_at)}
+                {hours.is_closed ? t("shop.closed") : formatOpenRange(hours.opens_at, hours.closes_at)}
               </Text>
             </View>
           );
         })}
       </View>
 
-      <SectionHeader title="Services" />
+      <SectionHeader title={t("shop.services")} />
       {shop.services.length === 0 ? (
-        <Text style={styles.emptyText}>No services listed yet.</Text>
+        <Text style={styles.emptyText}>{t("shop.no_services")}</Text>
       ) : (
         categories.map((category) => (
           <View key={category} style={styles.servicesGroup}>
@@ -453,9 +454,9 @@ export default function ShopDetailScreen() {
         ))
       )}
 
-      <SectionHeader title="Barbers" />
+      <SectionHeader title={t("shop.barbers")} />
       {shop.members.length === 0 ? (
-        <Text style={styles.emptyText}>No barbers at this shop yet.</Text>
+        <Text style={styles.emptyText}>{t("shop.no_barbers")}</Text>
       ) : (
         <View style={styles.detailsCard}>
           {shop.members.map((member) => (
@@ -516,13 +517,13 @@ export default function ShopDetailScreen() {
         <ShopLoyaltyCard shopId={shop.id} customerId={user.id} />
       )}
 
-      <SectionHeader title="Reviews" />
+      <SectionHeader title={t("shop.reviews")} />
 
       {notice ? <NoticeBanner notice={notice} /> : null}
 
       {!!user?.id && !!completedBookingId && (
         <Button
-          title={myReview ? "Edit your review" : "Leave a review"}
+          title={myReview ? t("shop.edit_review") : t("shop.leave_review")}
           variant={myReview ? "outline" : "primary"}
           onPress={() => setReviewVisible(true)}
           style={styles.reviewCta}
@@ -530,14 +531,14 @@ export default function ShopDetailScreen() {
       )}
 
       {myReview?.status === "pending" && (
-        <Text style={styles.reviewPending}>Your review is awaiting approval.</Text>
+        <Text style={styles.reviewPending}>{t("shop.review_awaiting")}</Text>
       )}
 
       {reviews.length === 0 ? (
         <View style={styles.reviewEmptyCard}>
-          <Text style={styles.reviewEmptyTitle}>No reviews yet</Text>
+          <Text style={styles.reviewEmptyTitle}>{t("shop.no_reviews")}</Text>
           <Text style={styles.reviewEmptySubtitle}>
-            Be the first to share your experience after your visit.
+            {t("shop.be_first")}
           </Text>
         </View>
       ) : (
@@ -549,7 +550,7 @@ export default function ShopDetailScreen() {
               </Text>
               <StarRating value={Math.round(shop.rating_avg ?? 0)} size={16} />
               <Text style={styles.reviewSummaryCount}>
-                {shop.rating_count} {shop.rating_count === 1 ? "review" : "reviews"}
+                {shop.rating_count} {shop.rating_count === 1 ? t("shop.review") : t("shop.reviews_count")}
               </Text>
             </View>
             <View style={styles.reviewDistribution}>
@@ -577,7 +578,7 @@ export default function ShopDetailScreen() {
       )}
 
       <Button
-        title="Book Now"
+        title={t("shop.book_now")}
         onPress={() => setBookingVisible(true)}
         style={styles.bookButton}
       />

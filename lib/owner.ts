@@ -1,5 +1,6 @@
 import { BOOKING_SELECT, type BookingRow } from "@/lib/booking";
 import { runList, runQuery, uniqueIds } from "@/lib/db";
+import { t } from "@/lib/i18n";
 import { waitForDbRole } from "@/lib/profile";
 import { supabase } from "@/lib/supabase";
 
@@ -185,13 +186,13 @@ export type ServiceInput = {
 export function validateServiceInput(input: ServiceInput): string[] {
   const errors: string[] = [];
   if (!input.name.trim()) {
-    errors.push("Service name is required.");
+    errors.push(t("owner.shop_name_required"));
   }
   if (!Number.isFinite(input.price_cents) || input.price_cents < 0) {
-    errors.push("Price must be zero or more.");
+    errors.push(t("owner.price_must_be_zero"));
   }
   if (!Number.isInteger(input.duration_minutes) || input.duration_minutes <= 0) {
-    errors.push("Duration must be a positive number of minutes.");
+    errors.push(t("owner.duration_positive"));
   }
   return errors;
 }
@@ -379,10 +380,10 @@ export function sanitizeShopName(value: string): string {
 export function shopNameError(value: string): string | null {
   const trimmed = value.trim();
   if (trimmed.length === 0) {
-    return "Please enter your shop's name.";
+    return t("owner.enter_shop_name");
   }
   if (!SHOP_NAME_PATTERN.test(trimmed)) {
-    return "Shop name can only contain letters and numbers.";
+    return t("owner.shop_name_invalid");
   }
   return null;
 }
@@ -396,9 +397,7 @@ export function shopNameError(value: string): string | null {
 export async function createShop(draft: ShopDraft, ownerId: string): Promise<number> {
   const synced = await waitForDbRole(ownerId, "owner");
   if (!synced) {
-    throw new Error(
-      "Your account is still being set up. Give it a few seconds, then try again."
-    );
+    throw new Error(t("owner.account_still_setup"));
   }
   const suffix = Math.random().toString(36).slice(2, 6);
   const shop = await runQuery<OwnerShop>(

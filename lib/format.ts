@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { CountryContext } from "@/lib/user-country";
 import { getCurrencyForCountry } from "@/lib/currency";
+import { getLocale, t } from "@/lib/i18n";
 
 export function formatCents(
   cents: number | null | undefined,
@@ -29,12 +30,12 @@ export { formatCents as formatPrice };
 export function greetingFor(now: Date): string {
   const hour = now.getHours();
   if (hour < 12) {
-    return "Good morning";
+    return t("home.greeting_morning");
   }
   if (hour < 17) {
-    return "Good afternoon";
+    return t("home.greeting_afternoon");
   }
-  return "Good evening";
+  return t("home.greeting_evening");
 }
 
 export function formatTime(iso: string | null | undefined): string {
@@ -45,7 +46,7 @@ export function formatTime(iso: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) {
     return "—";
   }
-  return date.toLocaleTimeString(undefined, {
+  return date.toLocaleTimeString(getLocale(), {
     hour: "numeric",
     minute: "2-digit",
   });
@@ -59,7 +60,7 @@ export function formatDate(value: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) {
     return "—";
   }
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(getLocale(), {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -74,7 +75,7 @@ export function formatDateTime(iso: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) {
     return "—";
   }
-  return date.toLocaleString(undefined, {
+  return date.toLocaleString(getLocale(), {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -83,10 +84,24 @@ export function formatDateTime(iso: string | null | undefined): string {
   });
 }
 
-const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAY_NAME_KEYS = [
+  "days.sunday",
+  "days.monday",
+  "days.tuesday",
+  "days.wednesday",
+  "days.thursday",
+  "days.friday",
+  "days.saturday",
+] as const;
 
 export function dayName(dayOfWeek: number): string {
-  return DAY_NAMES[dayOfWeek] ?? "—";
+  const key = DAY_NAME_KEYS[dayOfWeek];
+  return key ? t(key) : "—";
+}
+
+export function dayLetter(dayOfWeek: number): string {
+  const key = DAY_NAME_KEYS[dayOfWeek];
+  return key ? t(key).charAt(0) : "—";
 }
 
 /** Formats a duration in minutes, e.g. "30m" or "1h 30m". */
@@ -94,9 +109,9 @@ export function formatDurationMinutes(minutes: number): string {
   if (minutes >= 60) {
     const hours = Math.floor(minutes / 60);
     const remainder = minutes % 60;
-    return remainder === 0 ? `${hours}h` : `${hours}h ${remainder}m`;
+    return remainder === 0 ? `${hours}${t("common.h")}` : `${hours}${t("common.h")} ${remainder}${t("common.m")}`;
   }
-  return `${minutes}m`;
+  return `${minutes}${t("common.m")}`;
 }
 
 export function formatRange(startIso: string, endIso: string | null | undefined): string {
@@ -153,7 +168,7 @@ export function formatTimeOfDay(value: string | null | undefined): string {
   }
   const hour = Number(match[1]);
   const minute = match[2];
-  const period = hour >= 12 ? "PM" : "AM";
+  const period = hour >= 12 ? t("common.pm") : t("common.am");
   const displayHour = hour % 12 === 0 ? 12 : hour % 12;
   return `${displayHour}:${minute} ${period}`;
 }
@@ -205,13 +220,13 @@ export function shopStatusInfo(
     if (nowMinutes < todayOpen) {
       return {
         open: false,
-        label: `Closed · Opens today at ${formatTimeOfDay(today?.opens_at)}`,
+        label: t("shop.opens_today_at", { time: formatTimeOfDay(today?.opens_at) }),
       };
     }
     if (nowMinutes < todayClose) {
       return {
         open: true,
-        label: `Open · Closes at ${formatTimeOfDay(today?.closes_at)}`,
+        label: t("shop.open_closes_at", { time: formatTimeOfDay(today?.closes_at) }),
       };
     }
   }
@@ -220,15 +235,15 @@ export function shopStatusInfo(
     const index = (todayIndex + offset) % 7;
     const row = hours.find((hour) => hour.day_of_week === index);
     if (row && !row.is_closed && row.opens_at) {
-      const when = offset === 1 ? "tomorrow" : dayName(index);
+      const when = offset === 1 ? t("common.tomorrow") : dayName(index);
       return {
         open: false,
-        label: `Closed · Opens ${when} at ${formatTimeOfDay(row.opens_at)}`,
+        label: t("shop.opens_day_at", { day: when, time: formatTimeOfDay(row.opens_at) }),
       };
     }
   }
 
-  return { open: false, label: "Closed" };
+  return { open: false, label: t("shop.closed") };
 }
 
 type FormatRatingOptions = {
@@ -249,7 +264,7 @@ export function formatRating(
   options?: FormatRatingOptions
 ): string {
   if (ratingAvg == null || ratingCount == null || ratingCount <= 0) {
-    return options?.fallback ?? "New";
+    return options?.fallback ?? t("common.new");
   }
   const avg = Number(ratingAvg).toFixed(1);
   if (options?.showCount === false) {

@@ -1,4 +1,5 @@
 import { isClerkAPIResponseError } from "@clerk/expo";
+import { t } from "@/lib/i18n";
 
 export type ClerkLikeError = {
   code: string;
@@ -38,5 +39,5 @@ export function errorMessageFromUnknown(error: unknown): string {
     }
   }
   console.error("Unhandled error thrown in app:", error);
-  return "Something went wrong. Please try again.";
+  return t("common.error");
 }

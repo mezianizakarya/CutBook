@@ -26,6 +26,7 @@ import {
   type PickedLocation,
 } from "@/lib/location";
 import { buildMapHtml } from "@/lib/map-html";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 
 const DEFAULT_LAT = 40.7128;
@@ -182,9 +183,7 @@ export function LocationPickerModal({
         moveMap(location.latitude, location.longitude);
         Keyboard.dismiss();
       } else {
-        setError(
-          `Couldn't find "${trimmed}". Try a full address, a Plus Code, or a Google Maps link.`
-        );
+        setError(t("location.could_not_find", { query: trimmed }));
       }
     } catch (e) {
       setError(errorMessageFromUnknown(e));
@@ -207,7 +206,7 @@ export function LocationPickerModal({
     }
   }
 
-  const summary = preview ? formatLocationSummary(preview) : "Drag the map to set your location";
+  const summary = preview ? formatLocationSummary(preview) : t("location.drag_map");
 
   return (
     <Modal
@@ -254,7 +253,7 @@ export function LocationPickerModal({
           style={[styles.backRow, { top: insets.top + spacing.md }]}
         >
           <Ionicons name="chevron-back" size={22} color={colors.text} />
-          <Text style={styles.backLabel}>Back</Text>
+          <Text style={styles.backLabel}>{t("common.back")}</Text>
         </Pressable>
 
         <View style={[styles.searchContainer, { top: searchTop }]}>
@@ -268,7 +267,7 @@ export function LocationPickerModal({
                 setError(null);
               }
             }}
-            placeholder="Search address or paste a Maps link"
+            placeholder={t("location.search_address")}
             placeholderTextColor={colors.muted}
             autoCapitalize="words"
             autoCorrect={false}
@@ -326,19 +325,19 @@ export function LocationPickerModal({
           ]}
         >
           <Text style={styles.previewTitle} numberOfLines={2}>
-            {resolving ? "Looking up address…" : summary}
+            {resolving ? t("location.looking_up") : summary}
           </Text>
           {!!error && <Text style={styles.errorText}>{error}</Text>}
           <View style={styles.actions}>
             <Button
-              title="Use my location"
+              title={t("location.use_my_location")}
               variant="outline"
               loading={locating}
               onPress={() => void handleLocateMe()}
               style={styles.actionButton}
             />
             <Button
-              title="Confirm location"
+              title={t("location.confirm_location")}
               loading={resolving}
               disabled={!coords || resolving}
               onPress={() => void handleConfirm()}

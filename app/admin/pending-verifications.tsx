@@ -19,7 +19,8 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { adminReviewVerificationRequest } from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDate } from "@/lib/format";
-import { ROLE_LABELS } from "@/lib/roles";
+import { t } from "@/lib/i18n";
+import { getRoleLabel } from "@/lib/roles";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
 import {
@@ -79,7 +80,7 @@ export default function PendingVerificationsScreen() {
     try {
       await adminReviewVerificationRequest(req.id, true);
       setRequests((previous) => previous.filter((row) => row.id !== req.id));
-      showNotice(`${applicantName(req)} verified`, "success");
+      showNotice(t("admin.user_verified", { name: applicantName(req) }), "success");
     } catch (e) {
       showNotice(errorMessageFromUnknown(e), "danger");
     } finally {
@@ -117,24 +118,24 @@ export default function PendingVerificationsScreen() {
           >
             <Ionicons name="chevron-back" size={26} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>Verification requests</Text>
+          <Text style={styles.title}>{t("admin.verification_requests")}</Text>
         </View>
         <Text style={styles.subtitle}>
-          Barbers and shop owners who asked to be verified.
+          {t("admin.barbers_owners_verify")}
         </Text>
 
         {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
         {!!error && <Text style={styles.error}>{error}</Text>}
 
         <SectionHeader
-          title="Requests"
-          actionLabel={requests.length > 0 ? `${requests.length} waiting` : undefined}
+          title={t("admin.requests")}
+          actionLabel={requests.length > 0 ? t("admin.waiting_count", { count: requests.length }) : undefined}
         />
         {requests.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>Nothing to review</Text>
+            <Text style={styles.emptyTitle}>{t("admin.nothing_to_review")}</Text>
             <Text style={styles.emptySubtitle}>
-              No verification requests are waiting right now.
+              {t("admin.no_verification_requests")}
             </Text>
           </View>
         ) : (
@@ -150,7 +151,7 @@ export default function PendingVerificationsScreen() {
                   {applicantName(req)}
                 </Text>
                 <Text style={styles.rowSubtitle} numberOfLines={1}>
-                  {req.profiles?.role ? ROLE_LABELS[req.profiles.role] : "—"} ·{" "}
+                  {req.profiles?.role ? getRoleLabel(req.profiles.role) : "—"} ·{" "}
                   {formatDate(req.created_at)}
                 </Text>
                 {!!req.note && (
@@ -160,7 +161,7 @@ export default function PendingVerificationsScreen() {
                 )}
               </View>
               <Button
-                title="Approve"
+                title={t("admin.approve")}
                 variant="successOutline"
                 loading={verifyingId === req.id}
                 disabled={verifyingId !== null}

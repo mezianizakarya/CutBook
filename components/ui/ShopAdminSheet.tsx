@@ -16,6 +16,7 @@ import {
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatDate, formatRating } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useConfirmAction } from "@/lib/useConfirmAction";
 import type { NoticeTone } from "@/lib/useNotice";
@@ -28,9 +29,9 @@ type ShopAdminSheetProps = {
 };
 
 const STATUS_LABELS: Record<ShopStatus, string> = {
-  pending: "Pending",
-  approved: "Approved",
-  suspended: "Suspended",
+  pending: t("status.pending"),
+  approved: t("status.approved"),
+  suspended: t("status.suspended"),
 };
 
 const STATUS_TONES: Record<ShopStatus, StatusTone> = {
@@ -42,7 +43,7 @@ const STATUS_TONES: Record<ShopStatus, StatusTone> = {
 function CopyPill({ copied }: { copied: boolean }) {
   return (
     <Text style={[styles.copyPill, copied ? styles.copyPillCopied : null]}>
-      {copied ? "Copied" : "Copy"}
+      {copied ? t("common.copied") : t("common.copy")}
     </Text>
   );
 }
@@ -62,7 +63,7 @@ export function ShopAdminSheet({
     count: confirmCount,
     press: suspendPress,
   } = useConfirmAction(() => {
-    void performUpdate({ status: "suspended" }, "Shop suspended");
+    void performUpdate({ status: "suspended" }, t("owner.shop_suspended"));
   });
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -143,7 +144,7 @@ export function ShopAdminSheet({
                 label={STATUS_LABELS[shop.status]}
                 tone={STATUS_TONES[shop.status]}
               />
-              {!shop.is_active && <StatusBadge label="Closed" tone="danger" />}
+              {!shop.is_active && <StatusBadge label={t("status.closed")} tone="danger" />}
             </View>
           </View>
           <Text style={styles.slug} numberOfLines={1}>
@@ -155,13 +156,13 @@ export function ShopAdminSheet({
       <DetailsCard>
         {shop.city ? (
           <DetailRow
-            label="Location"
+            label={t("shop.location")}
             value={[shop.address_line1, shop.city, shop.state].filter(Boolean).join(", ")}
           />
         ) : null}
         {shop.email ? (
           <DetailRow
-            label="Email"
+            label={t("shop.email")}
             value={shop.email}
             onPress={() => copyToClipboard(shop.email ?? "", "email")}
             action={<CopyPill copied={copiedField === "email"} />}
@@ -169,46 +170,46 @@ export function ShopAdminSheet({
         ) : null}
         {shop.phone ? (
           <DetailRow
-            label="Phone"
+            label={t("shop.phone")}
             value={shop.phone}
             onPress={() => copyToClipboard(shop.phone ?? "", "phone")}
             action={<CopyPill copied={copiedField === "phone"} />}
           />
         ) : null}
         <DetailRow
-          label="Rating"
+          label={t("shop.rating")}
           value={formatRating(shop.rating_avg, shop.rating_count, {
-            fallback: "No reviews yet",
+            fallback: t("owner.no_reviews_yet"),
           })}
         />
-        <DetailRow label="Owner" value={ownerName ?? "—"} />
-        <DetailRow label="Registered" value={formatDate(shop.created_at)} />
+        <DetailRow label={t("owner.owner_label")} value={ownerName ?? "—"} />
+        <DetailRow label={t("owner.registered")} value={formatDate(shop.created_at)} />
       </DetailsCard>
 
       {shop.deleted_at ? (
         <Button
-          title="Restore shop"
+          title={t("owner.restore_shop")}
           variant="primary"
           loading={busy}
           disabled={busy}
           onPress={() =>
             void performUpdate(
               { status: "approved", is_active: true, deleted_at: null },
-              "Shop restored"
+              t("owner.shop_approved")
             )
           }
         />
       ) : shop.status === "pending" ? (
         <Button
-          title="Approve shop"
+          title={t("owner.approve_shop")}
           variant="primary"
           loading={busy}
           disabled={busy}
-          onPress={() => void performUpdate({ status: "approved" }, "Shop approved")}
+          onPress={() => void performUpdate({ status: "approved" }, t("owner.shop_approved"))}
         />
       ) : shop.status === "approved" ? (
         <Button
-          title={confirmingSuspend ? `Confirm suspend (${confirmCount})` : "Suspend shop"}
+          title={confirmingSuspend ? t("owner.confirm_suspend", { count: confirmCount }) : t("owner.suspend_shop")}
           variant={confirmingSuspend ? "danger" : "dangerOutline"}
           loading={busy}
           disabled={busy}
@@ -216,46 +217,46 @@ export function ShopAdminSheet({
         />
       ) : (
         <Button
-          title="Reactivate shop"
+          title={t("owner.reactivate_shop")}
           variant="successOutline"
           loading={busy}
           disabled={busy}
           onPress={() =>
             void performUpdate(
               { status: "approved", deleted_at: null },
-              "Shop reactivated"
+              t("owner.shop_reactivated")
             )
           }
         />
       )}
 
       <Button
-        title={shop.is_verified ? "Remove verified badge" : "Mark as verified"}
+        title={shop.is_verified ? t("owner.remove_verified") : t("owner.mark_verified")}
         variant={shop.is_verified ? "blueOutline" : "blue"}
         loading={busy}
         disabled={busy}
         onPress={() =>
           void performUpdate(
             { is_verified: !shop.is_verified },
-            shop.is_verified ? "Verified badge removed" : "Shop marked as verified"
+            shop.is_verified ? t("owner.verified_badge_removed") : t("owner.shop_verified")
           )
         }
       />
 
       <Button
-        title={shop.is_active ? "Close temporarily" : "Reopen for business"}
+        title={shop.is_active ? t("owner.close_temporarily") : t("owner.reopen_business")}
         variant="outline"
         loading={busy}
         disabled={busy}
         onPress={() =>
           void performUpdate(
             { is_active: !shop.is_active },
-            shop.is_active ? "Shop closed temporarily" : "Shop reopened"
+            shop.is_active ? t("owner.shop_closed") : t("owner.shop_reopened")
           )
         }
       />
 
-      <Button title="Cancel" variant="ghost" onPress={onClose} />
+      <Button title={t("common.cancel")} variant="ghost" onPress={onClose} />
     </BottomSheet>
   );
 }

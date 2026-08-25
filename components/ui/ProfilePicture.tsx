@@ -13,6 +13,7 @@ import {
 
 import { Avatar } from "@/components/ui/Avatar";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
 
@@ -53,7 +54,7 @@ export function ProfilePicture() {
     setError(null);
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setError("Photo library access is required to choose a photo.");
+      setError(t("account.photo_library_required"));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -68,7 +69,7 @@ export function ProfilePicture() {
     }
     const asset = result.assets[0];
     if (!asset.base64) {
-      setError("Could not read the selected photo. Please try again.");
+      setError(t("account.could_not_read_photo"));
       return;
     }
     await uploadImage(`data:${asset.mimeType ?? "image/jpeg"};base64,${asset.base64}`);
@@ -91,12 +92,12 @@ export function ProfilePicture() {
   }
 
   function handlePress() {
-    const buttons: AlertButton[] = [{ text: "Choose Photo", onPress: handleChoosePhoto }];
+    const buttons: AlertButton[] = [{ text: t("account.choose_photo"), onPress: handleChoosePhoto }];
     if (user?.hasImage) {
-      buttons.push({ text: "Remove Photo", onPress: handleRemovePhoto, style: "destructive" });
+      buttons.push({ text: t("account.remove_photo"), onPress: handleRemovePhoto, style: "destructive" });
     }
-    buttons.push({ text: "Cancel", style: "cancel" });
-    Alert.alert("Profile Picture", undefined, buttons);
+    buttons.push({ text: t("common.cancel"), style: "cancel" });
+    Alert.alert(t("account.profile_picture"), undefined, buttons);
   }
 
   return (

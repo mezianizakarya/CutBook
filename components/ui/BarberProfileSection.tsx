@@ -15,6 +15,7 @@ import {
   isBarberProfessionalComplete,
   type OwnProfile,
 } from "@/lib/profile";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useFocusLoad } from "@/lib/useFocusLoad";
 import { useNotice } from "@/lib/useNotice";
@@ -61,7 +62,7 @@ export function BarberProfileSection() {
   const complete = isBarberProfessionalComplete(data?.profile ?? null);
 
   async function handleJoined(shopName: string) {
-    showNotice(`You joined ${shopName}`, "success");
+    showNotice(t("shop.you_joined", { shopName }), "success");
     setData(await loader());
   }
 
@@ -76,30 +77,30 @@ export function BarberProfileSection() {
   const yearsLabel =
     data?.profile?.years_of_experience != null
       ? `${data.profile.years_of_experience} ${
-          data.profile.years_of_experience === 1 ? "year" : "years"
+          data.profile.years_of_experience === 1 ? t("barber.year") : t("barber.years")
         }`
       : null;
 
   return (
     <View style={styles.section}>
       <SectionHeader
-        title="Professional profile"
-        actionLabel="Edit"
+        title={t("barber.professional_profile")}
+        actionLabel={t("common.edit")}
         onAction={() => router.push("/onboarding/barber-professional")}
       />
 
       {complete ? (
         <NoticeBanner
           variant="soft"
-          notice={{ message: "Professional profile complete", tone: "success" }}
+          notice={{ message: t("barber.professional_profile_complete"), tone: "success" }}
         />
       ) : (
         <View style={styles.incompleteCard}>
           <Text style={styles.incompleteText}>
-            Complete your professional profile to join a shop.
+            {t("barber.complete_profile_to_join")}
           </Text>
           <Button
-            title="Complete professional profile"
+            title={t("barber.complete_professional_profile")}
             onPress={() => router.push("/onboarding/barber-professional")}
           />
         </View>
@@ -112,14 +113,14 @@ export function BarberProfileSection() {
       ) : (
         <DetailsCard>
           <DetailRow
-            label="Specialty"
-            value={data?.profile?.specialty ?? "Not set"}
+            label={t("barber.specialty")}
+            value={data?.profile?.specialty ?? t("barber.not_set")}
             numberOfLines={2}
           />
-          <DetailRow label="Experience" value={yearsLabel ?? "Not set"} />
+          <DetailRow label={t("barber.experience")} value={yearsLabel ?? t("barber.not_set")} />
           {!!data?.profile?.bio && (
             <DetailRow
-              label="Bio"
+              label={t("barber.bio")}
               value={data.profile.bio}
               numberOfLines={2}
             />
@@ -128,7 +129,7 @@ export function BarberProfileSection() {
       )}
       {!!error && <Text style={styles.error}>{error}</Text>}
 
-      <SectionHeader title="Shop" />
+      <SectionHeader title={t("barber.shop")} />
 
       {loading ? (
         <View style={styles.loading}>
@@ -136,12 +137,12 @@ export function BarberProfileSection() {
         </View>
       ) : !data || data.shopNames.length === 0 ? (
         <View style={styles.shopCard}>
-          <Text style={styles.shopEmpty}>Not joined yet.</Text>
+          <Text style={styles.shopEmpty}>{t("shop.not_joined_yet")}</Text>
           <Text style={styles.shopHint}>
-            Ask your shop owner for an invitation code to join.
+            {t("shop.ask_for_code")}
           </Text>
           <Button
-            title="Join a shop with code"
+            title={t("shop.join_with_code")}
             variant="outline"
             onPress={handleJoinPress}
           />

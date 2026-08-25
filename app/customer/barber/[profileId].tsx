@@ -28,6 +28,7 @@ import {
 } from "@/lib/barber";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatCents, formatDurationMinutes } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { useUserCountry } from "@/lib/user-country";
 import { loadShopDetail, type ShopMember, type ShopService } from "@/lib/shop";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -36,7 +37,7 @@ function yearsLabel(years: number | null): string | null {
   if (years == null) {
     return null;
   }
-  return `${years} ${years === 1 ? "yr" : "yrs"} experience`;
+  return t("barber.years_experience", { count: years, unit: years === 1 ? t("barber.year") : t("barber.years") });
 }
 
 export default function BarberProfileScreen() {
@@ -64,7 +65,7 @@ export default function BarberProfileScreen() {
   useEffect(() => {
     let cancelled = false;
     if (!profileId) {
-      setError("Barber not found.");
+      setError(t("barber.not_found"));
       setLoading(false);
       return;
     }
@@ -83,7 +84,7 @@ export default function BarberProfileScreen() {
         setServices(servicesResult);
         setPortfolio(portfolioResult);
         if (!result) {
-          setError("This barber isn't available right now.");
+          setError(t("barber.unavailable_now"));
         }
       })
       .catch((e) => {
@@ -110,13 +111,13 @@ export default function BarberProfileScreen() {
     try {
       const detail = await loadShopDetail(id);
       if (!detail) {
-        Alert.alert("Couldn't book", "This shop is not available right now.");
+        Alert.alert(t("barber.could_not_book"), t("barber.shop_not_available"));
         return;
       }
       setBookingShop({ services: detail.services, members: detail.members, country: detail.country });
       setBookingVisible(true);
     } catch (e) {
-      Alert.alert("Couldn't book", errorMessageFromUnknown(e));
+      Alert.alert(t("barber.could_not_book"), errorMessageFromUnknown(e));
     } finally {
       setBookingLoading(false);
     }
@@ -142,7 +143,7 @@ export default function BarberProfileScreen() {
           >
             <Ionicons name="chevron-back" size={26} color={colors.text} />
           </Pressable>
-          <Text style={styles.title}>Barber</Text>
+          <Text style={styles.title}>{t("barber.page_title")}</Text>
         </View>
 
         {loading ? (
@@ -151,10 +152,10 @@ export default function BarberProfileScreen() {
           </View>
         ) : error || !profile ? (
           <View style={styles.errorBox}>
-            <Text style={styles.errorTitle}>{"Couldn't load this barber"}</Text>
-            <Text style={styles.errorText}>{error ?? "Something went wrong."}</Text>
+            <Text style={styles.errorTitle}>{t("barber.could_not_load")}</Text>
+            <Text style={styles.errorText}>{error ?? t("common.error")}</Text>
             <Button
-              title="Go back"
+              title={t("shop.go_back")}
               variant="outline"
               onPress={() => router.back()}
               style={styles.backButton}
@@ -210,7 +211,7 @@ export default function BarberProfileScreen() {
 
             {!!profile.bio && (
               <>
-                <SectionHeader title="About" />
+                <SectionHeader title={t("barber.about")} />
                 <DetailsCard>
                   <Text style={styles.bio}>{profile.bio}</Text>
                 </DetailsCard>
@@ -219,7 +220,7 @@ export default function BarberProfileScreen() {
 
             {services.length > 0 && (
               <>
-                <SectionHeader title="Services" />
+                <SectionHeader title={t("shop.services")} />
                 {serviceCategories.length > 0
                   ? serviceCategories.map((category) => (
                       <View key={category} style={styles.servicesGroup}>
@@ -272,7 +273,7 @@ export default function BarberProfileScreen() {
 
             {portfolio.length > 0 && (
               <>
-                <SectionHeader title="Portfolio" />
+                <SectionHeader title={t("barber.portfolio")} />
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -292,7 +293,7 @@ export default function BarberProfileScreen() {
 
             {shopId && (
               <Button
-                title={`Book with ${profile.display_name || "this barber"}`}
+                title={t("barber.book_with", { name: profile.display_name || t("barber.unavailable") })}
                 onPress={() => void handleBook()}
                 loading={bookingLoading}
                 style={styles.bookButton}

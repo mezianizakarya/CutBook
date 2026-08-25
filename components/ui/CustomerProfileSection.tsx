@@ -4,6 +4,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { CustomerReputationSection } from "@/components/ui/CustomerReputationSection";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatCard } from "@/components/ui/StatCard";
+import { t } from "@/lib/i18n";
 import { loadFavoriteShops } from "@/lib/shop";
 import { supabase } from "@/lib/supabase";
 import { colors, spacing } from "@/lib/theme";
@@ -61,16 +62,16 @@ export function CustomerProfileSection() {
     <>
       <CustomerReputationSection />
       <View style={styles.section}>
-        <SectionHeader title="Activity" />
+        <SectionHeader title={t("customer.activity")} />
         {loading ? (
           <View style={styles.loading}>
             <ActivityIndicator color={colors.primary} />
           </View>
         ) : (
           <View style={styles.statsRow}>
-            <StatCard label="Bookings" value={String(data?.counts.all ?? 0)} />
-            <StatCard label="Upcoming" value={String(data?.counts.upcoming ?? 0)} />
-            <StatCard label="Favorites" value={String(data?.favorites ?? 0)} />
+            <StatCard label={t("customer.bookings")} value={String(data?.counts.all ?? 0)} />
+            <StatCard label={t("customer.upcoming")} value={String(data?.counts.upcoming ?? 0)} />
+            <StatCard label={t("customer.favorites")} value={String(data?.favorites ?? 0)} />
           </View>
         )}
         {!!error && <Text style={styles.error}>{error}</Text>}

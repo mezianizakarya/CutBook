@@ -8,6 +8,7 @@ import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
 import { FullScreenLoader } from "@/lib/auth";
 import { errorMessage } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import { colors, spacing } from "@/lib/theme";
 
 export default function ResetPasswordScreen() {
@@ -31,11 +32,11 @@ export default function ResetPasswordScreen() {
   async function handleReset() {
     setLocalError(null);
     if (password.length < 8) {
-      setLocalError("Password must be at least 8 characters long.");
+      setLocalError(t("auth.password_too_short"));
       return;
     }
     if (password !== confirmPassword) {
-      setLocalError("Passwords do not match.");
+      setLocalError(t("auth.passwords_dont_match"));
       return;
     }
     if (!signIn) return;
@@ -63,7 +64,7 @@ export default function ResetPasswordScreen() {
       }
       router.replace({
         pathname: "/sign-in",
-        params: { message: "Password reset. Sign in with your new password." },
+        params: { message: t("auth.password_reset_sign_in") },
       });
     } finally {
       setSubmitting(false);
@@ -75,24 +76,24 @@ export default function ResetPasswordScreen() {
   return (
     <Screen scroll centered>
       <View style={styles.header}>
-        <Text style={styles.title}>Set a new password</Text>
-        <Text style={styles.subtitle}>Choose a strong password you haven&apos;t used before.</Text>
+        <Text style={styles.title}>{t("auth.set_new_password")}</Text>
+        <Text style={styles.subtitle}>{t("auth.choose_strong_password")}</Text>
       </View>
 
       <View style={styles.form}>
         <TextField
-          label="New password"
+          label={t("auth.new_password")}
           value={password}
           onChangeText={setPassword}
-          placeholder="At least 8 characters"
+          placeholder={t("auth.at_least_8_chars")}
           secureTextEntry
           error={errors?.fields.password?.message}
         />
         <TextField
-          label="Confirm password"
+          label={t("auth.confirm_password")}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
-          placeholder="Re-enter your new password"
+          placeholder={t("auth.reenter_password")}
           secureTextEntry
         />
 
@@ -104,7 +105,7 @@ export default function ResetPasswordScreen() {
         ))}
 
         <Button
-          title="Reset Password"
+          title={t("auth.reset_password")}
           onPress={handleReset}
           loading={submitting}
           disabled={fetchStatus === "fetching"}
@@ -113,7 +114,7 @@ export default function ResetPasswordScreen() {
 
       <View style={styles.footer}>
         <Pressable onPress={() => router.push("/sign-in")}>
-          <Text style={styles.link}>Back to sign in</Text>
+          <Text style={styles.link}>{t("auth.back_to_sign_in")}</Text>
         </Pressable>
       </View>
     </Screen>

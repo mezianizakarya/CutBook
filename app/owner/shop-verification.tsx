@@ -9,6 +9,7 @@ import { Screen } from "@/components/ui/Screen";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { TextField } from "@/components/ui/TextField";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import { formatDate } from "@/lib/format";
 import {
   fetchShopVerificationState,
@@ -66,7 +67,7 @@ export default function ShopVerificationScreen() {
   async function handleSubmit() {
     setError(null);
     if (!note.trim()) {
-      setError("Add a short note so we know why you want your shop verified.");
+      setError(t("verification.add_note_error"));
       return;
     }
     setSubmitting(true);
@@ -78,7 +79,7 @@ export default function ShopVerificationScreen() {
       }));
       setShowForm(false);
       setNote("");
-      showNotice("Verification request sent", "success");
+      showNotice(t("verification.request_sent"), "success");
     } catch (e) {
       setError(errorMessageFromUnknown(e));
     } finally {
@@ -96,7 +97,7 @@ export default function ShopVerificationScreen() {
     try {
       await withdrawShopVerificationRequest(request.id);
       await load();
-      showNotice("Verification request withdrawn", "success");
+      showNotice(t("verification.request_withdrawn"), "success");
     } catch (e) {
       setError(errorMessageFromUnknown(e));
     } finally {
@@ -119,7 +120,7 @@ export default function ShopVerificationScreen() {
     return (
       <Screen centered>
         <Pressable onPress={() => router.back()} accessibilityRole="button">
-          <Text style={styles.error}>Couldn&apos;t find this shop.</Text>
+          <Text style={styles.error}>{t("verification.shop_not_found")}</Text>
         </Pressable>
       </Screen>
     );
@@ -141,12 +142,12 @@ export default function ShopVerificationScreen() {
         >
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Shop verification</Text>
+        <Text style={styles.title}>{t("verification.shop_verification_title")}</Text>
       </View>
       <Text style={styles.subtitle}>
         {name
-          ? `Get a verified badge on ${name} so customers know it's the real deal.`
-          : "Get a verified badge on your shop so customers know it's the real deal."}
+          ? t("verification.subtitle_named", { name })
+          : t("verification.subtitle_default")}
       </Text>
 
       {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
@@ -160,21 +161,19 @@ export default function ShopVerificationScreen() {
         <>
           {isVerified ? (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>This shop is verified</Text>
+              <Text style={styles.cardTitle}>{t("verification.shop_verified")}</Text>
               <Text style={styles.cardText}>
-                The verified badge is shown next to the shop name wherever it
-                appears for customers.
+                {t("verification.shop_verified_desc")}
               </Text>
             </View>
           ) : pending ? (
             <View style={styles.card}>
               <View style={styles.cardBadge}>
-                <StatusBadge label="Pending review" tone="warning" />
+                <StatusBadge label={t("verification.pending_review")} tone="warning" />
               </View>
-              <Text style={styles.cardTitle}>Request under review</Text>
+              <Text style={styles.cardTitle}>{t("verification.under_review")}</Text>
               <Text style={styles.cardText}>
-                You requested verification on {formatDate(request.created_at)}.
-                An admin will review it shortly.
+                {t("verification.requested_on", { date: formatDate(request.created_at) })}
               </Text>
               {!!request.note && (
                 <View style={styles.quote}>
@@ -184,8 +183,8 @@ export default function ShopVerificationScreen() {
               <Button
                 title={
                   confirmingWithdraw
-                    ? `Confirm withdraw (${count})`
-                    : "Withdraw request"
+                    ? t("verification.confirm_withdraw", { count })
+                    : t("verification.withdraw_request")
                 }
                 onPress={handleWithdrawPress}
                 variant={confirmingWithdraw ? "danger" : "dangerOutline"}
@@ -197,50 +196,47 @@ export default function ShopVerificationScreen() {
             rejected && !showForm ? (
               <View style={styles.card}>
                 <View style={styles.cardBadge}>
-                  <StatusBadge label="Rejected" tone="danger" />
+                  <StatusBadge label={t("verification.rejected")} tone="danger" />
                 </View>
-                <Text style={styles.cardTitle}>Request was rejected</Text>
+                <Text style={styles.cardTitle}>{t("verification.request_rejected")}</Text>
                 <Text style={styles.cardText}>
-                  Your verification request was not approved. You can submit a
-                  new request.
+                  {t("verification.request_not_approved")}
                 </Text>
                 {!!request?.review_note && (
                   <View style={styles.quote}>
                     <Text style={styles.quoteText}>{request.review_note}</Text>
                   </View>
                 )}
-                <Button title="Request again" onPress={() => setShowForm(true)} />
+                <Button title={t("verification.request_again")} onPress={() => setShowForm(true)} />
               </View>
             ) : (
               <View style={styles.card}>
-                <Text style={styles.cardTitle}>Request verification</Text>
+                <Text style={styles.cardTitle}>{t("verification.request_verification")}</Text>
                 <Text style={styles.cardText}>
-                  Tell us a bit about your shop so the team can review your
-                  request.
+                  {t("verification.tell_us_about_shop")}
                 </Text>
                 <TextField
-                  label="Why should this shop be verified?"
+                  label={t("verification.why_shop_verified")}
                   value={note}
                   onChangeText={setNote}
-                  placeholder="e.g. Licensed barbershop operating since 2015"
+                  placeholder={t("verification.placeholder")}
                   multiline
                   autoCapitalize="sentences"
                 />
                 <Button
-                  title="Request verification"
+                  title={t("verification.request_verification_button")}
                   onPress={handleSubmit}
                   loading={submitting}
                 />
               </View>
             )
-          ) : (
+          )           : (
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Get verified</Text>
+              <Text style={styles.cardTitle}>{t("verification.get_verified")}</Text>
               <Text style={styles.cardText}>
-                A verified badge lets clients know your shop is legitimate.
-                Requests are reviewed by our team.
+                {t("verification.shop_badge_desc")}
               </Text>
-              <Button title="Request verification" onPress={() => setShowForm(true)} />
+              <Button title={t("verification.request_verification_button")} onPress={() => setShowForm(true)} />
             </View>
           )}
         </>

@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
+import { t } from "@/lib/i18n";
 import { colors, spacing } from "@/lib/theme";
 
 type CompleteProfileFirstSheetProps = {
@@ -24,12 +25,11 @@ export function CompleteProfileFirstSheet({
   return (
     <BottomSheet visible={visible} onClose={onClose}>
       <View style={styles.content}>
-        <Text style={styles.title}>Complete your profile first</Text>
+        <Text style={styles.title}>{t("onboarding.complete_profile_first")}</Text>
         <Text style={styles.subtitle}>
-          You need to add your specialty and experience to your barber profile
-          before you can join a shop.
+          {t("onboarding.need_specialty")}
         </Text>
-        <Button title="Complete Profile" onPress={onCompleteProfile} />
+        <Button title={t("onboarding.complete_profile_button")} onPress={onCompleteProfile} />
       </View>
     </BottomSheet>
   );

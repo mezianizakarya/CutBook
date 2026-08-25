@@ -23,6 +23,7 @@ import { Screen } from "@/components/ui/Screen";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { ShopForm, type ShopFormValues } from "@/components/ui/ShopForm";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import {
   dayName,
   formatCents,
@@ -197,7 +198,7 @@ export default function OwnerShopScreen() {
           : shop
       )
     );
-    showNotice("Shop details saved", "success");
+    showNotice(t("shop.details_saved"), "success");
   }
 
   const { confirming, count, press: confirmDelete, reset: resetDelete } =
@@ -217,9 +218,9 @@ export default function OwnerShopScreen() {
           setServices([]);
           setHours([]);
         }
-        showNotice("Shop deleted", "success");
+        showNotice(t("shop.shop_deleted"), "success");
       } catch (e) {
-        Alert.alert("Could not delete shop", errorMessageFromUnknown(e));
+        Alert.alert(t("shop.could_not_delete"), errorMessageFromUnknown(e));
       } finally {
         setDeleting(false);
       }
@@ -233,7 +234,7 @@ export default function OwnerShopScreen() {
       setServices((prev) =>
         prev.map((s) => (s.id === service.id ? { ...s, is_active: service.is_active } : s))
       );
-      Alert.alert("Could not update service", errorMessageFromUnknown(e));
+      Alert.alert(t("shop.could_not_update_service"), errorMessageFromUnknown(e));
     });
   }
 
@@ -259,8 +260,8 @@ export default function OwnerShopScreen() {
     return (
       <Screen scroll style={styles.screenPadding}>
         <EmptyState
-          title="You don't manage a shop yet"
-          subtitle="Your shop details, services and hours will appear here."
+          title={t("owner.no_shop_title")}
+          subtitle={t("shop.shop_empty_description")}
         />
       </Screen>
     );
@@ -281,11 +282,11 @@ export default function OwnerShopScreen() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Shop</Text>
+          <Text style={styles.title}>{t("tabs.shop")}</Text>
           <Text style={styles.subtitle}>
             {selectedShop.status === "pending"
-              ? "Pending approval by KUTZ."
-              : "Details, services and working hours."}
+              ? t("shop.shop_subtitle_pending")
+              : t("shop.shop_subtitle_active")}
           </Text>
         </View>
 
@@ -311,7 +312,7 @@ export default function OwnerShopScreen() {
             onPress={() => router.push("/onboarding/owner-shop")}
             hitSlop={4}
             accessibilityRole="button"
-            accessibilityLabel="Add shop"
+            accessibilityLabel={t("shop.add_shop")}
             style={({ pressed }) => [
               styles.addShopChip,
               pressed && styles.addShopChipPressed,
@@ -322,37 +323,37 @@ export default function OwnerShopScreen() {
         </ScrollView>
 
         {/* Details */}
-        <SectionHeader title="Details" />
+        <SectionHeader title={t("shop.details")} />
         {canEdit ? (
           <ShopForm
             key={selectedShop.id}
             initial={detailsInitial}
-            submitLabel="Save details"
+            submitLabel={t("shop.save_details")}
             onSubmit={handleSaveDetails}
           />
         ) : (
           <View style={styles.card}>
-            <InfoRow label="Name" value={selectedShop.name} />
-            <InfoRow label="Description" value={selectedShop.description} />
-            <InfoRow label="Address" value={selectedShop.address_line1} />
+            <InfoRow label={t("shop.name")} value={selectedShop.name} />
+            <InfoRow label={t("shop.description")} value={selectedShop.description} />
+            <InfoRow label={t("shop.address")} value={selectedShop.address_line1} />
             <InfoRow
-              label="City"
+              label={t("shop.city")}
               value={[selectedShop.city, selectedShop.state, selectedShop.country]
                 .filter(Boolean)
                 .join(", ")}
             />
-            <InfoRow label="Postal code" value={selectedShop.postal_code} />
-            <InfoRow label="Phone" value={selectedShop.phone} />
+            <InfoRow label={t("shop.postal_code")} value={selectedShop.postal_code} />
+            <InfoRow label={t("shop.phone")} value={selectedShop.phone} />
             <Text style={styles.managerHint}>
-              Only the shop owner can edit details.
+              {t("shop.manager_hint")}
             </Text>
           </View>
         )}
 
         {/* Services */}
         <SectionHeader
-          title="Services"
-          actionLabel={canEdit ? "Edit" : undefined}
+          title={t("shop.services")}
+          actionLabel={canEdit ? t("common.edit") : undefined}
           onAction={
             canEdit
               ? () =>
@@ -368,9 +369,9 @@ export default function OwnerShopScreen() {
         />
         {services.length === 0 ? (
           <View style={styles.inlineEmpty}>
-            <Text style={styles.inlineEmptyTitle}>No services yet</Text>
+            <Text style={styles.inlineEmptyTitle}>{t("shop.no_services_yet")}</Text>
             <Text style={styles.inlineEmptySubtitle}>
-              Add the services customers can book.
+              {t("shop.add_services_hint")}
             </Text>
           </View>
         ) : (
@@ -388,7 +389,7 @@ export default function OwnerShopScreen() {
                     <Text style={styles.servicePrice}>
                       {formatCents(service.price_cents, userCountry)}
                     </Text>
-                    {`  ·  ${service.duration_minutes} min`}
+                    {`  ·  ${service.duration_minutes} ${t("common.min")}`}
                   </Text>
                 </View>
                 {canEdit ? (
@@ -415,7 +416,7 @@ export default function OwnerShopScreen() {
                           : styles.statusPillTextHidden,
                       ]}
                     >
-                      {service.is_active ? "Active" : "Hidden"}
+                      {service.is_active ? t("shop.active_label") : t("shop.hidden_label")}
                     </Text>
                   </View>
                 )}
@@ -426,8 +427,8 @@ export default function OwnerShopScreen() {
 
         {/* Working hours */}
         <SectionHeader
-          title="Working hours"
-          actionLabel="Edit"
+          title={t("shop.shop_hours")}
+          actionLabel={t("common.edit")}
           onAction={() =>
             router.push({
               pathname: "/owner/shop-hours",
@@ -436,7 +437,7 @@ export default function OwnerShopScreen() {
           }
         />
         <Text style={styles.hoursHint}>
-          Your shop&apos;s regular opening hours.
+          {t("shop.hours_hint")}
         </Text>
         <View style={styles.groupCard}>
           {hours.map((day, index) => {
@@ -458,7 +459,7 @@ export default function OwnerShopScreen() {
                   ]}
                 >
                   {day.is_closed
-                    ? "Closed"
+                    ? t("shop.closed")
                     : formatOpenRange(day.opens_at, day.closes_at)}
                 </Text>
               </View>
@@ -473,7 +474,7 @@ export default function OwnerShopScreen() {
         />
 
         {/* Verification */}
-        <SectionHeader title="Verification" />
+        <SectionHeader title={t("shop.shop_verification")} />
         <Pressable
           onPress={() =>
             router.push({
@@ -490,13 +491,13 @@ export default function OwnerShopScreen() {
           <View style={styles.serviceInfo}>
             <Text style={styles.serviceName} numberOfLines={1}>
               {selectedShop.is_verified
-                ? "Verified badge"
-                : "Request verification"}
+                ? t("shop.verified_badge")
+                : t("shop.request_verification")}
             </Text>
             <Text style={styles.serviceMeta} numberOfLines={1}>
               {selectedShop.is_verified
-                ? "Customers see a verified badge on your shop."
-                : "Show customers a verified badge on your shop."}
+                ? t("shop.verified_badge_desc")
+                : t("shop.request_verification_desc")}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.muted} />
@@ -505,12 +506,10 @@ export default function OwnerShopScreen() {
         {canEdit ? (
           <View style={styles.dangerZone}>
             <Text style={styles.dangerHint}>
-              Deleting your shop hides it from customers and stops new
-              bookings. Your shop data stays on file and this can{"'"}t be
-              undone from the app.
+              {t("shop.delete_description")}
             </Text>
             <Button
-              title={confirming ? `Confirm delete (${count})` : "Delete shop"}
+              title={confirming ? t("shop.confirm_delete", { count }) : t("shop.delete_shop")}
               variant="danger"
               loading={deleting}
               disabled={deleting}

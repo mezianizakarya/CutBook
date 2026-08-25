@@ -9,6 +9,7 @@ import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
 import { FullScreenLoader } from "@/lib/auth";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import {
   fetchOwnProfile,
   isBarberProfessionalComplete,
@@ -96,7 +97,7 @@ export default function BarberProfessionalScreen() {
     setError(null);
     const parsedSpecialty = specialty.trim() ? specialty.trim() : null;
     if (!parsedSpecialty) {
-      setError("Add your specialty to complete your barber profile.");
+      setError(t("barber.add_specialty_error"));
       return;
     }
     const parsedYears = years.trim() === "" ? null : Number(years);
@@ -106,7 +107,7 @@ export default function BarberProfessionalScreen() {
       parsedYears < 0 ||
       parsedYears > 100
     ) {
-      setError("Experience must be a whole number between 0 and 100 years.");
+      setError(t("barber.experience_range_error"));
       return;
     }
     setSubmitting(true);
@@ -150,16 +151,15 @@ export default function BarberProfessionalScreen() {
         >
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Tell customers about your work</Text>
+        <Text style={styles.title}>{t("barber.tell_customers")}</Text>
       </View>
       <Text style={styles.subtitle}>
-        Pick a specialty and add your experience so clients know what to book
-        you for. You can change this later.
+        {t("barber.specialty_experience_info")}
       </Text>
 
       <View style={styles.form}>
         <TextField
-          label="Specialty"
+          label={t("barber.specialty")}
           value={specialty}
           onChangeText={setSpecialty}
           placeholder="e.g. Fades, beard work"
@@ -190,7 +190,7 @@ export default function BarberProfessionalScreen() {
         </ScrollView>
 
         <TextField
-          label="Years of experience"
+          label={t("profile.years_experience")}
           value={years}
           onChangeText={setYears}
           placeholder="e.g. 5"
@@ -198,7 +198,7 @@ export default function BarberProfessionalScreen() {
         />
 
         <TextField
-          label="Bio"
+          label={t("barber.bio")}
           value={bio}
           onChangeText={setBio}
           placeholder="Tell clients about your craft, style and what to expect."
@@ -208,9 +208,9 @@ export default function BarberProfessionalScreen() {
 
         {!!error && <Text style={styles.errorText}>{error}</Text>}
 
-        <Button title="Save" onPress={handleSave} loading={submitting} />
+        <Button title={t("common.save")} onPress={handleSave} loading={submitting} />
         {isOnboarding && (
-          <Button title="Skip for now" variant="ghost" onPress={handleSkip} />
+          <Button title={t("barber.skip_for_now")} variant="ghost" onPress={handleSkip} />
         )}
       </View>
     </Screen>

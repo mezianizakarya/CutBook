@@ -6,7 +6,8 @@ import { StyleSheet, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { FullScreenLoader } from "@/lib/auth";
-import { ROLE_ROUTES, ROLE_LABELS } from "@/lib/roles";
+import { t } from "@/lib/i18n";
+import { ROLE_ROUTES, getRoleLabel, type Role } from "@/lib/roles";
 import { colors, spacing } from "@/lib/theme";
 
 export default function UnauthorizedScreen() {
@@ -23,7 +24,7 @@ export default function UnauthorizedScreen() {
     return <Redirect href="/welcome" />;
   }
 
-  const role = user?.unsafeMetadata?.role;
+  const role = user?.unsafeMetadata?.role as Role | undefined;
   const homeRoute = role ? ROLE_ROUTES[role] : null;
 
   async function handleSignOut() {
@@ -40,18 +41,18 @@ export default function UnauthorizedScreen() {
     <Screen centered>
       <View style={styles.container}>
         <Text style={styles.code}>403</Text>
-        <Text style={styles.title}>Access denied</Text>
+        <Text style={styles.title}>{t("error.access_denied")}</Text>
         <Text style={styles.description}>
-          You don&apos;t have permission to view this page.
-          {role ? ` Your current role is ${ROLE_LABELS[role]}.` : ""}
+          {t("error.no_permission")}
+          {role ? ` ${t("error.your_role", { role: getRoleLabel(role) })}` : ""}
         </Text>
 
         <View style={styles.actions}>
           {homeRoute && (
-            <Button title="Go to my home" onPress={() => router.replace(homeRoute)} />
+            <Button title={t("error.go_home")} onPress={() => router.replace(homeRoute)} />
           )}
           <Button
-            title="Sign out"
+            title={t("error.sign_out")}
             onPress={handleSignOut}
             variant="outline"
             loading={signingOut}

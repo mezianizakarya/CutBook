@@ -19,6 +19,7 @@ import { NoticeBanner } from "@/components/ui/NoticeBanner";
 import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import { formatCents } from "@/lib/format";
 import { useUserCountry } from "@/lib/user-country";
 import {
@@ -86,15 +87,15 @@ export default function ShopServicesScreen() {
         setServices((prev) =>
           prev.map((service) => (service.id === updated.id ? updated : service))
         );
-        showNotice("Service updated", "success");
+        showNotice(t("services.updated"), "success");
       } else {
         const created = await createService(id, input);
         setServices((prev) => [...prev, created]);
-        showNotice("Service added", "success");
+        showNotice(t("services.added"), "success");
       }
       setServiceSheet(null);
     } catch (e) {
-      Alert.alert("Could not save service", errorMessageFromUnknown(e));
+      Alert.alert(t("services.could_not_save"), errorMessageFromUnknown(e));
     }
   }
 
@@ -106,7 +107,7 @@ export default function ShopServicesScreen() {
       setServices((prev) =>
         prev.map((s) => (s.id === service.id ? { ...s, is_active: service.is_active } : s))
       );
-      Alert.alert("Could not update service", errorMessageFromUnknown(e));
+      Alert.alert(t("services.could_not_update"), errorMessageFromUnknown(e));
     });
   }
 
@@ -121,10 +122,10 @@ export default function ShopServicesScreen() {
         >
           <Ionicons name="chevron-back" size={26} color={colors.text} />
         </Pressable>
-        <Text style={styles.title}>Services</Text>
+        <Text style={styles.title}>{t("shop.services")}</Text>
       </View>
       <Text style={styles.subtitle}>
-        The services customers can book at your shop.
+        {t("services.subtitle")}
       </Text>
 
       {notice ? <NoticeBanner notice={notice} style={styles.notice} /> : null}
@@ -136,9 +137,9 @@ export default function ShopServicesScreen() {
         </View>
       ) : services.length === 0 ? (
         <EmptyState
-          title="No services yet"
-          subtitle="Add the services customers can book."
-          actionLabel={canEdit ? "Add service" : undefined}
+          title={t("services.no_services")}
+          subtitle={t("services.add_services_hint")}
+          actionLabel={canEdit ? t("services.add_service") : undefined}
           onAction={
             canEdit ? () => setServiceSheet({ mode: "create" }) : undefined
           }
@@ -169,7 +170,7 @@ export default function ShopServicesScreen() {
                     <Text style={styles.servicePrice}>
                       {formatCents(service.price_cents, userCountry)}
                     </Text>
-                    {`  ·  ${service.duration_minutes} min`}
+                    {`  ·  ${service.duration_minutes} ${t("common.min")}`}
                   </Text>
                 </View>
                 {canEdit ? (
@@ -196,7 +197,7 @@ export default function ShopServicesScreen() {
                           : styles.statusPillTextHidden,
                       ]}
                     >
-                      {service.is_active ? "Active" : "Hidden"}
+                      {service.is_active ? t("services.active") : t("services.hidden")}
                     </Text>
                   </View>
                 )}
@@ -206,7 +207,7 @@ export default function ShopServicesScreen() {
 
           {canEdit ? (
             <Button
-              title="Add service"
+              title={t("services.add_service")}
               onPress={() => setServiceSheet({ mode: "create" })}
               style={styles.addButton}
             />
@@ -266,15 +267,15 @@ function ServiceSheet({
     const priceValue = Number(price);
     const durationValue = Number(duration);
     if (!trimmedName) {
-      setError("Please enter a service name.");
+      setError(t("services.enter_name"));
       return;
     }
     if (!Number.isFinite(priceValue) || priceValue <= 0) {
-      setError("Please enter a valid price.");
+      setError(t("services.enter_price"));
       return;
     }
     if (!Number.isInteger(durationValue) || durationValue <= 0) {
-      setError("Please enter a valid duration in minutes.");
+      setError(t("services.enter_duration"));
       return;
     }
     onSave({
@@ -289,15 +290,15 @@ function ServiceSheet({
   return (
     <BottomSheet visible={visible} onClose={onClose}>
       <Text style={styles.sheetTitle}>
-        {isEditing ? "Edit service" : "Add service"}
+        {isEditing ? t("services.edit_service") : t("services.add_service_title")}
       </Text>
       {isEditing ? null : (
         <Text style={styles.sheetText}>
-          Customers can book this service at your shop.
+          {t("services.service_description")}
         </Text>
       )}
       <TextField
-        label="Name"
+        label={t("services.name_label")}
         value={name}
         onChangeText={setName}
         placeholder="Classic fade"
@@ -306,7 +307,7 @@ function ServiceSheet({
       <View style={styles.rowFields}>
         <View style={styles.rowField}>
           <TextField
-            label="Price ($)"
+            label={t("services.price_label")}
             value={price}
             onChangeText={setPrice}
             placeholder="35"
@@ -315,7 +316,7 @@ function ServiceSheet({
         </View>
         <View style={styles.rowField}>
           <TextField
-            label="Duration (min)"
+            label={t("services.duration_label")}
             value={duration}
             onChangeText={setDuration}
             placeholder="30"
@@ -324,22 +325,22 @@ function ServiceSheet({
         </View>
       </View>
       <TextField
-        label="Category (optional)"
+        label={t("services.category_label")}
         value={category}
         onChangeText={setCategory}
-        placeholder="Haircut"
+        placeholder={t("services.category_placeholder")}
         autoCapitalize="words"
       />
       <TextField
-        label="Description (optional)"
+        label={t("services.description_label")}
         value={description}
         onChangeText={setDescription}
-        placeholder="What's included?"
+        placeholder={t("services.description_placeholder")}
         autoCapitalize="sentences"
       />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
       <Button
-        title={isEditing ? "Save changes" : "Add service"}
+        title={isEditing ? t("services.save_changes") : t("services.add_service")}
         onPress={handleSave}
       />
     </BottomSheet>

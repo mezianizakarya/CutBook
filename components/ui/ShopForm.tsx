@@ -15,6 +15,7 @@ import { LocationPickerModal } from "@/components/ui/LocationPickerModal";
 import { StaticMapPreview } from "@/components/ui/StaticMapPreview";
 import { TextField } from "@/components/ui/TextField";
 import { errorMessageFromUnknown } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import {
   formatLocationSummary,
   getCurrentLocation,
@@ -136,7 +137,7 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
   }): Promise<string[]> {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setError("Photo library access is required to add photos.");
+          setError(t("shop.photo_library_required"));
       return [];
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -157,7 +158,7 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
         (asset) => `data:${asset.mimeType ?? "image/jpeg"};base64,${asset.base64}`
       );
     if (uris.length === 0 && result.assets.length > 0) {
-      setError("Could not read the selected photo. Please try again.");
+      setError(t("shop.could_not_read_photo"));
     }
     return uris;
   }
@@ -215,14 +216,14 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
     <>
       <View style={styles.form}>
         <TextField
-          label="Shop name"
+          label={t("shop.shop_name")}
           value={name}
           onChangeText={(text) => setName(sanitizeShopName(text))}
-          placeholder="e.g. The Fade Room"
+          placeholder={t("shop.e_g_fade_room")}
           autoCapitalize="words"
         />
 
-        <Text style={styles.label}>Location</Text>
+        <Text style={styles.label}>{t("shop.location")}</Text>
         {hasLocation && pickedLocation ? (
           <View style={styles.locationCard}>
             <StaticMapPreview
@@ -242,27 +243,26 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
           <Pressable
             onPress={() => openMap(false)}
             accessibilityRole="button"
-            accessibilityLabel="Set your shop location"
+            accessibilityLabel={t("shop.set_location")}
             style={({ pressed }) => [
               styles.locationEmpty,
               pressed && styles.locationEmptyPressed,
             ]}
           >
-            <Text style={styles.locationEmptyTitle}>Set your shop location</Text>
+            <Text style={styles.locationEmptyTitle}>{t("shop.set_location")}</Text>
             <Text style={styles.locationEmptySubtitle}>
-              Search for your address, drop a pin on the map, or use your
-              current location.
+              {t("shop.search_address")}
             </Text>
             <View style={styles.locationActions}>
               <Button
-                title="Use my location"
+                title={t("shop.use_my_location")}
                 variant="outline"
                 loading={pickingLocation}
                 onPress={() => void handleUseMyLocation()}
                 style={styles.locationActionButton}
               />
               <Button
-                title="Enter a location"
+                title={t("shop.enter_location")}
                 variant="outline"
                 onPress={() => openMap(true)}
                 style={styles.locationActionButton}
@@ -272,33 +272,33 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
         )}
         <Text style={styles.hint}>
           {hasLocation
-            ? "Your address below was filled in automatically. Edit it if needed."
-            : "Set a location and we'll fill in your address automatically."}
+            ? t("shop.address_filled_automatically")
+            : t("shop.set_location_fill")}
         </Text>
 
         <TextField
-          label="Address"
+          label={t("shop.address")}
           value={address}
           onChangeText={setAddress}
-          placeholder="Street address (optional)"
+          placeholder={t("shop.street_address_optional")}
           autoCapitalize="words"
         />
         <View style={styles.rowFields}>
           <View style={styles.rowField}>
             <TextField
-              label="City"
+              label={t("shop.city")}
               value={city}
               onChangeText={setCity}
-              placeholder="e.g. Austin"
+              placeholder={t("shop.e_g_austin")}
               autoCapitalize="words"
             />
           </View>
           <View style={styles.rowField}>
             <TextField
-              label="State"
+              label={t("shop.state")}
               value={state}
               onChangeText={setState}
-              placeholder="e.g. TX"
+              placeholder={t("shop.e_g_tx")}
               autoCapitalize="words"
             />
           </View>
@@ -306,39 +306,39 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
         <View style={styles.rowFields}>
           <View style={styles.rowField}>
             <TextField
-              label="Postal code"
+              label={t("shop.postal_code")}
               value={postalCode}
               onChangeText={setPostalCode}
-              placeholder="Optional"
+              placeholder={t("common.optional")}
               keyboardType="numeric"
             />
           </View>
           <View style={styles.rowField}>
             <TextField
-              label="Country"
+              label={t("shop.country")}
               value={country}
               onChangeText={setCountry}
-              placeholder="Optional"
+              placeholder={t("common.optional")}
               autoCapitalize="words"
             />
           </View>
         </View>
         <TextField
-          label="Phone"
+          label={t("shop.phone")}
           value={phone}
           onChangeText={setPhone}
-          placeholder="Optional"
+          placeholder={t("common.optional")}
           keyboardType="phone-pad"
         />
         <TextField
-          label="Description"
+          label={t("shop.description")}
           value={description}
           onChangeText={setDescription}
-          placeholder="What makes your shop special?"
+          placeholder={t("shop.what_makes_special")}
           autoCapitalize="sentences"
         />
 
-        <Text style={styles.label}>Shop photo</Text>
+        <Text style={styles.label}>{t("shop.photos")}</Text>
         <View style={styles.logoRow}>
           <Pressable
             onPress={() => void handleChooseLogo()}
@@ -355,7 +355,7 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
             ) : (
               <View style={styles.logoPlaceholder}>
                 <Ionicons name="camera-outline" size={28} color={colors.muted} />
-                <Text style={styles.logoPlaceholderText}>Add photo</Text>
+                <Text style={styles.logoPlaceholderText}>{t("shop.add_photo")}</Text>
               </View>
             )}
           </Pressable>
@@ -372,10 +372,10 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
           )}
         </View>
         <Text style={styles.hint}>
-          Your shop photo shows on the shop card and page.
+          {t("shop.shop_photo_shows")}
         </Text>
 
-        <Text style={styles.label}>Photos</Text>
+        <Text style={styles.label}>{t("shop.photos")}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -416,8 +416,7 @@ export function ShopForm({ initial, submitLabel, onSubmit }: ShopFormProps) {
           )}
         </ScrollView>
         <Text style={styles.hint}>
-          Show off your shop interior — you can select several at once. The
-          first photo becomes the cover.
+          {t("shop.show_off_interior")}
         </Text>
 
         {!!error && <Text style={styles.errorText}>{error}</Text>}

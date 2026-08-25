@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
 import { errorMessage, errorMessageFromUnknown } from "@/lib/errors";
+import { t } from "@/lib/i18n";
 import { colors, spacing } from "@/lib/theme";
 
 type VerifyMode = "signup" | "reset" | "verify";
@@ -47,7 +48,7 @@ export default function VerifyEmailScreen() {
     } else {
       const email = user?.primaryEmailAddress;
       if (!email) {
-        setSendError("No verified email address is available on this account.");
+        setSendError(t("auth.no_verified_email"));
         return;
       }
       try {
@@ -103,14 +104,14 @@ export default function VerifyEmailScreen() {
       } else {
         const email = user?.primaryEmailAddress;
         if (!email) {
-          setVerifyError("No email address is available on this account.");
+          setVerifyError(t("auth.no_email_available"));
           return;
         }
         await email.attemptVerification({ code });
         router.replace("/loading");
       }
     } catch (error) {
-      setVerifyError(error instanceof Error ? error.message : "Verification failed. Try again.");
+      setVerifyError(error instanceof Error ? error.message : t("auth.verification_failed"));
     } finally {
       setSubmitting(false);
     }
@@ -119,15 +120,15 @@ export default function VerifyEmailScreen() {
   return (
     <Screen scroll centered>
       <View style={styles.header}>
-        <Text style={styles.title}>Verify your email</Text>
+        <Text style={styles.title}>{t("auth.verify_your_email")}</Text>
         <Text style={styles.subtitle}>
-          Enter the 6-digit code that was sent to your email address.
+          {t("auth.enter_6_digit_code")}
         </Text>
       </View>
 
       <View style={styles.form}>
         <TextField
-          label="Verification code"
+          label={t("auth.verification_code")}
           value={code}
           onChangeText={setCode}
           placeholder="000000"
@@ -137,16 +138,16 @@ export default function VerifyEmailScreen() {
 
         {sendError && <Text style={styles.errorText}>{sendError}</Text>}
 
-        <Button title="Verify Code" onPress={handleVerify} loading={submitting} />
+        <Button title={t("auth.verify_code")} onPress={handleVerify} loading={submitting} />
 
         <Pressable onPress={sendCode} disabled={submitting}>
           <Text style={styles.resendText}>
-            {codeSent ? "Resend code" : "Send me a new code"}
+            {codeSent ? t("auth.resend_code") : t("auth.send_new_code")}
           </Text>
         </Pressable>
 
         <Pressable onPress={() => router.replace("/loading")}>
-          <Text style={styles.link}>Back to app</Text>
+          <Text style={styles.link}>{t("auth.back_to_app")}</Text>
         </Pressable>
       </View>
     </Screen>

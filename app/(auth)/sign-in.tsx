@@ -8,6 +8,7 @@ import { Screen } from "@/components/ui/Screen";
 import { TextField } from "@/components/ui/TextField";
 import { errorMessage } from "@/lib/errors";
 import { FullScreenLoader } from "@/lib/auth";
+import { t } from "@/lib/i18n";
 import { colors, spacing } from "@/lib/theme";
 
 type SecondFactorStrategy = "email_code" | "phone_code" | "totp";
@@ -104,7 +105,7 @@ export default function SignInScreen() {
         await startSecondFactor();
         return;
       }
-      setLocalError("Sign in could not be completed. Please try again.");
+      setLocalError(t("auth.sign_in_error"));
     } finally {
       setSubmitting(false);
     }
@@ -139,17 +140,17 @@ export default function SignInScreen() {
     return (
       <Screen scroll centered>
         <View style={styles.header}>
-          <Text style={styles.title}>Verify your account</Text>
+          <Text style={styles.title}>{t("auth.verify_your_account")}</Text>
           <Text style={styles.subtitle}>
             {secondFactorStrategy === "totp"
-              ? "Enter the 6-digit code from your authenticator app."
-              : "Enter the code we sent to your email or phone."}
+              ? t("auth.enter_authenticator_code")
+              : t("auth.enter_email_or_phone_code")}
           </Text>
         </View>
 
         <View style={styles.form}>
           <TextField
-            label="Verification code"
+            label={t("auth.verification_code")}
             value={code}
             onChangeText={setCode}
             placeholder="000000"
@@ -158,7 +159,7 @@ export default function SignInScreen() {
           />
 
           <Button
-            title="Verify Code"
+            title={t("auth.verify_code")}
             onPress={handleVerifySecondFactor}
             loading={submitting}
             disabled={fetchStatus === "fetching"}
@@ -166,7 +167,7 @@ export default function SignInScreen() {
 
           {secondFactorStrategy !== "totp" && (
             <Pressable onPress={startSecondFactor} disabled={submitting}>
-              <Text style={styles.link}>Resend code</Text>
+              <Text style={styles.link}>{t("auth.resend_code")}</Text>
             </Pressable>
           )}
 
@@ -177,7 +178,7 @@ export default function SignInScreen() {
               setLocalError(null);
             }}
           >
-            <Text style={styles.link}>Start over</Text>
+            <Text style={styles.link}>{t("auth.start_over")}</Text>
           </Pressable>
         </View>
       </Screen>
@@ -187,13 +188,13 @@ export default function SignInScreen() {
   return (
     <Screen scroll centered>
       <View style={styles.header}>
-        <Text style={styles.title}>Welcome back</Text>
-        <Text style={styles.subtitle}>Sign in to your KUTZ account</Text>
+        <Text style={styles.title}>{t("auth.welcome_back")}</Text>
+        <Text style={styles.subtitle}>{t("auth.sign_in_to_account")}</Text>
       </View>
 
       <View style={styles.form}>
         <TextField
-          label="Email"
+          label={t("auth.email")}
           value={emailAddress}
           onChangeText={setEmailAddress}
           placeholder="you@example.com"
@@ -201,10 +202,10 @@ export default function SignInScreen() {
           error={errors?.fields.identifier?.message}
         />
         <TextField
-          label="Password"
+          label={t("auth.password")}
           value={password}
           onChangeText={setPassword}
-          placeholder="Your password"
+          placeholder={t("auth.your_password")}
           secureTextEntry
           error={errors?.fields.password?.message}
         />
@@ -222,11 +223,11 @@ export default function SignInScreen() {
         )}
 
         <Pressable onPress={() => router.push("/forgot-password")}>
-          <Text style={styles.link}>Forgot password?</Text>
+          <Text style={styles.link}>{t("auth.forgot_password")}</Text>
         </Pressable>
 
         <Button
-          title="Sign In"
+          title={t("auth.sign_in")}
           onPress={handleSignIn}
           loading={submitting}
           disabled={fetchStatus === "fetching"}
@@ -234,9 +235,9 @@ export default function SignInScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Don&apos;t have an account?</Text>
+        <Text style={styles.footerText}>{t("auth.dont_have_account")}</Text>
         <Pressable onPress={() => router.push("/sign-up")}>
-          <Text style={styles.link}>Sign up</Text>
+          <Text style={styles.link}>{t("auth.sign_up")}</Text>
         </Pressable>
       </View>
     </Screen>

@@ -27,6 +27,7 @@ import {
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { startOfDay } from "@/lib/format";
 import { supabase } from "@/lib/supabase";
+import { t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
 import {
@@ -198,12 +199,12 @@ export default function BarberWorkSessionScreen() {
 
     function handleStart() {
         if (!next) return;
-        void run(async () => startBooking(next.row.id), "Appointment started");
+        void run(async () => startBooking(next.row.id), t("barber.appointment_started"));
     }
 
     function handleFinish() {
         if (!active) return;
-        void run(async () => setBookingStatus(active.row.id, "completed"), "Cut finished");
+        void run(async () => setBookingStatus(active.row.id, "completed"), t("barber.cut_finished"));
     }
 
     function handleExtend(minutes: number) {
@@ -257,7 +258,7 @@ export default function BarberWorkSessionScreen() {
                 >
                     <Ionicons name="chevron-back" size={26} color={colors.text} />
                 </Pressable>
-                <Text style={styles.title}>Today&apos;s Work</Text>
+                <Text style={styles.title}>{t("barber.todays_work")}</Text>
                 <Text style={styles.counter}>{completedCount} / {totalCount}</Text>
             </View>
 
@@ -272,7 +273,7 @@ export default function BarberWorkSessionScreen() {
                 <View style={styles.card}>
                     <View style={styles.nowServingPill}>
                         <View style={styles.nowDot} />
-                        <Text style={styles.nowServingText}>NOW SERVING</Text>
+                        <Text style={styles.nowServingText}>{t("barber.now_serving")}</Text>
                     </View>
 
                     <Text style={styles.customerName}>
@@ -280,7 +281,7 @@ export default function BarberWorkSessionScreen() {
                     </Text>
                     <View style={styles.serviceRow}>
                         <Text style={styles.serviceText}>
-                            {active.row.service_name} · {active.row.service_duration_minutes} min
+                            {active.row.service_name} · {active.row.service_duration_minutes} {t("common.min")}
                         </Text>
                     </View>
 
@@ -294,14 +295,14 @@ export default function BarberWorkSessionScreen() {
                                         : formatCountdown(activeRemaining)}
                             </Text>
                             <Text style={[styles.timerLabel, isOvertime && { color: colors.danger }]}>
-                                {activePaused ? "paused" : isOvertime ? "overtime" : "remaining"}
+                                {activePaused ? t("barber.paused") : isOvertime ? t("barber.overtime") : t("barber.remaining")}
                             </Text>
                         </View>
                     </View>
 
                     {!!active.row.note && (
                         <View style={styles.noteBox}>
-                            <Text style={styles.noteLabel}>Note</Text>
+                            <Text style={styles.noteLabel}>{t("staff.note")}</Text>
                             <Text style={styles.noteText}>{active.row.note}</Text>
                         </View>
                     )}
@@ -314,16 +315,16 @@ export default function BarberWorkSessionScreen() {
                                 disabled={busy}
                                 style={styles.extendButton}
                             >
-                                <Text style={styles.extendButtonText}>+{m} min</Text>
+                                <Text style={styles.extendButtonText}>{t("barber.extend_min", { minutes: m })}</Text>
                             </Pressable>
                         ))}
                     </View>
 
-                    <Button title="Finish Cut" onPress={handleFinish} loading={busy} />
+                    <Button title={t("barber.finish_cut")} onPress={handleFinish} loading={busy} />
 
                     {next && (
                         <View style={styles.nextBox}>
-                            <Text style={styles.nextLabel}>NEXT</Text>
+                            <Text style={styles.nextLabel}>{t("barber.next_label")}</Text>
                             <View style={styles.nextRow}>
                                 <Avatar
                                     fullName={customerDisplayName(nextCustomer)}
@@ -334,7 +335,7 @@ export default function BarberWorkSessionScreen() {
                                     {customerDisplayName(nextCustomer)} · {next.row.service_name}
                                 </Text>
                                 <Text style={styles.nextTime}>
-                                    ~{next.row.service_duration_minutes} min
+                                    {t("barber.estimated_time", { minutes: next.row.service_duration_minutes })}
                                 </Text>
                             </View>
                         </View>
@@ -342,19 +343,18 @@ export default function BarberWorkSessionScreen() {
                 </View>
             ) : next ? (
                 <View style={styles.card}>
-                    <Button title="Start Appointment" onPress={handleStart} loading={busy} />
+                    <Button title={t("barber.start_workday")} onPress={handleStart} loading={busy} />
                 </View>
             ) : (
                 <View style={styles.emptyCard}>
                     <Text style={styles.emptyTitle}>
-                        {completedCount > 0 ? "All done for today" : "No appointments today"
-                        }
+                        {completedCount > 0 ? t("barber.all_done_today") : t("barber.no_appointments_today")}
                     </Text>
                 </View>
             )}
 
             <View style={styles.queueHeader}>
-                <Text style={styles.queueTitle}>TODAY&apos;S QUEUE</Text>
+                <Text style={styles.queueTitle}>{t("barber.todays_queue")}</Text>
             </View>
 
             <View style={styles.queueList}>
@@ -375,7 +375,7 @@ export default function BarberWorkSessionScreen() {
                                 )}
                             </View>
                             <Text style={[styles.queueStatus, isDone && styles.queueStatusDone]}>
-                                {isDone ? "Done" : isCurrent ? "In chair" : "Waiting"}
+                                {isDone ? t("common.done") : isCurrent ? t("barber.in_chair") : t("barber.waiting")}
                             </Text>
                         </View>
                     );
@@ -384,13 +384,13 @@ export default function BarberWorkSessionScreen() {
 
             <View style={styles.bottomActions}>
                 <Button
-                    title="+ Add walk-in"
+                    title={t("barber.add_walkin")}
                     variant="outline"
                     onPress={() => { }}
                     style={styles.walkInButton}
                 />
                 <Button
-                    title="Break"
+                    title={t("barber.take_a_break")}
                     variant="outline"
                     onPress={() => { }}
                     style={styles.breakButton}

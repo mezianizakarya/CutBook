@@ -19,6 +19,7 @@ import { Screen } from "@/components/ui/Screen";
 import { VerifiedIcon } from "@/components/ui/VerifiedIcon";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { formatRating } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useUserCountry } from "@/lib/user-country";
@@ -202,9 +203,9 @@ export default function DiscoverScreen() {
   return (
     <Screen style={styles.screenPadding}>
       <View style={styles.header}>
-        <Text style={styles.title}>Discover</Text>
+        <Text style={styles.title}>{t("discover.title")}</Text>
         <Text style={styles.subtitle}>
-          {barbers?.length ?? 0} barbers · {cityCounts.length} cities
+          {t("discover.stats", { barbers: barbers?.length ?? 0, cities: cityCounts.length })}
         </Text>
       </View>
 
@@ -213,7 +214,7 @@ export default function DiscoverScreen() {
           style={styles.search}
           value={query}
           onChangeText={setQuery}
-          placeholder="Search barber or shop"
+          placeholder={t("discover.search_barber_shop")}
           placeholderTextColor={colors.muted}
           autoCapitalize="none"
           autoCorrect={false}
@@ -247,7 +248,7 @@ export default function DiscoverScreen() {
               cityFilter === "all" && styles.chipLabelActive,
             ]}
           >
-            All cities ({barbers?.length ?? 0})
+            {t("discover.all_cities", { count: barbers?.length ?? 0 })}
           </Text>
         </Pressable>
         {cityCounts.map(([city, count]) => {
@@ -281,7 +282,7 @@ export default function DiscoverScreen() {
               style={[styles.chip, isActive && styles.chipActive]}
             >
               <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
-                {sort === "top" ? "Top rated" : "Newest"}
+                {sort === "top" ? t("discover.top_rated") : t("discover.newest")}
               </Text>
             </Pressable>
           );
@@ -306,13 +307,13 @@ export default function DiscoverScreen() {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No barbers found</Text>
+            <Text style={styles.emptyTitle}>{t("discover.no_barbers_found")}</Text>
             <Text style={styles.emptySubtitle}>
-              Try a different search or filter.
+              {t("discover.try_filter")}
             </Text>
             {hasActiveFilters && (
               <Button
-                title="Reset filters"
+                title={t("discover.reset_filters")}
                 variant="outline"
                 onPress={resetFilters}
                 style={styles.resetButton}
@@ -327,7 +328,7 @@ export default function DiscoverScreen() {
                 <ActivityIndicator color={colors.primary} />
               ) : (
                 <Button
-                  title="Load more"
+                  title={t("home.load_more")}
                   variant="outline"
                   onPress={loadMore}
                   style={styles.loadMoreButton}
@@ -365,7 +366,7 @@ export default function DiscoverScreen() {
                 {(item.shops?.is_verified ?? false) && <VerifiedIcon size={16} />}
               </View>
               <Text style={styles.rowUsername} numberOfLines={1}>
-                {item.shops?.name ?? "No shop"}
+                {item.shops?.name ?? t("discover.no_shop")}
               </Text>
             </View>
             <View style={styles.rowBadges}>

@@ -12,6 +12,7 @@ import { formatCents, parseTimeToMinutes, toDateKey } from "@/lib/format";
 import { useUserCountry } from "@/lib/user-country";
 import type { ShopMember, ShopService } from "@/lib/shop";
 import { supabase } from "@/lib/supabase";
+import { getLocale, t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 
 const DAYS_AHEAD = 14;
@@ -42,7 +43,7 @@ function buildDayList(): Date[] {
 }
 
 function formatDayLabel(day: Date): string {
-  return day.toLocaleDateString(undefined, {
+  return day.toLocaleDateString(getLocale(), {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -172,9 +173,7 @@ export function BookingModal({
       if (insertError) {
         const message = insertError.message.toLowerCase();
         if (message.includes("exclude") || message.includes("overlap")) {
-          setError(
-            "That time was just booked. Please choose a different slot."
-          );
+          setError(t("shop.time_just_booked"));
           return;
         }
         throw insertError;
@@ -194,19 +193,19 @@ export function BookingModal({
           <View style={styles.successBadge}>
             <Ionicons name="checkmark" size={28} color={colors.white} />
           </View>
-          <Text style={styles.successTitle}>Booking requested</Text>
+          <Text style={styles.successTitle}>{t("shop.booking_requested_title")}</Text>
           <Text style={styles.successSubtitle}>
-            Your appointment at {shopName} is pending confirmation from the shop.
+            {t("shop.booking_requested_message", { shopName })}
           </Text>
           <Button
-            title="View my bookings"
+            title={t("shop.view_my_bookings")}
             onPress={() => {
               onClose();
               onBooked();
             }}
             style={styles.actionButton}
           />
-          <Button title="Close" variant="outline" onPress={onClose} style={styles.cancelButton} />
+          <Button title={t("common.close")} variant="outline" onPress={onClose} style={styles.cancelButton} />
         </View>
       </BottomSheet>
     );
@@ -214,21 +213,21 @@ export function BookingModal({
 
   return (
     <BottomSheet visible={visible} onClose={onClose}>
-      <Text style={styles.title}>Book at {shopName}</Text>
+      <Text style={styles.title}>{t("shop.book_at_shop", { shopName })}</Text>
       <Text style={styles.subtitle}>
-        Pick a service, barber and time. The shop confirms your booking.
+        {t("shop.pick_service_barber")}
       </Text>
 
       {regionMismatch && (
         <View style={styles.regionWarning}>
           <Ionicons name="warning" size={16} color="#b45309" />
           <Text style={styles.regionWarningText}>
-            This shop is in a different region. You can only book shops in your own region ({userCountry}).
+            {t("shop.different_region", { userCountry })}
           </Text>
         </View>
       )}
 
-      <Text style={styles.stepTitle}>Service</Text>
+      <Text style={styles.stepTitle}>{t("shop.service")}</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -253,7 +252,7 @@ export function BookingModal({
         })}
       </ScrollView>
 
-      <Text style={styles.stepTitle}>Barber</Text>
+      <Text style={styles.stepTitle}>{t("shop.barber")}</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -285,7 +284,7 @@ export function BookingModal({
         })}
       </ScrollView>
 
-      <Text style={styles.stepTitle}>Date</Text>
+      <Text style={styles.stepTitle}>{t("shop.date")}</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -313,13 +312,13 @@ export function BookingModal({
 
       {dateKey !== null && (
         <>
-          <Text style={styles.stepTitle}>Time</Text>
+          <Text style={styles.stepTitle}>{t("shop.time")}</Text>
           {loadingSlots ? (
-            <Text style={styles.hint}>Checking availability…</Text>
+            <Text style={styles.hint}>{t("shop.checking_availability")}</Text>
           ) : slots === null ? (
-            <Text style={styles.hint}>Pick a service, barber and date first.</Text>
+            <Text style={styles.hint}>{t("shop.pick_first")}</Text>
           ) : slots.length === 0 ? (
-            <Text style={styles.hint}>No available slots for this day.</Text>
+            <Text style={styles.hint}>{t("shop.no_available_slots")}</Text>
           ) : (
             <View style={styles.slotGrid}>
               {slots.map((slot) => {
@@ -344,22 +343,22 @@ export function BookingModal({
       {!!error && <Text style={styles.error}>{error}</Text>}
 
       <TextField
-        label="Note for your barber (optional)"
+        label={t("shop.note_for_barber")}
         value={note}
         onChangeText={setNote}
-        placeholder="Anything they should know before your visit"
+        placeholder={t("shop.anything_they_should_know")}
         multiline
         autoCapitalize="sentences"
         style={styles.noteField}
       />
 
       <Button
-        title="Request Booking"
+        title={t("shop.request_booking_button")}
         onPress={handleBook}
         loading={submitting}
         disabled={!canSubmit}
       />
-      <Button title="Cancel" variant="outline" onPress={onClose} style={styles.cancelButton} />
+      <Button title={t("common.cancel")} variant="outline" onPress={onClose} style={styles.cancelButton} />
     </BottomSheet>
   );
 }
@@ -388,7 +387,7 @@ function generateSlots(
     slots.push({
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
-      label: startsAt.toLocaleTimeString(undefined, {
+      label: startsAt.toLocaleTimeString(getLocale(), {
         hour: "numeric",
         minute: "2-digit",
       }),

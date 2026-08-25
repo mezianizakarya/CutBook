@@ -1,4 +1,5 @@
 import { StatusBadge, type StatusTone } from "@/components/ui/StatusBadge";
+import { t } from "@/lib/i18n";
 
 export type BookingStatus =
   | "pending"
@@ -8,11 +9,11 @@ export type BookingStatus =
   | "no_show";
 
 const STATUS_LABELS: Record<BookingStatus, string> = {
-  pending: "Pending",
-  confirmed: "Confirmed",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  no_show: "No-show",
+  pending: t("status.pending"),
+  confirmed: t("status.confirmed"),
+  completed: t("status.completed"),
+  cancelled: t("status.cancelled"),
+  no_show: t("status.no_show"),
 };
 
 const STATUS_TONES: Record<BookingStatus, StatusTone> = {
