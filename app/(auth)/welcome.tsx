@@ -32,7 +32,6 @@ export default function WelcomeScreen() {
               style={styles.logoImage}
             />
           </View>
-          <AppText style={styles.title}>KUTZ</AppText>
           <AppText style={styles.tagline}>
             {t("auth.tagline")}
           </AppText>
@@ -46,6 +45,18 @@ export default function WelcomeScreen() {
             variant="outline"
           />
         </View>
+
+        <AppText style={styles.legalText}>
+          {t("legal.continuing")}
+          <AppText style={styles.legalLink} onPress={() => router.push("/terms")}>
+            {t("legal.terms_of_service")}
+          </AppText>
+          {t("legal.joiner")}
+          <AppText style={styles.legalLink} onPress={() => router.push("/privacy")}>
+            {t("legal.privacy_policy")}
+          </AppText>
+          .
+        </AppText>
       </View>
     </Screen>
   );
@@ -55,7 +66,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "space-between",
-    paddingVertical: spacing.xxl,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.xs,
   },
   hero: {
     alignItems: "center",
@@ -63,8 +75,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxl,
   },
   logoBadge: {
-    width: 104,
-    height: 104,
+    width: 124,
+    height: 124,
     borderRadius: radius.full,
     backgroundColor: colors.primary,
     alignItems: "center",
@@ -75,18 +87,28 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  title: {
-    fontSize: 36,
-    fontWeight: "800",
-    color: colors.text,
-  },
   tagline: {
-    fontSize: 16,
-    color: colors.muted,
+    fontSize: 22,
+    fontWeight: "700",
+    color: colors.text,
     textAlign: "center",
-    maxWidth: 280,
+    maxWidth: 320,
+    marginTop: spacing.md,
   },
   actions: {
-    gap: spacing.md,
+    gap: spacing.sm,
+  },
+  legalText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.muted,
+    textAlign: "center",
+    maxWidth: 320,
+    alignSelf: "center",
+  },
+  legalLink: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.primary,
   },
 });

@@ -1,5 +1,4 @@
 import { useUser } from "@clerk/expo";
-import * as Clipboard from "expo-clipboard";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
@@ -148,11 +147,6 @@ export default function OwnerStaffScreen() {
     } else {
       setPickShop(true);
     }
-  }
-
-  async function handleCopy(code: string) {
-    await Clipboard.setStringAsync(code);
-    showNotice(t("staff.code_copied", { code }), "success");
   }
 
   function handleRevoke(invitation: ShopInvitation) {
@@ -305,14 +299,6 @@ export default function OwnerStaffScreen() {
                     {status === "active" ? (
                       <View style={styles.inviteActions}>
                         <Pressable
-                          onPress={() => void handleCopy(invite.code)}
-                          hitSlop={8}
-                          style={styles.iconButton}
-                          accessibilityRole="button"
-                        >
-                          <AppText style={styles.iconButtonText}>{t("common.copy")}</AppText>
-                        </Pressable>
-                        <Pressable
                           onPress={() => handleRevoke(invite)}
                           hitSlop={8}
                           style={styles.revokeButton}
@@ -407,18 +393,12 @@ export default function OwnerStaffScreen() {
             <AppText style={styles.sheetText}>
               {t("staff.share_code_description", { date: formatDate(generated.expires_at) })}
             </AppText>
-            <Pressable
-              onPress={() => void handleCopy(generated.code)}
-              style={({ pressed }) => [styles.codeBox, pressed && styles.codeBoxPressed]}
-            >
+            <View style={styles.codeBox}>
               <AppText style={styles.codeText}>{generated.code}</AppText>
-            </Pressable>
-            <Button
-              title={t("staff.copy_code")}
-              onPress={() => void handleCopy(generated.code)}
-              variant="outline"
-            />
-            <Button title={t("common.done")} onPress={() => setGenerated(null)} />
+            </View>
+            <View style={styles.sheetActions}>
+              <Button title={t("common.done")} onPress={() => setGenerated(null)} />
+            </View>
           </>
         ) : (
           <ActivityIndicator color={colors.primary} style={styles.generating} />
@@ -587,17 +567,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.sm,
   },
-  iconButton: {
-    paddingVertical: 6,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.full,
-    backgroundColor: colors.primarySoft,
-  },
-  iconButtonText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: colors.primaryDark,
-  },
   revokeButton: {
     paddingVertical: 6,
     paddingHorizontal: spacing.md,
@@ -668,9 +637,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.primary,
   },
-  codeBoxPressed: {
-    opacity: 0.8,
-  },
   codeText: {
     fontSize: 28,
     fontWeight: "800",
@@ -679,6 +645,9 @@ const styles = StyleSheet.create({
   },
   generating: {
     paddingVertical: spacing.lg,
+  },
+  sheetActions: {
+    gap: spacing.sm,
   },
   staffSheetHeader: {
     flexDirection: "row",

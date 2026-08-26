@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useUser } from "@clerk/expo";
-import * as Clipboard from "expo-clipboard";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Animated, FlatList, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
@@ -629,9 +628,7 @@ function ActionModal({
   const [confirmingRole, setConfirmingRole] = useState<Role | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingRestore, setConfirmingRestore] = useState(false);
-  const [copiedField, setCopiedField] = useState<"email" | "phone" | "username" | null>(null);
   const [request, setRequest] = useState<VerificationRequest | null>(null);
-  const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -649,14 +646,6 @@ function ActionModal({
     };
   }, [row.id, row.role]);
 
-  useEffect(() => {
-    return () => {
-      if (copyTimeout.current) {
-        clearTimeout(copyTimeout.current);
-      }
-    };
-  }, []);
-
   const {
     count: confirmCount,
     start: startCountdown,
@@ -673,18 +662,6 @@ function ActionModal({
   function handleClose() {
     Keyboard.dismiss();
     onClose();
-  }
-
-  async function copyToClipboard(value: string, field: "email" | "phone" | "username") {
-    if (!value) {
-      return;
-    }
-    await Clipboard.setStringAsync(value);
-    setCopiedField(field);
-    if (copyTimeout.current) {
-      clearTimeout(copyTimeout.current);
-    }
-    copyTimeout.current = setTimeout(() => setCopiedField(null), 1500);
   }
 
   function handleRoleBadgePress() {
@@ -973,50 +950,26 @@ function ActionModal({
 
           <View style={styles.detailsCard}>
             {row.username ? (
-              <Pressable
-                onPress={() => copyToClipboard(row.username ?? "", "username")}
-                style={styles.detailRow}
-              >
+              <View style={styles.detailRow}>
                 <AppText style={styles.detailLabel}>{t("admin.username")}</AppText>
                 <AppText style={styles.detailValue} numberOfLines={1}>
                   {row.username}
                 </AppText>
-                {copiedField === "username" ? (
-                  <AppText style={styles.copiedText}>{t("common.copied")}</AppText>
-                ) : (
-                  <AppText style={styles.copyHint}>{t("common.copy")}</AppText>
-                )}
-              </Pressable>
+              </View>
             ) : null}
-            <Pressable
-              onPress={() => copyToClipboard(row.email ?? "", "email")}
-              style={styles.detailRow}
-            >
+            <View style={styles.detailRow}>
               <AppText style={styles.detailLabel}>{t("staff.email")}</AppText>
               <AppText style={styles.detailValue} numberOfLines={1}>
                 {row.email ?? t("admin.no_email")}
               </AppText>
-              {copiedField === "email" ? (
-                <AppText style={styles.copiedText}>{t("common.copied")}</AppText>
-              ) : (
-                <AppText style={styles.copyHint}>{t("common.copy")}</AppText>
-              )}
-            </Pressable>
+            </View>
             {row.phone ? (
-              <Pressable
-                onPress={() => copyToClipboard(row.phone ?? "", "phone")}
-                style={styles.detailRow}
-              >
+              <View style={styles.detailRow}>
                 <AppText style={styles.detailLabel}>{t("staff.phone")}</AppText>
                 <AppText style={styles.detailValue} numberOfLines={1}>
                   {row.phone}
                 </AppText>
-                {copiedField === "phone" ? (
-                  <AppText style={styles.copiedText}>{t("common.copied")}</AppText>
-                ) : (
-                  <AppText style={styles.copyHint}>{t("common.copy")}</AppText>
-                )}
-              </Pressable>
+              </View>
             ) : null}
             <View style={styles.detailRow}>
               <AppText style={styles.detailLabel}>{t("admin.member_since")}</AppText>
@@ -1326,26 +1279,6 @@ const styles = StyleSheet.create({
   modalUsername: {
     fontSize: 13,
     color: colors.muted,
-  },
-  copiedText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.primaryDark,
-    backgroundColor: colors.primarySoft,
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.full,
-    overflow: "hidden",
-  },
-  copyHint: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.primaryDark,
-    backgroundColor: colors.primarySoft,
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.full,
-    overflow: "hidden",
   },
   detailsCard: {
     backgroundColor: colors.surface,

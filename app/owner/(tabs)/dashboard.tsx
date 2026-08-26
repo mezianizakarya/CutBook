@@ -13,6 +13,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StaffBookingSheet } from "@/components/ui/StaffBookingSheet";
 import { StatCard } from "@/components/ui/StatCard";
 import { getLocale, t } from "@/lib/i18n";
+import { localeDateString } from "@/lib/format";
 import { computeDashboardStats } from "@/lib/barber";
 import {
   fetchBookingCustomers,
@@ -167,7 +168,7 @@ export default function OwnerDashboardScreen() {
   }
 
   const shopName = shops.length === 1 ? shops[0].name : t("owner.shops_count", { count: shops.length });
-  const dateLabel = new Date().toLocaleDateString(getLocale(), {
+  const dateLabel = localeDateString(new Date(), getLocale(), {
     weekday: "long",
     month: "long",
     day: "numeric",

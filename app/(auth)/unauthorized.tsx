@@ -90,6 +90,6 @@ const styles = StyleSheet.create({
   actions: {
     marginTop: spacing.lg,
     alignSelf: "stretch",
-    gap: spacing.md,
+    gap: spacing.sm,
   },
 });

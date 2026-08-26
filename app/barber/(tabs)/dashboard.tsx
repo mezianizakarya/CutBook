@@ -47,6 +47,7 @@ import {
 } from "@/lib/format";
 import { fetchOwnProfile, isBarberProfessionalComplete } from "@/lib/profile";
 import { getLocale, t } from "@/lib/i18n";
+import { localeDateString } from "@/lib/format";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useConfirmCountdown } from "@/lib/useConfirmCountdown";
 import { useNotice } from "@/lib/useNotice";
@@ -315,7 +316,7 @@ export default function BarberDashboardScreen() {
 
   const greetingName = user?.firstName || primaryMember?.display_name || t("common.there");
   const today = new Date();
-  const dateLabel = today.toLocaleDateString(getLocale(), {
+  const dateLabel = localeDateString(today, getLocale(), {
     weekday: "long",
     month: "long",
     day: "numeric",

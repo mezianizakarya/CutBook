@@ -3,6 +3,64 @@ import { CountryContext } from "@/lib/user-country";
 import { getCurrencyForCountry } from "@/lib/currency";
 import { getLocale, t } from "@/lib/i18n";
 
+const EASTERN_ARABIC = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+
+export function toLatinDigits(s: string): string {
+    let out = s;
+    for (let i = 0; i < 10; i++) {
+        out = out.replaceAll(EASTERN_ARABIC[i], String(i));
+    }
+    return out;
+}
+
+const AR_MONTHS: Record<string, string> = {
+    "يناير": "جانفي",
+    "فبراير": "فيفري",
+    "أبريل": "أفريل",
+    "مايو": "ماي",
+    "يونيو": "جوان",
+    "يوليو": "جويلية",
+    "أغسطس": "أوت",
+    "ينايه": "جانفي",
+    "مايوز": "ماي",
+    "يونيوه": "جوان",
+    "يوليوه": "جويلية",
+};
+
+function normalizeArabicMonths(s: string): string {
+    let out = s;
+    for (const [std, tun] of Object.entries(AR_MONTHS)) {
+        out = out.replace(std, tun);
+    }
+    return out;
+}
+
+export function localeString(
+    date: Date,
+    locale: string,
+    options?: Intl.DateTimeFormatOptions,
+): string {
+    const s = date.toLocaleString(locale, options);
+    return locale === "ar" ? normalizeArabicMonths(toLatinDigits(s)) : toLatinDigits(s);
+}
+
+export function localeTimeString(
+    date: Date,
+    locale: string,
+    options?: Intl.DateTimeFormatOptions,
+): string {
+    return toLatinDigits(date.toLocaleTimeString(locale, options));
+}
+
+export function localeDateString(
+    date: Date,
+    locale: string,
+    options?: Intl.DateTimeFormatOptions,
+): string {
+    const s = date.toLocaleDateString(locale, options);
+    return locale === "ar" ? normalizeArabicMonths(toLatinDigits(s)) : toLatinDigits(s);
+}
+
 export function formatCents(
   cents: number | null | undefined,
   countryCode?: string | null
@@ -46,7 +104,7 @@ export function formatTime(iso: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) {
     return "—";
   }
-  return date.toLocaleTimeString(getLocale(), {
+  return localeTimeString(date, getLocale(), {
     hour: "numeric",
     minute: "2-digit",
   });
@@ -60,7 +118,7 @@ export function formatDate(value: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) {
     return "—";
   }
-  return date.toLocaleDateString(getLocale(), {
+  return localeDateString(date, getLocale(), {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -75,7 +133,7 @@ export function formatDateTime(iso: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) {
     return "—";
   }
-  return date.toLocaleString(getLocale(), {
+  return localeString(date, getLocale(), {
     weekday: "short",
     month: "short",
     day: "numeric",

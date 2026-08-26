@@ -1,6 +1,5 @@
 import { useUser } from "@clerk/expo";
-import * as Clipboard from "expo-clipboard";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { AppText } from "@/components/AppText";
 
 
@@ -28,13 +27,6 @@ export function ProfileSummary({
   const name = user?.fullName ?? t("profile.your_name");
   const isCustomer = role === "customer";
 
-  async function handleCopyUsername() {
-    if (!username) {
-      return;
-    }
-    await Clipboard.setStringAsync(formatUsername(username));
-  }
-
   return (
     <View style={styles.container}>
       <View style={styles.nameRow}>
@@ -48,15 +40,9 @@ export function ProfileSummary({
         </View>
       </View>
       {!!username && (
-        <Pressable
-          onPress={handleCopyUsername}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Copy username"
-          style={styles.usernameRow}
-        >
+        <View style={styles.usernameRow}>
           <AppText style={styles.username}>{formatUsername(username)}</AppText>
-        </Pressable>
+        </View>
       )}
     </View>
   );

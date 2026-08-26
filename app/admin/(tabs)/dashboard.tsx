@@ -18,7 +18,7 @@ import {
   type RecentUser,
 } from "@/lib/admin";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { useFormatCents } from "@/lib/format";
+import { useFormatCents, localeDateString } from "@/lib/format";
 import { getRoleLabel } from "@/lib/roles";
 import { getLocale, t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -97,7 +97,7 @@ export default function AdminDashboardScreen() {
 
   const dateLabel = useMemo(
     () =>
-      new Date().toLocaleDateString(getLocale(), {
+      localeDateString(new Date(), getLocale(), {
         weekday: "long",
         month: "long",
         day: "numeric",

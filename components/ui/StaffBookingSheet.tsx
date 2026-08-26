@@ -153,56 +153,58 @@ export function StaffBookingSheet({
         )}
       </DetailsCard>
 
-      {primary === "confirmed" && (
+      <View style={styles.actions}>
+        {primary === "confirmed" && (
+          <Button
+            title={t("staff.confirm_booking")}
+            variant="primary"
+            loading={busy}
+            disabled={busy}
+            onPress={() => void handleStatusChange("confirmed")}
+          />
+        )}
+        {primary === "completed" && (
+          <Button
+            title={t("staff.mark_complete")}
+            variant="successOutline"
+            loading={busy}
+            disabled={busy}
+            onPress={() => void handleStatusChange("completed")}
+          />
+        )}
+        {showNoShow && (
+          <Button
+            title={t("staff.mark_no_show")}
+            variant="dangerOutline"
+            loading={busy}
+            disabled={busy}
+            onPress={() => void handleStatusChange("no_show")}
+          />
+        )}
+        {cancellable && (
+          <Button
+            title={
+              confirmingCancel ? t("staff.confirm_cancel", { count: confirmCount }) : t("staff.cancel_booking")
+            }
+            onPress={cancelPress}
+            variant={confirmingCancel ? "danger" : "dangerOutline"}
+            loading={cancelling}
+            disabled={busy || cancelling}
+          />
+        )}
         <Button
-          title={t("staff.confirm_booking")}
-          variant="primary"
-          loading={busy}
-          disabled={busy}
-          onPress={() => void handleStatusChange("confirmed")}
+          title={t("common.close")}
+          variant="outline"
+          onPress={() => {
+            if (confirmingCancel) {
+              cancelReset();
+              return;
+            }
+            onClose();
+          }}
+          style={styles.closeButton}
         />
-      )}
-      {primary === "completed" && (
-        <Button
-          title={t("staff.mark_complete")}
-          variant="successOutline"
-          loading={busy}
-          disabled={busy}
-          onPress={() => void handleStatusChange("completed")}
-        />
-      )}
-      {showNoShow && (
-        <Button
-          title={t("staff.mark_no_show")}
-          variant="dangerOutline"
-          loading={busy}
-          disabled={busy}
-          onPress={() => void handleStatusChange("no_show")}
-        />
-      )}
-      {cancellable && (
-        <Button
-          title={
-            confirmingCancel ? t("staff.confirm_cancel", { count: confirmCount }) : t("staff.cancel_booking")
-          }
-          onPress={cancelPress}
-          variant={confirmingCancel ? "danger" : "dangerOutline"}
-          loading={cancelling}
-          disabled={busy || cancelling}
-        />
-      )}
-      <Button
-        title={t("common.close")}
-        variant="outline"
-        onPress={() => {
-          if (confirmingCancel) {
-            cancelReset();
-            return;
-          }
-          onClose();
-        }}
-        style={styles.closeButton}
-      />
+      </View>
     </BottomSheet>
   );
 }
@@ -228,5 +230,8 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     backgroundColor: colors.surface,
+  },
+  actions: {
+    gap: spacing.sm,
   },
 });

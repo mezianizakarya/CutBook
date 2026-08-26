@@ -210,10 +210,12 @@ export default function BarberProfessionalScreen() {
 
         {!!error && <AppText style={styles.errorText}>{error}</AppText>}
 
-        <Button title={t("common.save")} onPress={handleSave} loading={submitting} />
-        {isOnboarding && (
-          <Button title={t("barber.skip_for_now")} variant="ghost" onPress={handleSkip} />
-        )}
+        <View style={styles.formActions}>
+          <Button title={t("common.save")} onPress={handleSave} loading={submitting} />
+          {isOnboarding && (
+            <Button title={t("barber.skip_for_now")} variant="ghost" onPress={handleSkip} />
+          )}
+        </View>
       </View>
     </Screen>
   );
@@ -248,6 +250,9 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: spacing.md,
+  },
+  formActions: {
+    gap: spacing.sm,
   },
   chipsScroll: {
     flexGrow: 0,

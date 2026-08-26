@@ -302,6 +302,7 @@ export default function BarberProfileScreen() {
               shopCountry={bookingShop?.country}
               services={bookingShop?.services ?? []}
               members={bookingShop?.members ?? []}
+              selectedProfileId={profileId}
               onClose={() => setBookingVisible(false)}
               onBooked={() => router.push("/customer/bookings")}
             />

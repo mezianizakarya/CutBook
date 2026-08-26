@@ -27,9 +27,10 @@ import {
   formatDurationMinutes,
   formatOpenRange,
   formatRating,
+  localeDateString,
   shopStatusInfo,
 } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { getLocale, t } from "@/lib/i18n";
 import { useUserCountry } from "@/lib/user-country";
 import {
   loadCompletedBookingId,
@@ -491,7 +492,7 @@ export default function ShopDetailScreen() {
                         }`
                       : null,
                     member.joined_at
-                      ? new Date(member.joined_at).toLocaleDateString(undefined, {
+                      ? localeDateString(new Date(member.joined_at), getLocale(), {
                           month: "short",
                           year: "numeric",
                         })

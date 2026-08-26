@@ -29,7 +29,7 @@ import {
   type TimeOffRow,
 } from "@/lib/barber";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { dayLetter, formatOpenRange, isSameDay, startOfDay } from "@/lib/format";
+import { dayLetter, formatOpenRange, isSameDay, localeDateString, startOfDay } from "@/lib/format";
 import { getLocale, t } from "@/lib/i18n";
 import { colors, radius, spacing } from "@/lib/theme";
 import { useNotice } from "@/lib/useNotice";
@@ -241,7 +241,7 @@ export default function BarberScheduleScreen() {
     );
   }
 
-  const selectedLabel = selectedDay.toLocaleDateString(getLocale(), {
+  const selectedLabel = localeDateString(selectedDay, getLocale(), {
     weekday: "long",
     month: "long",
     day: "numeric",

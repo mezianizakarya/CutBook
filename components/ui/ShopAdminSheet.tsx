@@ -1,5 +1,4 @@
-import * as Clipboard from "expo-clipboard";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { AppText } from "@/components/AppText";
 
@@ -42,14 +41,6 @@ const STATUS_TONES: Record<ShopStatus, StatusTone> = {
   pending: "warning",
 };
 
-function CopyPill({ copied }: { copied: boolean }) {
-  return (
-    <AppText style={[styles.copyPill, copied ? styles.copyPillCopied : null]}>
-      {copied ? t("common.copied") : t("common.copy")}
-    </AppText>
-  );
-}
-
 export function ShopAdminSheet({
   shop: initial,
   onClose,
@@ -59,7 +50,6 @@ export function ShopAdminSheet({
   const [shop, setShop] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [ownerName, setOwnerName] = useState<string | null>(null);
-  const [copiedField, setCopiedField] = useState<"email" | "phone" | null>(null);
   const {
     confirming: confirmingSuspend,
     count: confirmCount,
@@ -67,7 +57,6 @@ export function ShopAdminSheet({
   } = useConfirmAction(() => {
     void performUpdate({ status: "suspended" }, t("owner.shop_suspended"));
   });
-  const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,14 +82,6 @@ export function ShopAdminSheet({
     };
   }, [initial.created_by]);
 
-  useEffect(() => {
-    return () => {
-      if (copyTimeout.current) {
-        clearTimeout(copyTimeout.current);
-      }
-    };
-  }, []);
-
   async function performUpdate(
     patch: Parameters<typeof updateShopFields>[1],
     successMessage: string
@@ -117,18 +98,6 @@ export function ShopAdminSheet({
     } finally {
       setBusy(false);
     }
-  }
-
-  async function copyToClipboard(value: string, field: "email" | "phone") {
-    if (!value) {
-      return;
-    }
-    await Clipboard.setStringAsync(value);
-    setCopiedField(field);
-    if (copyTimeout.current) {
-      clearTimeout(copyTimeout.current);
-    }
-    copyTimeout.current = setTimeout(() => setCopiedField(null), 1500);
   }
 
   return (
@@ -166,16 +135,12 @@ export function ShopAdminSheet({
           <DetailRow
             label={t("shop.email")}
             value={shop.email}
-            onPress={() => copyToClipboard(shop.email ?? "", "email")}
-            action={<CopyPill copied={copiedField === "email"} />}
           />
         ) : null}
         {shop.phone ? (
           <DetailRow
             label={t("shop.phone")}
             value={shop.phone}
-            onPress={() => copyToClipboard(shop.phone ?? "", "phone")}
-            action={<CopyPill copied={copiedField === "phone"} />}
           />
         ) : null}
         <DetailRow
@@ -188,77 +153,79 @@ export function ShopAdminSheet({
         <DetailRow label={t("owner.registered")} value={formatDate(shop.created_at)} />
       </DetailsCard>
 
-      {shop.deleted_at ? (
+      <View style={styles.actions}>
+        {shop.deleted_at ? (
+          <Button
+            title={t("owner.restore_shop")}
+            variant="primary"
+            loading={busy}
+            disabled={busy}
+            onPress={() =>
+              void performUpdate(
+                { status: "approved", is_active: true, deleted_at: null },
+                t("owner.shop_approved")
+              )
+            }
+          />
+        ) : shop.status === "pending" ? (
+          <Button
+            title={t("owner.approve_shop")}
+            variant="primary"
+            loading={busy}
+            disabled={busy}
+            onPress={() => void performUpdate({ status: "approved" }, t("owner.shop_approved"))}
+          />
+        ) : shop.status === "approved" ? (
+          <Button
+            title={confirmingSuspend ? t("owner.confirm_suspend", { count: confirmCount }) : t("owner.suspend_shop")}
+            variant={confirmingSuspend ? "danger" : "dangerOutline"}
+            loading={busy}
+            disabled={busy}
+            onPress={suspendPress}
+          />
+        ) : (
+          <Button
+            title={t("owner.reactivate_shop")}
+            variant="successOutline"
+            loading={busy}
+            disabled={busy}
+            onPress={() =>
+              void performUpdate(
+                { status: "approved", deleted_at: null },
+                t("owner.shop_reactivated")
+              )
+            }
+          />
+        )}
+
         <Button
-          title={t("owner.restore_shop")}
-          variant="primary"
+          title={shop.is_verified ? t("owner.remove_verified") : t("owner.mark_verified")}
+          variant={shop.is_verified ? "blueOutline" : "blue"}
           loading={busy}
           disabled={busy}
           onPress={() =>
             void performUpdate(
-              { status: "approved", is_active: true, deleted_at: null },
-              t("owner.shop_approved")
+              { is_verified: !shop.is_verified },
+              shop.is_verified ? t("owner.verified_badge_removed") : t("owner.shop_verified")
             )
           }
         />
-      ) : shop.status === "pending" ? (
+
         <Button
-          title={t("owner.approve_shop")}
-          variant="primary"
-          loading={busy}
-          disabled={busy}
-          onPress={() => void performUpdate({ status: "approved" }, t("owner.shop_approved"))}
-        />
-      ) : shop.status === "approved" ? (
-        <Button
-          title={confirmingSuspend ? t("owner.confirm_suspend", { count: confirmCount }) : t("owner.suspend_shop")}
-          variant={confirmingSuspend ? "danger" : "dangerOutline"}
-          loading={busy}
-          disabled={busy}
-          onPress={suspendPress}
-        />
-      ) : (
-        <Button
-          title={t("owner.reactivate_shop")}
-          variant="successOutline"
+          title={shop.is_active ? t("owner.close_temporarily") : t("owner.reopen_business")}
+          variant="outline"
           loading={busy}
           disabled={busy}
           onPress={() =>
             void performUpdate(
-              { status: "approved", deleted_at: null },
-              t("owner.shop_reactivated")
+              { is_active: !shop.is_active },
+              shop.is_active ? t("owner.shop_closed") : t("owner.shop_reopened")
             )
           }
         />
-      )}
 
-      <Button
-        title={shop.is_verified ? t("owner.remove_verified") : t("owner.mark_verified")}
-        variant={shop.is_verified ? "blueOutline" : "blue"}
-        loading={busy}
-        disabled={busy}
-        onPress={() =>
-          void performUpdate(
-            { is_verified: !shop.is_verified },
-            shop.is_verified ? t("owner.verified_badge_removed") : t("owner.shop_verified")
-          )
-        }
-      />
-
-      <Button
-        title={shop.is_active ? t("owner.close_temporarily") : t("owner.reopen_business")}
-        variant="outline"
-        loading={busy}
-        disabled={busy}
-        onPress={() =>
-          void performUpdate(
-            { is_active: !shop.is_active },
-            shop.is_active ? t("owner.shop_closed") : t("owner.shop_reopened")
-          )
-        }
-      />
-
-      <Button title={t("common.cancel")} variant="ghost" onPress={onClose} />
+        <Button title={t("common.cancel")} variant="ghost" onPress={onClose} />
+      </View>
     </BottomSheet>
   );
 }
@@ -294,18 +261,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
   },
-  copyPill: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.primaryDark,
-    backgroundColor: colors.primarySoft,
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.full,
-    overflow: "hidden",
-  },
-  copyPillCopied: {
-    color: colors.success,
-    backgroundColor: colors.successSoft,
+  actions: {
+    gap: spacing.sm,
   },
 });

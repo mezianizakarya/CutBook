@@ -401,14 +401,15 @@ const styles = StyleSheet.create({
   },
   search: {
     height: 48,
+    width: "100%",
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.full,
     paddingHorizontal: spacing.md,
     paddingEnd: 44,
-  fontSize: 15,
-  color: colors.text,
-  backgroundColor: colors.surface,
+    fontSize: 15,
+    color: colors.text,
+    backgroundColor: colors.surface,
   },
   clearButton: {
     position: "absolute",

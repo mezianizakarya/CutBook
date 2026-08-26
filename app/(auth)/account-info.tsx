@@ -10,6 +10,7 @@ import { Screen } from "@/components/ui/Screen";
 import { FullScreenLoader } from "@/lib/auth";
 import { errorMessageFromUnknown } from "@/lib/errors";
 import { getLocale, t } from "@/lib/i18n";
+import { localeDateString } from "@/lib/format";
 import { fetchOwnProfile, type OwnProfile } from "@/lib/profile";
 import { getAccountTypeLabel } from "@/lib/roles";
 import { colors, radius, spacing } from "@/lib/theme";
@@ -81,7 +82,7 @@ export default function AccountInfoScreen() {
     null;
   const email = user.primaryEmailAddress?.emailAddress;
   const joinedAt = user.createdAt
-    ? new Date(user.createdAt).toLocaleDateString(getLocale(), {
+    ? localeDateString(new Date(user.createdAt), getLocale(), {
         year: "numeric",
         month: "long",
         day: "numeric",

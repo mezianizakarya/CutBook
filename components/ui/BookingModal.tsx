@@ -10,7 +10,7 @@ import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { errorMessageFromUnknown } from "@/lib/errors";
-import { formatCents, parseTimeToMinutes, toDateKey } from "@/lib/format";
+import { formatCents, localeDateString, localeTimeString, parseTimeToMinutes, toDateKey } from "@/lib/format";
 import { useUserCountry } from "@/lib/user-country";
 import type { ShopMember, ShopService } from "@/lib/shop";
 import { supabase } from "@/lib/supabase";
@@ -27,6 +27,7 @@ type BookingModalProps = {
   shopCountry?: string | null;
   services: ShopService[];
   members: ShopMember[];
+  selectedProfileId?: string | null;
   onClose: () => void;
   onBooked: () => void;
 };
@@ -45,7 +46,7 @@ function buildDayList(): Date[] {
 }
 
 function formatDayLabel(day: Date): string {
-  return day.toLocaleDateString(getLocale(), {
+  return localeDateString(day, getLocale(), {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -59,6 +60,7 @@ export function BookingModal({
   shopCountry,
   services,
   members,
+  selectedProfileId,
   onClose,
   onBooked,
 }: BookingModalProps) {
@@ -82,7 +84,10 @@ export function BookingModal({
   useEffect(() => {
     if (visible) {
       setServiceId(null);
-      setMemberId(null);
+      const preselected = selectedProfileId
+        ? members.find((m) => m.profile_id === selectedProfileId)?.id ?? null
+        : null;
+      setMemberId(preselected);
       setDateKey(null);
       setSlots(null);
       setSelectedSlot(null);
@@ -354,13 +359,15 @@ export function BookingModal({
         style={styles.noteField}
       />
 
-      <Button
-        title={t("shop.request_booking_button")}
-        onPress={handleBook}
-        loading={submitting}
-        disabled={!canSubmit}
-      />
-      <Button title={t("common.cancel")} variant="outline" onPress={onClose} style={styles.cancelButton} />
+      <View style={styles.actions}>
+        <Button
+          title={t("shop.request_booking_button")}
+          onPress={handleBook}
+          loading={submitting}
+          disabled={!canSubmit}
+        />
+        <Button title={t("common.cancel")} variant="outline" onPress={onClose} style={styles.cancelButton} />
+      </View>
     </BottomSheet>
   );
 }
@@ -389,7 +396,7 @@ function generateSlots(
     slots.push({
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
-      label: startsAt.toLocaleTimeString(getLocale(), {
+      label: localeTimeString(startsAt, getLocale(), {
         hour: "numeric",
         minute: "2-digit",
       }),
@@ -514,6 +521,9 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: colors.surface,
+  },
+  actions: {
+    gap: spacing.sm,
   },
   success: {
     alignItems: "center",

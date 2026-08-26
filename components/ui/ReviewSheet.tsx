@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { AppText } from "@/components/AppText";
 
 
@@ -130,22 +130,24 @@ export function ReviewSheet({
 
       {!!error && <AppText style={styles.error}>{error}</AppText>}
 
-      <Button
-        title={existing ? t("review.save_changes") : t("review.submit_review")}
-        onPress={handleSubmit}
-        loading={submitting}
-        disabled={rating < 1}
-      />
-      {!!existing && (
+      <View style={styles.actions}>
         <Button
-          title={confirmingDelete ? t("review.confirm_delete", { count: deleteCount }) : t("review.delete_review")}
-          variant="dangerOutline"
-          onPress={handleDeletePress}
-          loading={deleting}
-          disabled={deleting}
+          title={existing ? t("review.save_changes") : t("review.submit_review")}
+          onPress={handleSubmit}
+          loading={submitting}
+          disabled={rating < 1}
         />
-      )}
-      <Button title={t("common.cancel")} variant="outline" onPress={onClose} style={styles.cancel} />
+        {!!existing && (
+          <Button
+            title={confirmingDelete ? t("review.confirm_delete", { count: deleteCount }) : t("review.delete_review")}
+            variant="dangerOutline"
+            onPress={handleDeletePress}
+            loading={deleting}
+            disabled={deleting}
+          />
+        )}
+        <Button title={t("common.cancel")} variant="outline" onPress={onClose} style={styles.cancel} />
+      </View>
     </BottomSheet>
   );
 }
@@ -177,5 +179,8 @@ const styles = StyleSheet.create({
   },
   cancel: {
     backgroundColor: colors.surface,
+  },
+  actions: {
+    gap: spacing.sm,
   },
 });

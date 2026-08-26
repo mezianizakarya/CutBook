@@ -7,7 +7,7 @@ import { useUser } from "@clerk/expo";
 
 export const CountryContext = createContext<string>("US");
 
-async function detectCountryCode(): Promise<string | null> {
+async function detectLocation(): Promise<{ country: string; city: string | null } | null> {
   try {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") return null;
@@ -18,7 +18,11 @@ async function detectCountryCode(): Promise<string | null> {
       latitude: loc.coords.latitude,
       longitude: loc.coords.longitude,
     });
-    return place?.isoCountryCode ?? null;
+    if (!place) return null;
+    return {
+      country: place.isoCountryCode ?? "US",
+      city: place.city ?? place.district ?? null,
+    };
   } catch {
     return null;
   }
@@ -39,14 +43,16 @@ export function CountryProvider({ children }: { children: React.ReactNode }) {
 
     (async () => {
       try {
-        const code = (await detectCountryCode()) ?? "US";
+        const result = await detectLocation();
+        const code = result?.country ?? "US";
+        const city = result?.city ?? null;
         if (!cancelled) {
           setCountry(code);
           setGlobalCountry(code);
         }
         await supabase
           .from("profiles")
-          .update({ country: code })
+          .update({ country: code, city })
           .eq("id", user.id);
       } catch {
         if (!cancelled) {
